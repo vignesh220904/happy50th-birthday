@@ -11,6 +11,8 @@
 // the presentation moves on by itself. Each scene says how long to stay
 // (ctl.auto() → milliseconds) or that it will say when it is done
 // (ctl.auto() → 'wait', then deck.autoAdvance(): a film that has ended).
+// Switching it on or off tells the current scene (ctl.autoChanged(on)), so a
+// film that is waiting starts as soon as the host resumes.
 // There is only ever one timer: every move clears it first, so the photo
 // slideshows, the reasons and the scenes can never run conflicting timers.
 // Touching the scene restarts the wait; the photo viewer or the section menu
@@ -28,7 +30,7 @@ const IDLE_MS = 3500;
 const NAV_KEYS_NEXT = new Set(['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter']);
 const NAV_KEYS_PREV = new Set(['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace']);
 const CLICKER_KEYS = new Set(['PageDown', 'PageUp']); // presentation remotes send these
-const DEFAULT_DWELL = 9000;
+const DEFAULT_DWELL = 4000; // a scene without its own timing: a few seconds to read it
 
 export function createDeck(root, uiMount) {
   const scenes = [];          // { id, title, el, ctl }
@@ -179,6 +181,7 @@ export function createDeck(root, uiMount) {
     autoBtn.title = `${auto ? 'Pause' : 'Start'} automatic playback  (A)`;
     document.body.classList.toggle('is-autoplaying', auto);
     if (auto) scheduleAuto(); else clearAuto();
+    try { current()?.ctl.autoChanged?.(auto); } catch (err) { console.error('[deck] autoChanged', err); }
     announce(message || (auto ? 'Automatic playback on.' : 'Automatic playback paused.'));
   }
   autoBtn.addEventListener('click', () => setAuto(!auto));

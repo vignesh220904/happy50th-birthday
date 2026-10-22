@@ -1,26 +1,22 @@
-Family-supplied videos for the presentation
-===========================================
+The family's films, prepared for the presentation
+===================================================
 
-1. Her Life Journey film (not supplied yet)
-   Save the family's Life Journey video here as   life-journey.mp4
-   and set data/site.json -> videos.lifeJourney.src to
-       "assets/videos/family/life-journey.mp4"
-   The "Her Life Journey Film" scene joins the presentation (after Happy 50th
-   Birthday) once the file exists. Until then it is left out entirely.
+These files are made by   npm run build:films   from the family's originals
+in the VIDEOS folder (which are never changed):
 
-2. Messages Filled With Love (the "Family video wishes" Google Drive folder)
-   These are not saved here. Download the Drive folder into the project root as
-       Family video wishes/
-   keeping the family's numbered filenames, then run
-       npm run build:wishes
-   It converts every video to a browser-ready copy in assets/videos/wishes/,
-   keeps the family's order, and writes data/wishes.json. The final two videos
-   wait for the family's confirmation ("confirmed": false in data/wishes.json).
+  age-1-to-5-story.mp4   <- VIDEOS/age 1 to 5 story video.mp4   (web copy: 1440 x 1080, H.264 + AAC)
+  age-1-to-50.mp4        <- VIDEOS/AGE 1 TO 50 - real video.mp4 (copied as it is)
+  life-journey.mp4       <- VIDEOS/LIFE JOURNEY.mp4             (copied as it is)
 
-Format: MP4 with H.264 video and AAC audio plays everywhere. Phone videos are
-often HEVC (H.265), which some browsers cannot play. build:wishes converts them
-automatically; to convert the Life Journey video by hand:
+Each has a poster frame (.jpg). data/site.json -> videos lists them, with the
+words shown beside each film. They play in that order, straight after
+"Happy 50th Birthday".
 
-  python -c "import imageio_ffmpeg,subprocess,sys; subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-i',sys.argv[1],'-c:v','libx264','-crf','20','-pix_fmt','yuv420p','-c:a','aac','-b:a','160k','-movflags','+faststart',sys.argv[2]],check=True)" input.mov life-journey.mp4
+To replace a film: put the new original in VIDEOS/ under the same name and run
+npm run build:films again. A film whose file is missing is left out of the
+presentation, never replaced by anything else.
+
+The family's video wishes are not here: they come from the
+"Family video wishes" folder via   npm run build:wishes   (assets/videos/wishes/).
 
 (needs: pip install imageio-ffmpeg)

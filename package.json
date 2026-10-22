@@ -10,6 +10,7 @@
     "test:browser": "node scripts/smoke.mjs",
     "build:media": "python scripts/build_media.py",
     "build:pages": "python scripts/build_pages.py",
+    "build:films": "python scripts/build_films.py",
     "build:wishes": "python scripts/build_wishes.py"
   },
   "devDependencies": {

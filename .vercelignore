@@ -1,0 +1,12 @@
+# Deploy only what the site serves: index.html, pages/, css/, js/, data/, assets/.
+# The original media below are source files for the build scripts, several GB in all.
+/VIDEOS/
+/Family video wishes/
+/Age 1 to 50/
+/Final Life Journey/
+/Memory gallery/
+/assets/videos/happy 50th birthday.mp4
+/node_modules/
+/tests/
+/scripts/
+*.bat

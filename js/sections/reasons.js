@@ -8,7 +8,7 @@
 
 import { h, icons, fitText, announce } from '../core/util.js';
 
-const GROUP_MS = 22000;  // ten reasons to read aloud, comfortably
+const GROUP_MS = 18000;  // ten reasons: about 4 s to gather, then time to read them
 
 export async function mount(el, content) {
   const { reasons, chapters, closing } = content.reasons;

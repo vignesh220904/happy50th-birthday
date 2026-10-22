@@ -8,6 +8,8 @@ import { h } from '../core/util.js';
 import { picture } from '../core/data.js';
 import { confetti } from '../core/confetti.js';
 
+const HOLD_MS = 5500; // the words rise in (about 2 s), then a few seconds to enjoy them
+
 export async function mount(el, content) {
   const r = content.site.reveal || {};
   const photo = content.media.get(r.photo);
@@ -37,6 +39,7 @@ export async function mount(el, content) {
 
   let timers = [];
   return {
+    auto: () => HOLD_MS,
     enter({ dir }) {
       if (dir < 0) return; // coming back from the journey: no second celebration
       timers.push(setTimeout(() => confetti({ x: 0.08, y: 0.95, count: 120, angle: -1.05 }), 650));

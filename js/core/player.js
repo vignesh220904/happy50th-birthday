@@ -77,7 +77,8 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
   };
   const loaded = () => root.classList.remove('is-loading');
   function onError() {
-    if (!video.error) return;
+    if (!video.error || root.classList.contains('has-error')) return; // reported once
+    if (!video.getAttribute('src')) return; // destroyed on purpose
     root.classList.remove('is-loading');
     root.classList.add('has-error');
     errorBox.hidden = false;
@@ -143,7 +144,17 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
     el: root,
     video,
     fsButton: fsBtn,
-    play: () => video.play().catch(onError),
+    /**
+     * Start playing. Resolves 'playing', 'blocked' (the browser wants a click
+     * first) or 'error' (the file cannot be played), so the caller never has to
+     * guess whether automatic playback really worked.
+     */
+    play: () => video.play().then(() => 'playing', (err) => {
+      if (err?.name === 'NotAllowedError') return 'blocked';
+      if (err?.name === 'AbortError') return 'aborted'; // the source changed or was paused before it started
+      onError();
+      return 'error';
+    }),
     pause: () => { if (!video.paused) video.pause(); },
     destroy() {
       video.pause();

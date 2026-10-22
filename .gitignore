@@ -30,3 +30,8 @@ assets/videos/happy 50th birthday.mp4
 # The family's original video wishes (phone videos, often HEVC and large).
 # The site plays the converted copies in assets/videos/wishes/ (npm run build:wishes).
 Family video wishes/
+
+# The family's original films (the story video alone is 1.4 GB, over GitHub's limit).
+# The site plays the prepared copies in assets/videos/family/ (npm run build:films).
+# Anchored to the root: git on Windows ignores case, and "VIDEOS/" alone would also hide assets/videos/.
+/VIDEOS/

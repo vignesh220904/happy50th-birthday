@@ -16,24 +16,31 @@ import { $, $$ } from './core/util.js';
 import { sectionError } from './sections/shared.js';
 import * as welcome from './sections/welcome.js';
 import * as reveal from './sections/reveal.js';
+import * as storyFilm from './sections/story-film.js';
+import * as ageFilm from './sections/age-film.js';
 import * as journeyFilm from './sections/journey-film.js';
 import * as journey from './sections/journey.js';
 import * as proud from './sections/proud.js';
 import * as reasons from './sections/reasons.js';
 import * as memories from './sections/memories.js';
 import * as wishes from './sections/wishes.js';
+import * as cake from './sections/cake.js';
 import * as finale from './sections/finale.js';
 
-// The running order of the celebration.
+// The running order of the celebration: the family's three films come straight
+// after the birthday greeting, the video wishes then the cake close the evening.
 const SCENES = [
   { id: 'welcome', title: 'A Golden Beginning', mod: welcome },
   { id: 'reveal', title: 'Happy 50th Birthday', mod: reveal },
-  { id: 'journey-film', title: 'Her Life Journey Film', mod: journeyFilm },
+  { id: 'story-film', title: 'Age 1 to 5: Her Story', mod: storyFilm },
+  { id: 'age-film', title: 'Age 1 to 50: The Real Journey', mod: ageFilm },
+  { id: 'journey-film', title: 'Her Life Journey', mod: journeyFilm },
   { id: 'journey', title: 'A Journey Through Time', mod: journey },
   { id: 'proud', title: 'Proud Moments', mod: proud },
   { id: 'reasons', title: '50 Reasons We Love You', mod: reasons },
   { id: 'memories', title: 'Our Memory Film', mod: memories },
   { id: 'wishes', title: 'Messages Filled With Love', mod: wishes },
+  { id: 'cake', title: 'Make a Wish', mod: cake },
   { id: 'finale', title: 'A Final Gift of Love', mod: finale },
 ];
 

@@ -4,13 +4,13 @@
 //
 // One photograph at a time, large and never cropped (a soft blurred copy of
 // the photo fills the frame around it), with the year, title and caption
-// beside it. Photos cross-fade with a slow, gentle zoom; a milestone with
+// beside it. Photos cross-fade (about half a second) with a gentle zoom; a milestone with
 // several photos keeps its caption while its photos change. A year rail along
 // the bottom shows where we are in the journey.
 //
 // The presentation controller drives it: every photo is one step, so Next /
 // Previous (and a clicker) move photo by photo, and automatic playback moves
-// on by itself at a comfortable pace (auto() says how long each photo stays).
+// on by itself at a brisk, readable pace (auto() says how long each photo stays).
 // A milestone without a photograph is shown as an elegant year card; if the
 // family still has to send its photo ('pendingPhoto'), the card says so.
 
@@ -18,9 +18,10 @@ import { h, fitText, prefersReducedMotion } from '../core/util.js';
 import { picture, url } from '../core/data.js';
 import { mediaLabel } from './shared.js';
 
-const FIRST_PHOTO_MS = 7500;  // a new milestone: time to read its caption
-const NEXT_PHOTO_MS = 5500;   // another photo of the same milestone
-const CARD_MS = 6500;         // a year card without a photograph
+const FIRST_PHOTO_MS = 4500;  // a new milestone: time to read its caption
+const NEXT_PHOTO_MS = 3500;   // another photo of the same milestone
+const CARD_MS = 4000;         // a year card without a photograph
+const FADE_MS = 600;          // the cross-fade between two photos (css/scenes.css → .tslide)
 const shortYear = (y) => (String(y).match(/\d{4}s?/) || [y])[0];
 
 export function mountTimelineShow(el, content, { chapterId, titleId }) {
@@ -90,7 +91,7 @@ export function mountTimelineShow(el, content, { chapterId, titleId }) {
     stage.querySelectorAll('.tslide').forEach((old) => {
       if (still) return old.remove();
       old.classList.add('is-leaving');
-      setTimeout(() => old.remove(), 1400);
+      setTimeout(() => old.remove(), FADE_MS + 100);
     });
     stage.append(incoming);
 

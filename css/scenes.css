@@ -427,6 +427,29 @@
 @keyframes upnext { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .cinema__screen:has(> .cinema__upnext:not([hidden])) .player__big-play,
 .cinema__screen:has(> .cinema__end:not([hidden])) .player__big-play { opacity: 0; pointer-events: none; }
+/* the browser held automatic playback back: say so under the Play button */
+.cinema__prompt {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--u) * 2.2);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0.55em 1.2em;
+  border-radius: 999px;
+  background: rgba(16, 40, 84, 0.82);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: fade-in 500ms var(--ease-out);
+}
+.cinema__prompt span { display: grid; width: 1em; color: var(--champagne-soft); }
 
 /* Theatre: the player fills the screen; the presentation controls step aside */
 .theatre-bar { display: none; }
@@ -461,6 +484,11 @@
   transition: opacity 600ms var(--ease-out);
 }
 .theatre-bar__mid { display: flex; align-items: center; gap: calc(var(--u) * 1); min-width: 0; }
+.theatre-bar__end { display: flex; align-items: center; gap: calc(var(--u) * 0.8); }
+/* not in full screen (the browser refused it without a click): the button asks to be noticed */
+.theatre-bar__fs.is-offer { box-shadow: 0 0 0 2px var(--champagne); animation: fs-offer 2.4s var(--ease-in-out) 3; }
+@keyframes fs-offer { 50% { box-shadow: 0 0 0 6px rgba(217, 182, 111, 0.35); } }
+body.controls-hidden .scene.is-theatre .theatre-bar:has(.theatre-bar__fs.is-offer) { opacity: 1; } /* stays in view until used */
 .theatre-bar__label {
   overflow: hidden;
   font-size: var(--fs-body);
@@ -512,11 +540,11 @@ body.is-theatre .deck-bar { display: none; }
   height: 100%;
   object-fit: contain; /* the whole photograph, never cropped */
   background: transparent !important;
-  animation: kenburns 9s var(--ease-out) both;
+  animation: kenburns 6s var(--ease-out) both;
 }
 @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.045); } }
-.tslide.is-entering { animation: tslide-in 1.3s var(--ease-out) both; }
-.tslide.is-leaving { animation: tslide-out 1.3s var(--ease-in-out) both; }
+.tslide.is-entering { animation: tslide-in 600ms var(--ease-out) both; } /* = FADE_MS in timeline-show.js */
+.tslide.is-leaving { animation: tslide-out 600ms var(--ease-in-out) both; }
 @keyframes tslide-in { from { opacity: 0; transform: scale(1.025); } to { opacity: 1; transform: none; } }
 @keyframes tslide-out { from { opacity: 1; } to { opacity: 0; } }
 
@@ -560,7 +588,7 @@ body.is-theatre .deck-bar { display: none; }
 .tshow--proud .tshow__chapter { font-style: italic; color: var(--ramar); }
 .tshow__story-wrap { flex: 1; min-height: 0; display: flex; align-items: center; padding-top: calc(var(--u) * 1.2); }
 .tshow__story { --fit: 1; width: 100%; max-height: 100%; overflow: hidden; }
-.tshow__story.is-changing { animation: rise-in 0.9s var(--ease-out) both; }
+.tshow__story.is-changing { animation: rise-in 0.6s var(--ease-out) both; }
 .tshow__year {
   margin: 0;
   font-family: var(--font-display);
@@ -602,7 +630,7 @@ body.is-theatre .deck-bar { display: none; }
   background: var(--powder);
   overflow: hidden;
 }
-.trail__fill { position: absolute; inset: 0; transform-origin: 0 50%; background: linear-gradient(90deg, var(--champagne), var(--ramar)); transition: transform 1.2s var(--ease-out); }
+.trail__fill { position: absolute; inset: 0; transform-origin: 0 50%; background: linear-gradient(90deg, var(--champagne), var(--ramar)); transition: transform 0.7s var(--ease-out); }
 .trail__stops { position: absolute; inset: 0; }
 .trail__stop {
   position: absolute;
@@ -879,12 +907,76 @@ body.is-theatre .deck-bar { display: none; }
   100% { opacity: 0; transform: translate3d(calc((var(--i) - 4.5) * var(--u) * 0.8), calc(var(--u) * -16), 0) scale(1.1); }
 }
 
+/* ===== The cake celebration ================================================= */
+.scene--cake::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(42% 58% at 72% 50%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(32% 42% at 72% 38%, rgba(236, 220, 178, 0.5), transparent 70%),
+    radial-gradient(40% 50% at 4% 8%, rgba(198, 219, 245, 0.55), transparent 70%);
+}
+.cake {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: calc(var(--u) * 3);
+}
+.cake__text { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.cake__title { font-size: calc(var(--u) * 5.4); font-weight: 700; line-height: 1; color: var(--ink); }
+.cake__message {
+  margin: calc(var(--u) * 1.4) 0 0;
+  max-width: 30ch;
+  font-family: var(--font-display);
+  font-size: calc(var(--u) * 2.3);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ramar-deep);
+}
+.cake__actions { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * 2.2); }
+.cake__visual { display: grid; place-items: center; height: 100%; min-height: 0; }
+.cake__art { position: relative; width: min(100%, calc(var(--u) * 40), 62vh); aspect-ratio: 32 / 34; animation: float-y 6.5s var(--ease-in-out) infinite; }
+.cake__art > span:last-child { position: absolute; inset: 0; display: block; }
+.cake__svg { width: 100%; height: 100%; overflow: visible; }
+.cake__glow {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 110%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255, 244, 214, 0.95), rgba(236, 220, 178, 0.45) 45%, transparent 72%);
+  opacity: 0.35;
+  transition: opacity 1.2s var(--ease-out);
+}
+.scene--cake.is-lit:not(.is-wished) .cake__glow { opacity: 1; }
+.cake__shadow { fill: rgba(35, 78, 156, 0.14); }
+.cake__fifty { font-family: var(--font-display); font-size: 30px; font-weight: 700; fill: var(--gold-text); }
+/* candles light one after another, flicker gently, and go out with a wisp of smoke */
+.cake__flame,
+.cake__halo { transform-box: fill-box; transform-origin: 50% 100%; opacity: 0; transform: scale(0.2); transition: opacity 400ms var(--ease-out), transform 500ms var(--ease-out); }
+.cake__halo { transform-origin: 50% 50%; fill: rgba(255, 226, 150, 0.35); }
+.scene--cake.is-lit .cake__flame,
+.scene--cake.is-lit .cake__halo { opacity: 1; transform: none; transition-delay: calc(var(--i) * 260ms); }
+.scene--cake.is-lit .cake__flame { animation: flicker 1.3s var(--ease-in-out) calc(var(--i) * 260ms + 500ms) infinite alternate; }
+.scene--cake.is-wished .cake__flame,
+.scene--cake.is-wished .cake__halo { opacity: 0; transform: scale(0.2); transition-delay: calc(var(--i) * 60ms); animation: none; }
+@keyframes flicker { 0% { transform: scale(1, 1) rotate(-2deg); } 50% { transform: scale(0.94, 1.06) rotate(1.5deg); } 100% { transform: scale(1.04, 0.97) rotate(-1deg); } }
+.cake__smoke { opacity: 0; stroke-dasharray: 60; stroke-dashoffset: 60; }
+.scene--cake.is-wished .cake__smoke { animation: smoke 2.2s var(--ease-out) calc(var(--i) * 60ms + 200ms) both; }
+@keyframes smoke { 0% { opacity: 0.9; stroke-dashoffset: 60; transform: none; } 100% { opacity: 0; stroke-dashoffset: 0; transform: translateY(-14px); } }
+
 /* ===== Phones & portrait screens: scenes stack and scroll ================== */
 @media (max-aspect-ratio: 1/1), (max-width: 760px), (max-height: 500px) {
   .welcome,
   .reveal,
   .cinema,
   .tshow,
+  .cake,
   .finale {
     display: flex;
     flex-direction: column;
@@ -961,4 +1053,9 @@ body.is-theatre .deck-bar { display: none; }
   .finale__visual { order: -1; height: auto; }
   .fgift { width: min(60vw, 260px); }
   .fgift__fifty { font-size: 4.4rem; }
+
+  .cake__title { font-size: 2.4rem; }
+  .cake__message { font-size: 1.3rem; }
+  .cake__visual { order: -1; height: auto; }
+  .cake__art { width: min(64vw, 280px); }
 }

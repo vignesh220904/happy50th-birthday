@@ -2,7 +2,8 @@
 // The family's closing words beside an understated ivory-and-gold gift. When
 // the page opens, the gift's lid lifts by itself and a soft golden light and a
 // "50" rise out of it, with a gentle fall of golden confetti. "Celebrate"
-// plays that moment again; "From the beginning" returns to the welcome.
+// plays that moment again; "Start Again" returns to the welcome (the presentation
+// itself never starts over on its own: automatic playback ends on this page).
 
 import { h, icons } from '../core/util.js';
 import { confetti } from '../core/confetti.js';
@@ -66,7 +67,7 @@ export async function mount(el, content, deck) {
       ),
       h('div', { class: 'finale__actions', 'data-enter': '', style: { '--enter': 6 } },
         h('button', { class: 'btn btn--celebrate', type: 'button', onclick: () => celebrate() }, h('span', { html: icons.sparkle }), 'Celebrate'),
-        h('button', { class: 'btn', type: 'button', onclick: () => deck.go(0, { dir: -1, focus: true }) }, h('span', { html: icons.replay }), 'From the beginning'),
+        h('button', { class: 'btn', type: 'button', onclick: () => deck.go(0, { dir: -1, focus: true }) }, h('span', { html: icons.replay }), 'Start Again'),
       ),
       content.site.music?.credit ? h('p', { class: 'finale__credit' }, content.site.music.credit) : null,
     ),

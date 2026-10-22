@@ -15,7 +15,11 @@
   "welcome": {
     "_note": "Page 1, A Golden Beginning: the screen on the projector while guests arrive. 'title' is shown one line per entry. 'begin' starts the celebration (music on, automatic playback).",
     "eyebrow": "A Golden Beginning",
-    "title": ["Fifty Years.", "A Thousand Memories.", "One Beautiful Life."],
+    "title": [
+      "Fifty Years.",
+      "A Thousand Memories.",
+      "One Beautiful Life."
+    ],
     "intro": "Celebrating the Beautiful Journey of Buvaneswari",
     "supporting": "50 Years of Love, Strength & Beautiful Memories",
     "dates": "27 October 1976 – 27 October 2026",
@@ -31,18 +35,50 @@
     "photoAlt": "Amma, M. Buvaneswari, smiling in a pink and orange silk saree, holding a bouquet of roses"
   },
   "videos": {
-    "_note": "The family's own films. 'film' is an id in data/photo_inventory.json → films; 'src' is a file path. The family's Life Journey video has not been supplied yet, so lifeJourney.src is empty and that scene is left out. When it arrives: save it as assets/videos/family/life-journey.mp4 (MP4, H.264 + AAC) and put that path in lifeJourney.src.",
+    "_note": "The family's own films. Their originals are in VIDEOS/ (never changed); 'npm run build:films' prepares the browser-ready copies in assets/videos/family/ that 'src' points to. They play in this order, after Happy 50th Birthday: storyFilm, ageFilm, lifeJourney. 'title' + 'titleAccent' (shown in gold) and 'lede' are the words beside each film. A film whose file is missing is left out. 'memories' is an id in data/photo_inventory.json → films.",
+    "storyFilm": {
+      "source": "VIDEOS/age 1 to 5 story video.mp4",
+      "src": "assets/videos/family/age-1-to-5-story.mp4",
+      "poster": "assets/videos/family/age-1-to-5-story.jpg",
+      "duration": 414,
+      "eyebrow": "A Film from the Family",
+      "title": "Age 1 to 5",
+      "titleAccent": "Her Story",
+      "lede": "The story film the family made for her."
+    },
+    "ageFilm": {
+      "source": "VIDEOS/AGE 1 TO 50 - real video.mp4",
+      "src": "assets/videos/family/age-1-to-50.mp4",
+      "poster": "assets/videos/family/age-1-to-50.jpg",
+      "duration": 62,
+      "eyebrow": "A Film from the Family",
+      "title": "Age 1 to 50",
+      "titleAccent": "The Real Journey",
+      "lede": "Fifty years in the family's real photographs."
+    },
     "lifeJourney": {
-      "src": "",
-      "poster": "",
-      "title": "Her Life Journey",
-      "lede": "Fifty years in one film, from the family."
+      "source": "VIDEOS/LIFE JOURNEY.mp4",
+      "src": "assets/videos/family/life-journey.mp4",
+      "poster": "assets/videos/family/life-journey.jpg",
+      "duration": 21,
+      "eyebrow": "A Film from the Family",
+      "title": "Her Life",
+      "titleAccent": "Journey",
+      "lede": "Her life journey in photographs, from the family."
     },
     "memories": {
       "film": "film-memories",
       "title": "Our Memories, Together",
       "description": "A film of her photographs, made by the family."
     }
+  },
+  "cake": {
+    "_note": "The cake celebration, after the family's video wishes and before A Final Gift of Love. It moves on by itself after 'holdSeconds' in the automatic presentation.",
+    "eyebrow": "Make a Wish",
+    "headline": "Happy Birthday, Amma",
+    "message": "Here's to fifty beautiful years, and to every celebration still to come.",
+    "button": "Make a Wish",
+    "holdSeconds": 10
   },
   "finale": {
     "_note": "The last page, A Final Gift of Love. The family's approved closing words.",

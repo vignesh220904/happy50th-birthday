@@ -1,9 +1,9 @@
 // Page 1 — A Golden Beginning: the screen on the projector while guests arrive.
 // The words are already in index.html (so they paint immediately); this fills
 // them from data/site.json and draws the golden laurel wreath around the "50".
-// There is one action, "Begin the Celebration": it starts the music and the
-// automatic presentation. Next, Space, Enter or a clicker do the same, so the
-// welcome needs no separate Next button.
+// There is one action, "Begin the Celebration": it starts the music, full
+// screen and the automatic presentation. Next, Space, Enter or a clicker do the
+// same, so the welcome needs no separate Next button.
 
 import { h, $ } from '../core/util.js';
 import { music } from '../core/audio.js';
@@ -68,13 +68,15 @@ export async function mount(el, content, deck) {
 
   const begin = () => {
     music.play(); // a click or key press: browsers allow the sound now
+    // …and full screen, which they allow only now: the films later play full screen without another click
+    if (!document.fullscreenElement && document.fullscreenEnabled) document.documentElement.requestFullscreen().catch(() => {});
     deck.setAuto(true, 'The celebration has begun. It moves on by itself; press the pause button, or the arrow keys, at any time.');
     deck.goTo('reveal');
   };
   $('[data-welcome="begin"]', el).addEventListener('click', begin);
 
   return {
-    hint: 'Begin the Celebration starts the music and the automatic presentation',
+    hint: 'Begin the Celebration starts the music, full screen and the automatic presentation',
     // Next / Space / Enter / a clicker on the welcome = Begin the Celebration
     step(dir) {
       if (dir < 0) return false;

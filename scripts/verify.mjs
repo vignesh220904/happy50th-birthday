@@ -2,7 +2,7 @@
 // Checks that the family's words, milestones and media references are intact
 // and that every file the site points to actually exists.
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,8 @@ const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 const json = (p) => JSON.parse(read(p));
 const exists = (p) => existsSync(join(ROOT, p));
+const mb = (p) => statSync(join(ROOT, p)).size / 1e6;
+const GITHUB_MAX_MB = 100;
 
 let failures = 0, passes = 0;
 function check(name, ok, detail = '') {
@@ -56,7 +58,7 @@ for (const film of manifest.films) {
   check(`film "${film.src}" and its poster exist`, exists(film.src) && exists(film.poster));
 }
 check('the family memories film is in the manifest', manifest.films.some((f) => f.id === 'film-memories'));
-check('the generated Life Journey film and the Age 1 to 50 film are removed', !manifest.films.some((f) => /life-journey|film-age|age\.mp4|life journey/.test(`${f.id} ${f.src}`)) && !exists('assets/videos/life journey.mp4') && !exists('assets/videos/age.mp4'));
+check('the old generated film copies stay out of assets/videos', !manifest.films.some((f) => /film-life-journey|film-age|film-childhood|age\.mp4|life journey/.test(`${f.id} ${f.src}`)) && !exists('assets/videos/life journey.mp4') && !exists('assets/videos/age.mp4'));
 const datedGallery = manifest.collections.gallery.filter((i) => i.date && /^\d{4}$/.test(i.group) && ['exif', 'filename'].includes(i.dateSource));
 check(`gallery: ${datedGallery.length} photos have a recorded date (${manifest.collections.gallery.length - datedGallery.length} without one are left out of the dated gallery)`, datedGallery.length > 0 && datedGallery.every((i) => i.date.startsWith(i.group)));
 check('no absolute or Windows paths in the manifest', !/[A-Za-z]:[\\/]|\\\\/.test(read('data/photo_inventory.json')));
@@ -111,9 +113,15 @@ check('final greeting and messages', site.finale.headline === 'Happy 50th Birthd
   && site.finale.message === 'We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.');
 check('music: an instrumental file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
 check('music: kept low (volume 0.4 or less)', site.music.volume > 0 && site.music.volume <= 0.4);
-const lj = site.videos.lifeJourney.src;
-check('Life Journey video: not configured yet, or an existing MP4', lj === '' || (/\.mp4$/.test(lj) && exists(lj)), lj);
-if (!lj) console.log("  · waiting for the family's Life Journey video (the scene is left out until then)");
+// The family's three films, from VIDEOS/ (prepared by npm run build:films)
+const FILMS = [['storyFilm', 'VIDEOS/age 1 to 5 story video.mp4'], ['ageFilm', 'VIDEOS/AGE 1 TO 50 - real video.mp4'], ['lifeJourney', 'VIDEOS/LIFE JOURNEY.mp4']];
+for (const [key, original] of FILMS) {
+  const f = site.videos[key] || {};
+  check(`film ${key}: made from the family's own "${original.split('/').pop()}"`, f.source === original && (!existsSync(join(ROOT, 'VIDEOS')) || exists(original)), f.source);
+  check(`film ${key}: its web copy (MP4) and poster exist`, /^assets\/videos\/family\/[\w-]+\.mp4$/.test(f.src || '') && exists(f.src) && !!f.poster && exists(f.poster), `${f.src} · ${f.poster}`);
+  if (f.src && exists(f.src)) check(`film ${key}: under ${GITHUB_MAX_MB} MB (${mb(f.src).toFixed(1)} MB)`, mb(f.src) < GITHUB_MAX_MB);
+}
+check('the three films are three different files', new Set(FILMS.map(([k]) => site.videos[k]?.src)).size === 3);
 check("the memories film is the family's own film", site.videos.memories.film === 'film-memories');
 const wishes = json('data/wishes.json');
 const wv = wishes.videos || [];
@@ -123,6 +131,16 @@ check('wishes: numbered 1, 2, 3 … in the family’s order', wv.every((v, i) =>
 const leading = (f) => { const m = /^\s*(\d+)/.exec((f || '').split('/').pop()); return m ? Number(m[1]) : Infinity; };
 check('wishes: the order follows the numbers in the family’s filenames', wv.every((v, i) => i === 0 || leading(wv[i - 1].file) <= leading(v.file)));
 check('wishes: captions come only from the filenames', wv.every((v) => !v.from || (v.file || '').includes(v.from)));
+check('wishes: the family’s numbers, in numeric order (2 before 10), none twice', wv.every((v, i) => v.number === leading(v.file) && (i === 0 || wv[i - 1].number < v.number)));
+check('wishes: only the final two can wait for confirmation; every other wish plays', wv.slice(0, -2).every((v) => v.confirmed === true) && wv.slice(-2).every((v) => typeof v.confirmed === 'boolean'));
+const bigWishes = wv.filter((v) => exists(v.src) && mb(v.src) >= GITHUB_MAX_MB);
+check(`wishes: every web copy is under ${GITHUB_MAX_MB} MB`, !bigWishes.length, bigWishes.map((v) => v.src).join(', '));
+if (existsSync(join(ROOT, wishes.source || 'Family video wishes'))) {
+  const folder = wishes.source || 'Family video wishes';
+  const sources = readdirSync(join(ROOT, folder)).filter((f) => /\.(mp4|mov|m4v|webm|3gp|mkv|avi)$/i.test(f));
+  const unlisted = sources.filter((f) => !wv.some((v) => v.file === `${folder}/${f}`));
+  check(`wishes: every video in "${folder}" is in the playlist (${sources.length})`, !unlisted.length, `not listed (run npm run build:wishes; it reports files that cannot be decoded): ${unlisted.join(', ')}`);
+}
 if (!wv.length) console.log('  · waiting for the "Family video wishes" folder (then run: npm run build:wishes)');
 else console.log(`  · ${wv.filter((v) => v.confirmed !== false).length} of ${wv.length} wishes will play; ${wv.filter((v) => v.confirmed === false).length} wait for the family's confirmation`);
 
@@ -133,7 +151,7 @@ const index = read('index.html');
 const indexRefs = [...index.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js|woff2))"/g)].map((m) => m[1]);
 check('index.html: stylesheets, scripts and fonts resolve', indexRefs.every((r) => exists(r)), indexRefs.filter((r) => !exists(r)).join(', '));
 const sceneIds = [...index.matchAll(/data-scene="([a-z-]+)"/g)].map((m) => m[1]);
-check('index.html: the presentation scenes, in order', sceneIds.join() === 'welcome,reveal,journey-film,journey,proud,reasons,memories,wishes,finale', sceneIds.join());
+check('index.html: the presentation scenes, in order: the three films before the wishes, then the cake and the gift', sceneIds.join() === 'welcome,reveal,story-film,age-film,journey-film,journey,proud,reasons,memories,wishes,cake,finale', sceneIds.join());
 check('the separate Family Photo Gallery is removed (its photographs stay in "Memory gallery/")', !sceneIds.includes('gallery') && !exists('js/sections/gallery.js') && manifest.collections.gallery.length > 0);
 check('no loading screen before the welcome', !/class="loader"/.test(index));
 check('index.html: the welcome is the scene shown first', /class="scene scene--welcome is-active"/.test(index));
@@ -156,14 +174,18 @@ check(`all ${jsFiles.length} JavaScript modules parse`, !syntaxErrors.length, sy
 const stale = jsFiles.concat(['index.html']).filter((f) => /assets\/(photos|thumbnails)\//.test(read(f)));
 check('no references to the removed assets/photos or assets/thumbnails folders', !stale.length, stale.join(', '));
 const presentation = ['js/app.js', 'js/core/deck.js', 'js/core/player.js', 'js/core/audio.js', ...jsFiles.filter((f) => f.startsWith('js/sections/') && !/childhood/.test(f))];
-const removed = presentation.concat(['index.html', 'data/site.json', 'data/photo_inventory.json']).filter((f) => /film-birthday|film-life-journey|film-childhood|film-age|openCinema|filmButton|Watch the Birthday Film|life journey\.mp4|age\.mp4/i.test(read(f)) || /(^|["'\s])VIDEOS\//.test(read(f)));
-check('no trace of the developer-generated films (Life Journey, Age 1 to 50, Childhood) or the Birthday Film button', !removed.length, removed.join(', '));
+const removed = presentation.concat(['index.html', 'data/site.json', 'data/photo_inventory.json']).filter((f) => /film-birthday|film-life-journey|film-childhood|film-age|openCinema|filmButton|Watch the Birthday Film|assets\/videos\/(life journey|age)\.mp4/i.test(read(f)) || /(^|["'\s])VIDEOS\//.test(f.endsWith('.json') ? '' : read(f)));
+check('no trace of the removed Childhood film, the old film copies or the Birthday Film button', !removed.length, removed.join(', '));
+check('the site plays the prepared copies, never the VIDEOS/ originals directly', !Object.values(site.videos).some((v) => /^VIDEOS\//.test(v?.src || '')));
 const app = read('js/app.js');
 const importsOf = (f) => [...read(f).matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]);
 const reachable = new Set();
 const visit = (f) => { if (reachable.has(f) || !exists(f)) return; reachable.add(f); importsOf(f).forEach((i) => visit(join(f, '..', i).replace(/\\/g, '/'))); };
 visit('js/app.js');
-check('no synthesised "Happy Birthday" song, cake scene or childhood film in the presentation', ![...reachable].some((f) => /birthday-song|cake-scene|childhood/.test(f)) && !/childhood|cake/.test(app), [...reachable].filter((f) => /birthday-song|cake-scene|childhood/.test(f)).join(', '));
+check('no synthesised "Happy Birthday" song, 3D pink cake or childhood film in the presentation', ![...reachable].some((f) => /birthday-song|cake-scene|childhood/.test(f)) && !/childhood|birthday-song|cake-scene/.test(app), [...reachable].filter((f) => /birthday-song|cake-scene|childhood/.test(f)).join(', '));
+check('cake: in the blue, ivory and gold palette (no pink or lavender)', !/pink|lavender|#e7889f|#f4a6c0|#c8a2c8/i.test(read('js/sections/cake.js')) && reachable.has('js/sections/cake.js'));
+const num = (f, name) => Number(new RegExp(`${name} = ([0-9]+)`).exec(read(f))?.[1]);
+check('slideshows: faster (milestone 4–5 s, other photos 3–4 s, cross-fade 0.4–0.7 s)', num('js/sections/timeline-show.js', 'FIRST_PHOTO_MS') <= 5000 && num('js/sections/timeline-show.js', 'NEXT_PHOTO_MS') <= 4000 && num('js/sections/timeline-show.js', 'FADE_MS') >= 400 && num('js/sections/timeline-show.js', 'FADE_MS') <= 700 && /tslide-in 600ms/.test(read('css/scenes.css')));
 check('50 Reasons: no separate "All 50 Reasons" view', !/All 50 Reasons|id: 'all'/.test(read('js/sections/reasons.js')));
 check('final page: no numbered gift tracker', !/gtile|gtracker|Mark all given/.test(read('js/sections/finale.js')));
 check('welcome: no ordinary Next button (the deck hides it there)', /body\[data-current-scene="welcome"\] \.deck-bar--nav \{ display: none; \}/.test(read('css/deck.css')));

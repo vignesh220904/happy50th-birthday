@@ -1,5 +1,6 @@
 // Background music from a file (data/site.json → music.src).
-// It never starts by itself: only the host's music button (or M) starts it.
+// It never starts by itself: Begin the Celebration, the music button or M start it.
+// There is only ever one <audio> for the whole presentation.
 // Volume fades in and out gently. While a video with sound plays, the music
 // fades out ("ducks") and comes back when the video pauses or ends — but only
 // if it was playing before. Several things can hold it down at once (a video
@@ -108,6 +109,7 @@ export const music = {
     if (!state.ducked || duckers.size) return;
     state.ducked = false;
     emit();
-    if (audio && state.on) audio.play().then(() => fadeTo(audibleVolume(), 1400)).catch(() => {});
+    // a film that follows straight on may duck again before play() resolves: stay quiet then
+    if (audio && state.on) audio.play().then(() => { if (!state.ducked) fadeTo(audibleVolume(), 1400); else audio.pause(); }).catch(() => {});
   },
 };
