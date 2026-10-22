@@ -1,8 +1,9 @@
 /* ==========================================================================
-   Design tokens — light "Ramar blue" identity for the projector
-   Soft sky and powder blue, pearl white and warm ivory, light sapphire and a
-   balanced Ramar blue accent, silver, and soft champagne gold. Dark blue is
-   kept for text and the cinema (video) scenes.
+   Design tokens — a light, warm palette for the projector
+   Ivory, warm cream and champagne gold as the base; soft royal blue and a
+   refined medium blue for her name, highlights and the screening rooms.
+   The blues are deliberately softer than navy, yet rich enough to hold
+   their contrast in a dim hall.
 
    Sizing: the presentation is designed on a 16:9 frame (1920 × 1080).
    --u is 1% of the largest 16:9 frame that fits the screen, so every scene
@@ -11,22 +12,26 @@
    ========================================================================== */
 :root {
   /* Palette */
-  --sky: #d9eeff;
-  --powder: #bbddf8;
-  --sapphire-light: #6daae8;
-  --ramar: #2f6fd6;            /* Ramar blue: her favourite colour, used as the accent */
-  --ramar-deep: #1f55b0;
+  --sky: #e4effd;              /* palest blue wash */
+  --powder: #c6dbf5;
+  --sapphire-light: #7fa6e3;   /* refined medium blue, light */
+  --ramar: #2f62c0;            /* soft royal blue: the accent (her favourite Ramar blue) */
+  --ramar-deep: #234e9c;
+  --royal-room: #2a5aa8;       /* the screening rooms: soft royal blue, not navy */
+  --royal-room-deep: #1d437f;
   --pearl: #ffffff;
   --ivory: #fffdf8;
+  --cream: #fbf3e3;
+  --warm-white: #fffaf2;
   --silver: #dce5f0;
   --champagne: #d9b66f;
   --champagne-soft: #ecdcb2;
-  --gold-text: #8a6a2b;        /* champagne darkened for text: 5.1:1 on ivory */
+  --champagne-light: #f6ebcf;
+  --champagne-deep: #b98e3e;
+  --gold-text: #87672a;        /* champagne darkened for text: 5.2:1 on ivory */
   --ink: #17365d;              /* main text: 11.6:1 on ivory */
   --ink-soft: #3a5579;         /* secondary text: 7.4:1 on ivory */
   --ink-muted: #5b7194;        /* small print: 4.9:1 on ivory */
-  --night: #0f2747;            /* cinema scenes */
-  --night-2: #17365d;
 
   /* Surfaces */
   --card: rgba(255, 255, 255, 0.78);

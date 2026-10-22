@@ -17,7 +17,7 @@ html {
   font-variant-numeric: lining-nums; /* Cormorant defaults to old-style figures */
 }
 body {
-  background: var(--ivory);
+  background: var(--warm-white);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--fs-body);
@@ -41,7 +41,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.005em;
   text-wrap: balance;
 }
-::selection { background: rgba(109, 170, 232, 0.35); color: var(--ink); }
+::selection { background: rgba(127, 166, 227, 0.35); color: var(--ink); }
 
 :focus-visible {
   outline: 3px solid var(--focus);
@@ -157,7 +157,29 @@ h1, h2, h3, h4 {
   color: #6b4f19;
 }
 .btn--gold:hover { border-color: var(--champagne); background: #fff6e2; }
-.btn--light {           /* on the dark cinema scenes */
+.btn--celebrate {      /* the big champagne-gold call to action */
+  min-height: max(52px, calc(var(--u) * 3.6));
+  padding: 0.75em 2em;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, #f4e2b1 0%, var(--champagne) 45%, #c49a48 100%);
+  color: #3b2a0c;
+  font-size: max(15px, calc(var(--u) * 1.15));
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: 0 12px 30px -10px rgba(185, 142, 62, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+}
+.btn--celebrate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: sheen 5s var(--ease-in-out) infinite;
+}
+.btn--celebrate:hover { border-color: #fff; background: linear-gradient(135deg, #f8e9c2 0%, #e2c27e 45%, #cfa553 100%); }
+.btn--light {           /* on the blue screening rooms */
   border-color: rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
@@ -183,6 +205,8 @@ h1, h2, h3, h4 {
 .icon-btn:active { transform: scale(0.94); }
 .icon-btn svg { width: 44%; height: 44%; }
 .icon-btn[aria-pressed="true"] { background: var(--ramar); border-color: var(--ramar); color: #fff; }
+.icon-btn--light { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.12); color: #fff; }
+.icon-btn--light:hover { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.22); }
 .icon-btn[disabled] { opacity: 0.35; cursor: default; }
 
 /* ---------- Shared backdrop: layered light, soft orbs, drifting particles ---------- */
@@ -197,20 +221,22 @@ h1, h2, h3, h4 {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(70% 60% at 78% 18%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(60% 55% at 12% 88%, rgba(187, 221, 248, 0.7), transparent 72%),
-    linear-gradient(165deg, #e6f3ff 0%, var(--sky) 22%, #f2f8ff 52%, var(--ivory) 78%, #f7f1e4 100%);
+    radial-gradient(70% 60% at 78% 16%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(55% 50% at 6% 94%, rgba(198, 219, 245, 0.7), transparent 72%),
+    radial-gradient(45% 45% at 96% 90%, rgba(236, 220, 178, 0.55), transparent 72%),
+    radial-gradient(50% 45% at 18% 6%, rgba(228, 239, 253, 0.95), transparent 70%),
+    linear-gradient(165deg, #eef5ff 0%, var(--warm-white) 34%, var(--ivory) 64%, var(--cream) 100%);
 }
 .backdrop__orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(calc(var(--u) * 4));
-  opacity: 0.75;
+  opacity: 0.8;
+  will-change: transform;
   animation: orb-drift 26s var(--ease-in-out) infinite alternate;
 }
-.backdrop__orb--1 { width: 46vw; height: 46vw; left: -12vw; top: -18vw; background: radial-gradient(circle, rgba(109, 170, 232, 0.55), transparent 65%); }
-.backdrop__orb--2 { width: 38vw; height: 38vw; right: -8vw; bottom: -16vw; background: radial-gradient(circle, rgba(217, 182, 111, 0.42), transparent 65%); animation-duration: 32s; }
-.backdrop__orb--3 { width: 30vw; height: 30vw; left: 40vw; top: 30vh; background: radial-gradient(circle, rgba(187, 221, 248, 0.6), transparent 65%); animation-duration: 38s; }
+.backdrop__orb--1 { width: 46vw; height: 46vw; left: -12vw; top: -18vw; background: radial-gradient(circle, rgba(187, 221, 248, 0.6), transparent 68%); }
+.backdrop__orb--2 { width: 38vw; height: 38vw; right: -8vw; bottom: -16vw; background: radial-gradient(circle, rgba(217, 182, 111, 0.4), transparent 68%); animation-duration: 32s; }
+.backdrop__orb--3 { width: 30vw; height: 30vw; left: 40vw; top: 30vh; background: radial-gradient(circle, rgba(246, 235, 207, 0.55), transparent 68%); animation-duration: 38s; }
 .backdrop__particles { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .confetti-canvas {

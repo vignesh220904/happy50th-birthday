@@ -48,7 +48,7 @@ export function videoStage({ src, poster, title, missingText, missingIcon = icon
   // `exists` may be passed when the caller has already checked the file
   const ready = (exists === undefined ? fileExists(src) : Promise.resolve(exists)).then((ok) => {
     if (!ok) {
-      console.info(`[video] "${title}" is not added yet. Save it as ${src} (see assets/videos/family/README.txt).`);
+      if (src) console.info(`[video] "${title}" is not added yet. Save it as ${src} (see assets/videos/family/README.txt).`);
       showMissing(missingText);
       return false;
     }

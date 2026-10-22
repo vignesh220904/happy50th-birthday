@@ -26,3 +26,7 @@ node_modules/
 # Original HEVC birthday film (270 MB, over GitHub's 100 MB limit).
 # The site plays the converted web copy in assets/media/films/.
 assets/videos/happy 50th birthday.mp4
+
+# The family's original video wishes (phone videos, often HEVC and large).
+# The site plays the converted copies in assets/videos/wishes/ (npm run build:wishes).
+Family video wishes/

@@ -9,7 +9,8 @@
     "test": "node scripts/verify.mjs",
     "test:browser": "node scripts/smoke.mjs",
     "build:media": "python scripts/build_media.py",
-    "build:pages": "python scripts/build_pages.py"
+    "build:pages": "python scripts/build_pages.py",
+    "build:wishes": "python scripts/build_wishes.py"
   },
   "devDependencies": {
     "puppeteer-core": "^23.11.1"

@@ -1,5 +1,9 @@
 {
-  "_note": "Life Journey milestones, in story order. 'media' lists ids from data/photo_inventory.json (lj-* = Final Life Journey, age-* = Age 1 to 50, ill-* = illustrations). Entries with an empty media list are shown as typographic scenes. 'needsConfirmation' marks wording the family should double-check; it is not shown on the site.",
+  "_note": "Life Journey milestones, in story order. 'media' lists ids from data/photo_inventory.json (lj-* = Final Life Journey, age-* = Age 1 to 50, ill-* = illustrations). Entries with an empty media list are shown as typographic scenes; 'pendingPhoto' marks one still waiting for a family photograph (shown as a small note on the slide). 'chapters' split the milestones by sortYear into the two slideshows: A Journey Through Time and Proud Moments. 'needsConfirmation' marks wording the family should double-check; it is not shown on the site.",
+  "chapters": [
+    { "id": "journey", "title": "A Journey Through Time", "eyebrow": "Her Life Journey", "from": 1976, "to": 2005 },
+    { "id": "proud", "title": "Proud Moments", "eyebrow": "Her Life Journey", "from": 2006, "to": 2026 }
+  ],
   "eras": [
     { "id": "childhood", "title": "Childhood", "from": 1976 },
     { "id": "education", "title": "School & College", "from": 1979 },
@@ -62,6 +66,7 @@
       "sortYear": 1996,
       "title": "M.Com — First Year",
       "caption": "She went on to complete the first year of her Master of Commerce.",
+      "pendingPhoto": "Photograph awaited from the family",
       "media": []
     },
     {

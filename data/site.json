@@ -13,29 +13,30 @@
     "area": "Ekkatuthangal, Chennai"
   },
   "welcome": {
-    "_note": "The default screen, shown on the projector while guests arrive. 'photos' are ids from data/photo_inventory.json.",
-    "eyebrow": "Welcome to the celebration",
-    "headline": "Celebrating the Beautiful Journey of Buvaneswari",
+    "_note": "Page 1, A Golden Beginning: the screen on the projector while guests arrive. 'title' is shown one line per entry. 'begin' starts the celebration (music on, automatic playback).",
+    "eyebrow": "A Golden Beginning",
+    "title": ["Fifty Years.", "A Thousand Memories.", "One Beautiful Life."],
+    "intro": "Celebrating the Beautiful Journey of Buvaneswari",
     "supporting": "50 Years of Love, Strength & Beautiful Memories",
     "dates": "27 October 1976 – 27 October 2026",
-    "photos": ["lj-28", "lj-5", "lj-25", "lj-21"]
+    "begin": "Begin the Celebration"
   },
   "reveal": {
-    "_note": "The birthday reveal, shown when the host presses Next. 'photo' is Amma's portrait (an id from data/photo_inventory.json).",
+    "_note": "Page 2, Happy 50th Birthday. 'photo' is Amma's portrait (an id from data/photo_inventory.json): Age 1 to 50/46.1.jpg, the photograph the family chose to replace the earlier one.",
     "line1": "Happy 50th Birthday",
     "line2": "Amma",
     "line3": "M. Buvaneswari",
     "message": "Fifty years of you. A lifetime of us, loving you back.",
-    "photo": "age-47",
-    "photoAlt": "Amma, M. Buvaneswari, smiling in a blue silk saree"
+    "photo": "age-46-1",
+    "photoAlt": "Amma, M. Buvaneswari, smiling in a pink and orange silk saree, holding a bouquet of roses"
   },
   "videos": {
-    "_note": "Family-supplied videos. Put the MP4 (H.264 + AAC) at the 'src' path and it appears automatically; until then the scene shows a graceful placeholder. 'poster' (an image) is optional.",
+    "_note": "The family's own films. 'film' is an id in data/photo_inventory.json → films; 'src' is a file path. The family's Life Journey video has not been supplied yet, so lifeJourney.src is empty and that scene is left out. When it arrives: save it as assets/videos/family/life-journey.mp4 (MP4, H.264 + AAC) and put that path in lifeJourney.src.",
     "lifeJourney": {
-      "src": "assets/videos/family/life-journey.mp4",
+      "src": "",
       "poster": "",
       "title": "Her Life Journey",
-      "missingText": "Her Life Journey film is on its way."
+      "lede": "Fifty years in one film, from the family."
     },
     "memories": {
       "film": "film-memories",
@@ -44,16 +45,18 @@
     }
   },
   "finale": {
+    "_note": "The last page, A Final Gift of Love. The family's approved closing words.",
+    "eyebrow": "A Final Gift of Love",
     "headline": "Happy 50th Birthday, Amma!",
     "subline": "50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.",
     "message": "We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.",
     "sign": "With all our love, always"
   },
   "music": {
-    "_note": "Background music. Never starts by itself: the host presses the music button (or M). It fades out while a video plays and returns afterwards. To change the track, put an MP3 in assets/audio/ and set 'src' (and 'credit').",
+    "_note": "Gentle instrumental background music. It starts only when the host presses Begin the Celebration (or the music button / M), stays low, fades out while a video plays and returns afterwards. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
     "src": "assets/audio/canon-in-d-major.mp3",
     "title": "Canon in D Major",
-    "volume": 0.4,
+    "volume": 0.3,
     "credit": "Music: “Canon in D Major” by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
   }
 }

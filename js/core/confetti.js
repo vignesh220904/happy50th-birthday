@@ -26,8 +26,9 @@ function ensureCanvas() {
 /**
  * burst({ x, y }) — x/y are 0..1 fractions of the viewport.
  * mode 'cannon' fires from the origin (straight up, or toward `angle` in radians), 'rain' falls from the top.
+ * shape 'petal' draws flower petals; `colors` overrides the palette.
  */
-export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon', angle: aim = -Math.PI / 2 } = {}) {
+export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon', angle: aim = -Math.PI / 2, colors = COLORS, shape = 'paper' } = {}) {
   if (prefersReducedMotion()) return; // a still page is kinder than falling paper
   ensureCanvas();
   // A modal <dialog> lives in the browser's top layer; follow it so confetti stays visible.
@@ -49,8 +50,9 @@ export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon', angle
       vr: (Math.random() - 0.5) * 0.25,
       flip: Math.random() * Math.PI,
       vf: 0.08 + Math.random() * 0.12,
-      color: COLORS[(Math.random() * COLORS.length) | 0],
-      round: Math.random() < 0.18,
+      color: colors[(Math.random() * colors.length) | 0],
+      round: shape === 'paper' && Math.random() < 0.18,
+      petal: shape === 'petal',
       life: 0,
     });
   }
@@ -77,7 +79,11 @@ function tick() {
     ctx.scale(1, Math.cos(p.flip)); // paper flipping in 3D
     ctx.fillStyle = p.color;
     ctx.globalAlpha = Math.min(1, (600 - p.life) / 120);
-    if (p.round) {
+    if (p.petal) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size * 0.42, p.size * 0.75, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.round) {
       ctx.beginPath();
       ctx.arc(0, 0, p.size * 0.35, 0, Math.PI * 2);
       ctx.fill();

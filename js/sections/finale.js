@@ -1,116 +1,60 @@
-// Scene 9 — The 50-Gift Celebration, the closing scene.
-// Left: the family's final greeting with her name, the date and the venue.
-// Right: a 3D Ramar-blue gift in a ring of 50 small gifts (WebGL, with a CSS
-// fallback), and a tracker of 50 numbered gifts for the gift distribution.
-//
-// Gifts are only ever shown as given when the host marks them (tap a gift, or
-// "Mark all given"); the marks are remembered on this computer so a refresh
-// during the event does not lose them. Names from data/gifts.json appear on
-// the gifts once the family fills them in. Nothing is invented.
+// The last page — A Final Gift of Love.
+// The family's closing words beside an understated ivory-and-gold gift. When
+// the page opens, the gift's lid lifts by itself and a soft golden light and a
+// "50" rise out of it, with a gentle fall of golden confetti. "Celebrate"
+// plays that moment again; "From the beginning" returns to the welcome.
 
-import { h, icons, pad } from '../core/util.js';
+import { h, icons } from '../core/util.js';
 import { confetti } from '../core/confetti.js';
-import { mountGiftScene } from '../three/gift-scene.js';
 
-const STORE_KEY = 'buvana50.giftsGiven';
+const GOLD = ['#d9b66f', '#ecdcb2', '#f4e2b1', '#c49a48', '#ffffff', '#6f9be0'];
 
-function loadMarks() {
-  try { return new Set(JSON.parse(localStorage.getItem(STORE_KEY) || '[]')); } catch { return new Set(); }
-}
-function saveMarks(set) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify([...set])); } catch { /* private mode: marks last for this visit */ }
-}
+const GIFT_SVG = `
+<svg class="fgift__svg" viewBox="0 0 320 300" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="fg-box" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.6" stop-color="#fbf4e6"/><stop offset="1" stop-color="#efe2c6"/></linearGradient>
+    <linearGradient id="fg-side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3e7cf"/><stop offset="1" stop-color="#e4d2ac"/></linearGradient>
+    <linearGradient id="fg-ribbon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4e2b1"/><stop offset="0.5" stop-color="#d9b66f"/><stop offset="1" stop-color="#b08435"/></linearGradient>
+  </defs>
+  <ellipse class="fgift__shadow" cx="160" cy="284" rx="118" ry="10"/>
+  <g class="fgift__box">
+    <rect x="58" y="150" width="204" height="132" rx="8" fill="url(#fg-box)" stroke="#e2cf9f"/>
+    <rect x="230" y="150" width="32" height="132" rx="6" fill="url(#fg-side)" opacity="0.7"/>
+    <rect x="146" y="150" width="28" height="132" fill="url(#fg-ribbon)"/>
+  </g>
+  <g class="fgift__lid">
+    <rect x="46" y="118" width="228" height="36" rx="8" fill="url(#fg-box)" stroke="#e2cf9f"/>
+    <rect x="144" y="118" width="32" height="36" fill="url(#fg-ribbon)"/>
+    <path d="M160 118 C 128 78, 86 86, 100 108 C 110 122, 140 120, 160 118 Z" fill="url(#fg-ribbon)"/>
+    <path d="M160 118 C 192 78, 234 86, 220 108 C 210 122, 180 120, 160 118 Z" fill="url(#fg-ribbon)"/>
+    <circle cx="160" cy="116" r="9" fill="#c9a14f"/>
+  </g>
+</svg>`;
 
 export async function mount(el, content, deck) {
   const f = content.site.finale;
   const { person, event } = content.site;
-  const total = content.gifts?.total || 50;
-  const gifts = Array.from({ length: total }, (_, i) => content.gifts?.gifts?.find((g) => g.n === i + 1) || { n: i + 1 });
-  const marks = loadMarks();
-  gifts.forEach((g) => { if (g.given === true) marks.add(g.n); });
+  let timers = [];
 
-  // ---- 3D gift ---------------------------------------------------------------
-  const sceneEl = h('div', { class: 'finale__scene', 'aria-hidden': 'true' },
-    h('div', { class: 'finale__fallback' }, h('span', { class: 'cssgift' }, h('span', { class: 'cssgift__lid' }), h('span', { class: 'cssgift__box' }))),
+  const gift = h('div', { class: 'fgift', 'aria-hidden': 'true' },
+    h('span', { class: 'fgift__glow' }),
+    h('span', { class: 'fgift__rays' }),
+    h('span', { class: 'fgift__fifty' }, '50'),
+    h('span', { class: 'fgift__sparks' }, Array.from({ length: 10 }, (_, i) => h('i', { style: { '--i': i } }))),
+    h('span', { html: GIFT_SVG }),
   );
-  let gift = null;
 
-  // ---- Gift tracker --------------------------------------------------------------
-  const counterNum = h('span', { class: 'gcount__num' }, '0');
-  const counterRing = h('span', { class: 'gcount__ring', 'aria-hidden': 'true' });
-  const counter = h('p', { class: 'gcount', 'aria-live': 'polite' },
-    counterRing, h('span', { class: 'gcount__text' }, counterNum, h('span', { class: 'gcount__of' }, ` / ${total}`), h('span', { class: 'gcount__label' }, 'gifts given')));
-  const tiles = gifts.map((g, i) => h('button', {
-    class: 'gtile',
-    type: 'button',
-    style: { '--i': i },
-    'aria-pressed': 'false',
-    title: g.name ? `${g.name}${g.from ? ` — from ${g.from}` : ''}` : `Gift ${g.n}`,
-    onclick: () => toggle(g.n),
-  },
-  h('span', { class: 'gtile__icon', html: icons.gift }),
-  h('span', { class: 'gtile__num' }, pad(g.n)),
-  g.name ? h('span', { class: 'gtile__name' }, g.name) : null,
-  h('span', { class: 'gtile__check', html: icons.check }),
-  ));
-  const resetBtn = h('button', { class: 'btn', type: 'button', onclick: () => reset() }, h('span', { html: icons.replay }), 'Reset');
-  const allBtn = h('button', { class: 'btn', type: 'button', onclick: () => markAll() }, h('span', { html: icons.check }), 'Mark all given');
-
-  function render() {
-    tiles.forEach((t, i) => {
-      const on = marks.has(i + 1);
-      t.classList.toggle('is-given', on);
-      t.setAttribute('aria-pressed', String(on));
-      t.setAttribute('aria-label', `Gift ${i + 1}${gifts[i].name ? `: ${gifts[i].name}` : ''}. ${on ? 'Given' : 'Not given yet'}. Tap to ${on ? 'unmark' : 'mark as given'}.`);
-    });
-    counterNum.textContent = marks.size;
-    counterRing.style.setProperty('--p', marks.size / total);
-    counter.classList.toggle('is-complete', marks.size === total);
-    allBtn.disabled = marks.size === total;
-    gift?.scene.setGiven([...marks].map((n) => n - 1));
-  }
-  function toggle(n) {
-    if (marks.has(n)) marks.delete(n); else marks.add(n);
-    saveMarks(marks);
-    render();
-    if (marks.size === total) celebrate();
-  }
-  let armed = null;
-  function confirmTwice(btn, label, action) {
-    if (armed === btn) { armed = null; btn.lastChild.textContent = label; action(); return; }
-    armed = btn;
-    const original = label;
-    btn.lastChild.textContent = 'Click again to confirm';
-    setTimeout(() => { if (armed === btn) { armed = null; btn.lastChild.textContent = original; } }, 3500);
-  }
-  function markAll() {
-    confirmTwice(allBtn, 'Mark all given', () => {
-      gifts.forEach((g) => marks.add(g.n));
-      saveMarks(marks);
-      render();
-      celebrate();
-    });
-  }
-  function reset() {
-    confirmTwice(resetBtn, 'Reset', () => {
-      marks.clear();
-      saveMarks(marks);
-      render();
-      gift?.scene.setOpen(false);
-      el.classList.remove('is-open');
-    });
-  }
-  function celebrate() {
+  function celebrate({ big = true } = {}) {
+    el.classList.remove('is-open');
+    void el.offsetWidth; // restart the opening
     el.classList.add('is-open');
-    gift?.scene.setOpen(true);
-    confetti({ x: 0.72, y: 0.55, count: 160 });
-    setTimeout(() => confetti({ mode: 'rain', count: 200 }), 500);
+    confetti({ mode: 'rain', count: big ? 150 : 90, colors: GOLD });
+    if (big) timers.push(setTimeout(() => confetti({ x: 0.74, y: 0.62, count: 110, colors: GOLD }), 700));
   }
 
-  // ---- Layout ------------------------------------------------------------------------
   el.append(h('div', { class: 'scene__frame finale' },
     h('div', { class: 'finale__text' },
-      h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, 'With all our love'),
+      h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, f.eyebrow || 'A Final Gift of Love'),
       h('h2', { class: 'finale__title', id: 'finale-title', 'data-enter': '', style: { '--enter': 1 } }, f.headline),
       h('p', { class: 'finale__subline', 'data-enter': '', style: { '--enter': 2 } }, f.subline),
       h('p', { class: 'finale__message', 'data-enter': '', style: { '--enter': 3 } }, f.message),
@@ -121,28 +65,24 @@ export async function mount(el, content, deck) {
         h('p', { class: 'finale__detail' }, h('span', { html: icons.pin }), `${event.venue}, ${event.area}`),
       ),
       h('div', { class: 'finale__actions', 'data-enter': '', style: { '--enter': 6 } },
-        h('button', { class: 'btn btn--primary', type: 'button', onclick: () => celebrate() }, h('span', { html: icons.sparkle }), 'Celebrate'),
-        h('button', { class: 'btn btn--gold', type: 'button', onclick: () => deck.go(0, { dir: -1, focus: true }) }, h('span', { html: icons.home }), 'Back to the welcome'),
+        h('button', { class: 'btn btn--celebrate', type: 'button', onclick: () => celebrate() }, h('span', { html: icons.sparkle }), 'Celebrate'),
+        h('button', { class: 'btn', type: 'button', onclick: () => deck.go(0, { dir: -1, focus: true }) }, h('span', { html: icons.replay }), 'From the beginning'),
       ),
       content.site.music?.credit ? h('p', { class: 'finale__credit' }, content.site.music.credit) : null,
     ),
-    h('div', { class: 'finale__gifts' },
-      h('div', { class: 'finale__stage', 'data-enter': '', style: { '--enter': 1 } }, sceneEl,
-        h('p', { class: 'finale__stage-title' }, h('span', {}, `${total} Gifts`), h('em', {}, `for ${total} beautiful years`))),
-      h('section', { class: 'gtracker', 'aria-label': 'Gift distribution', 'data-enter': '', style: { '--enter': 3 } },
-        h('div', { class: 'gtracker__head' }, counter, h('div', { class: 'gtracker__actions' }, allBtn, resetBtn)),
-        h('div', { class: 'gtracker__grid no-swipe' }, tiles),
-      ),
-    ),
+    h('div', { class: 'finale__visual', 'data-enter': '', style: { '--enter': 2 } }, gift),
   ));
 
-  render();
-  mountGiftScene(sceneEl, { count: total }).then((c) => { gift = c; render(); });
-
   return {
-    hint: `${total} gifts for ${total} years`,
-    enter({ dir }) {
-      if (dir > 0) setTimeout(() => confetti({ mode: 'rain', count: 120 }), 900);
+    hint: 'The closing words, with a gift that opens',
+    enter() {
+      el.classList.remove('is-open');
+      timers.push(setTimeout(() => celebrate({ big: false }), 1600));
+    },
+    leave() {
+      timers.forEach(clearTimeout);
+      timers = [];
+      el.classList.remove('is-open');
     },
   };
 }

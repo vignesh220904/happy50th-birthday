@@ -7,6 +7,15 @@
 // eras): Next first moves through those, then on to the next scene. Entering a
 // scene backwards opens it at its last step, like slide builds.
 //
+// Automatic playback: after "Begin the Celebration" (or the ▶ button / A),
+// the presentation moves on by itself. Each scene says how long to stay
+// (ctl.auto() → milliseconds) or that it will say when it is done
+// (ctl.auto() → 'wait', then deck.autoAdvance(): a film that has ended).
+// There is only ever one timer: every move clears it first, so the photo
+// slideshows, the reasons and the scenes can never run conflicting timers.
+// Touching the scene restarts the wait; the photo viewer or the section menu
+// hold it; the final scene ends it. Manual controls always work.
+//
 // The welcome is always the first screen. The current scene is deliberately
 // never stored (not in the URL, not in storage), so a refresh or a new session
 // shows the welcome again. A link such as index.html#reasons opens that scene
@@ -19,13 +28,17 @@ const IDLE_MS = 3500;
 const NAV_KEYS_NEXT = new Set(['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter']);
 const NAV_KEYS_PREV = new Set(['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace']);
 const CLICKER_KEYS = new Set(['PageDown', 'PageUp']); // presentation remotes send these
+const DEFAULT_DWELL = 9000;
 
 export function createDeck(root, uiMount) {
   const scenes = [];          // { id, title, el, ctl }
   const listeners = new Set();
   let index = 0, busy = false;
+  let auto = false, autoTimer = 0;
 
   // ---- Controls ---------------------------------------------------------------
+  const autoBtn = h('button', { class: 'icon-btn deck-auto', type: 'button', 'aria-pressed': 'false', 'aria-label': 'Resume the slideshow', title: 'Start automatic playback  (A)', html: icons.play },
+    h('span', { class: 'deck-auto__ring', 'aria-hidden': 'true' }));
   const prevBtn = h('button', { class: 'icon-btn deck-prev', type: 'button', 'aria-label': 'Previous', title: 'Previous  (←)', html: icons.prev });
   const nextBtn = h('button', { class: 'deck-next', type: 'button', 'aria-label': 'Next', title: 'Next  (→ or Space)' }, h('span', {}, 'Next'), h('i', { html: icons.next }));
   const dots = h('span', { class: 'deck-dots', 'aria-hidden': 'true' });
@@ -38,7 +51,7 @@ export function createDeck(root, uiMount) {
   const fsBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Full screen', title: 'Full screen  (F)', html: icons.expand });
   const menuBtn = h('button', { class: 'icon-btn tool-optional', type: 'button', 'aria-label': 'All sections', title: 'All sections  (G)', 'aria-expanded': 'false', html: icons.menu });
 
-  const navBar = h('nav', { class: 'deck-bar deck-bar--nav', 'aria-label': 'Presentation' }, prevBtn, progressBtn, nextBtn);
+  const navBar = h('nav', { class: 'deck-bar deck-bar--nav', 'aria-label': 'Presentation' }, autoBtn, prevBtn, progressBtn, nextBtn);
   const toolBar = h('div', { class: 'deck-bar deck-bar--tools', role: 'toolbar', 'aria-label': 'Music and screen' }, musicBtn, muteBtn, fsBtn, menuBtn);
   const menu = h('div', { class: 'deck-menu', role: 'dialog', 'aria-label': 'All sections', hidden: true });
   uiMount.replaceChildren(navBar, toolBar, menu);
@@ -90,6 +103,8 @@ export function createDeck(root, uiMount) {
     announce(`${next.title}. Section ${index + 1} of ${scenes.length}.`);
     listeners.forEach((fn) => fn(next.id, index));
     document.dispatchEvent(new CustomEvent('deck:change', { detail: { id: next.id, index } }));
+    // let the scene after this one get ready (e.g. load its 3D) while this one plays
+    try { scenes[index + 1]?.ctl.prepare?.(); } catch (err) { console.error('[deck] prepare', err); }
   }
 
   function next() {
@@ -125,7 +140,50 @@ export function createDeck(root, uiMount) {
     progressBtn.setAttribute('aria-label', `Section ${index + 1} of ${scenes.length}: ${s?.title}. Open the section list.`);
     dots.replaceChildren(...scenes.map((_, i) => h('span', { class: `deck-dot ${i < index ? 'is-past' : ''} ${i === index ? 'is-current' : ''}` })));
     document.body.dataset.currentScene = s?.id || '';
+    scheduleAuto();
   }
+
+  // ---- Automatic playback ---------------------------------------------------------------
+  function clearAuto() {
+    clearTimeout(autoTimer);
+    autoTimer = 0;
+    autoBtn.classList.remove('is-counting', 'is-waiting');
+  }
+  function scheduleAuto() {
+    clearAuto();
+    if (!auto || !scenes.length) return;
+    const s = current();
+    const info = stepInfo(s);
+    const last = index === scenes.length - 1 && (!info || info.index === info.count - 1);
+    if (last) { setAuto(false, 'The celebration has reached its finale.'); return; }
+    let plan = DEFAULT_DWELL;
+    try { plan = s.ctl.auto?.() ?? DEFAULT_DWELL; } catch (err) { console.error('[deck] auto', err); }
+    if (plan === 'wait') { autoBtn.classList.add('is-waiting'); return; }
+    autoBtn.style.setProperty('--dwell', `${plan}ms`);
+    void autoBtn.offsetWidth; // restart the ring animation
+    autoBtn.classList.add('is-counting');
+    autoTimer = setTimeout(fireAuto, plan);
+  }
+  function fireAuto() {
+    autoTimer = 0;
+    // someone is looking at a photo or choosing a section: wait a little longer
+    if (document.querySelector('dialog[open]') || !menu.hidden) { autoTimer = setTimeout(fireAuto, 3000); return; }
+    busy = false;
+    next();
+  }
+  function setAuto(on, message) {
+    auto = !!on;
+    autoBtn.setAttribute('aria-pressed', String(auto));
+    autoBtn.firstChild.outerHTML = auto ? icons.pause : icons.play;
+    autoBtn.setAttribute('aria-label', auto ? 'Pause the slideshow' : 'Resume the slideshow');
+    autoBtn.title = `${auto ? 'Pause' : 'Start'} automatic playback  (A)`;
+    document.body.classList.toggle('is-autoplaying', auto);
+    if (auto) scheduleAuto(); else clearAuto();
+    announce(message || (auto ? 'Automatic playback on.' : 'Automatic playback paused.'));
+  }
+  autoBtn.addEventListener('click', () => setAuto(!auto));
+  // Interacting with a scene restarts its wait, so nothing moves on mid-click
+  root.addEventListener('pointerdown', () => { if (auto && autoTimer) scheduleAuto(); });
 
   // ---- Section menu ---------------------------------------------------------------
   function openMenu() {
@@ -137,7 +195,7 @@ export function createDeck(root, uiMount) {
           h('span', {}, h('span', { class: 'deck-menu__name' }, s.title), s.ctl.hint ? h('span', { class: 'deck-menu__hint' }, s.ctl.hint) : null),
         ),
       ))),
-      h('p', { class: 'deck-menu__keys', html: '<kbd>→</kbd> next · <kbd>←</kbd> back · <kbd>1</kbd>–<kbd>9</kbd> section · <kbd>M</kbd> music · <kbd>F</kbd> full screen · <kbd>H</kbd> hide controls' }),
+      h('p', { class: 'deck-menu__keys', html: '<kbd>→</kbd> / <kbd>Space</kbd> next · <kbd>←</kbd> back · <kbd>A</kbd> pause / resume · <kbd>Esc</kbd> close a video · <kbd>1</kbd>–<kbd>9</kbd> section · <kbd>M</kbd> music · <kbd>F</kbd> full screen · <kbd>H</kbd> hide controls' }),
     );
     menu.hidden = false;
     progressBtn.setAttribute('aria-expanded', 'true');
@@ -229,6 +287,7 @@ export function createDeck(root, uiMount) {
     else if (key === 'f') { e.preventDefault(); toggleFullscreen(); }
     else if (key === 'g') { e.preventDefault(); toggleMenu(); }
     else if (key === 'h') { e.preventDefault(); setControls(document.body.classList.contains('controls-hidden')); }
+    else if (key === 'a') { e.preventDefault(); setAuto(!auto); }
     else if (key === 'escape' && inPlayer) { t.closest('.player').blur(); current().el.focus({ preventScroll: true }); }
   });
 
@@ -265,10 +324,19 @@ export function createDeck(root, uiMount) {
     goTo: (id, opts) => go(scenes.findIndex((s) => s.id === id), opts),
     refresh: render,
     get current() { return current()?.id; },
+    get autoplaying() { return auto; },
+    setAuto,
+    /** A scene that said 'wait' is done (a film ended, the cake was cut): move on soon. */
+    autoAdvance(delay = 1500) {
+      if (!auto) return;
+      clearAuto();
+      autoTimer = setTimeout(fireAuto, delay);
+    },
     get index() { return index; },
     get scenes() { return scenes.map((s) => ({ id: s.id, title: s.title })); },
     on(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     start(initialId) {
+      root.classList.add('is-running');
       scenes.forEach((s, i) => {
         const active = initialId ? s.id === initialId : i === 0;
         s.el.classList.toggle('is-active', false);

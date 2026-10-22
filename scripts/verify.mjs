@@ -82,31 +82,49 @@ check('2004 — first housewarming at 3rd Main Road', has('2004', /housewarming/
 check('2006 — first job and salary', has('2006', /first job/i) && has('2006', /salary/i));
 const schoolScene = ms.find((m) => m.id === 'schooling').media.map((x) => ids.get(x.id));
 check('school uniform scene is an illustration, alongside a real photo', schoolScene.some((m) => m.kind === 'illustration') && schoolScene.some((m) => m.kind === 'photo'));
+const chapters = timeline.chapters || [];
+const inChapter = (c) => ms.filter((m) => m.sortYear >= c.from && m.sortYear <= c.to);
+const journeyCh = chapters.find((c) => c.id === 'journey'), proudCh = chapters.find((c) => c.id === 'proud');
+check('slideshow 1: "A Journey Through Time", 1976 – 2005', journeyCh?.title === 'A Journey Through Time' && journeyCh.from === 1976 && journeyCh.to === 2005);
+check('slideshow 2: "Proud Moments", from 2006, with every Proud Moments milestone', proudCh?.title === 'Proud Moments' && proudCh.from === 2006 && ms.filter((m) => m.era === 'pride').every((m) => inChapter(proudCh).includes(m)));
+check('every milestone appears in exactly one slideshow', ms.every((m) => chapters.filter((c) => inChapter(c).includes(m)).length === 1));
+const photoUse = ms.flatMap((m) => m.media.map((x) => x.id));
+check('no photograph is repeated across the slideshows', new Set(photoUse).size === photoUse.length);
+const mcom = ms.find((m) => m.id === 'mcom');
+check('1996 (M.Com): no approved photo yet, so its year card is clearly marked as pending', mcom.media.length > 0 || !!mcom.pendingPhoto);
 
 // ---------------------------------------------------------------------------
-section('Site details, gifts, wishes');
+section('Site details and wishes');
 const site = json('data/site.json');
 check('name is M. Buvaneswari', site.person.fullName === 'M. Buvaneswari');
 check('born 27 October 1976', site.person.born === '1976-10-27');
 check('celebration on 27 October 2026', site.event.date === '2026-10-27');
 check('venue: Palmshore Restaurant, Ekkatuthangal, Chennai', site.event.venue === 'Palmshore Restaurant' && site.event.area === 'Ekkatuthangal, Chennai');
-check('welcome: the requested wording', site.welcome.headline === 'Celebrating the Beautiful Journey of Buvaneswari' && site.welcome.supporting === '50 Years of Love, Strength & Beautiful Memories' && site.welcome.dates === '27 October 1976 – 27 October 2026');
-check('welcome photo ids exist', site.welcome.photos.every((id) => ids.has(id)));
+check('welcome: "Fifty Years. A Thousand Memories. One Beautiful Life."', (site.welcome.title || []).join(' ') === 'Fifty Years. A Thousand Memories. One Beautiful Life.');
+check('welcome: the approved earlier wording is kept', site.welcome.intro === 'Celebrating the Beautiful Journey of Buvaneswari' && site.welcome.supporting === '50 Years of Love, Strength & Beautiful Memories' && site.welcome.dates === '27 October 1976 – 27 October 2026');
+check('welcome: one action, "Begin the Celebration", and no photo collage', site.welcome.begin === 'Begin the Celebration' && !site.welcome.photos && !site.welcome.explore);
 check('reveal: HAPPY 50TH BIRTHDAY / AMMA / M. BUVANESWARI', /^happy 50th birthday$/i.test(site.reveal.line1) && /^amma$/i.test(site.reveal.line2) && site.reveal.line3 === 'M. Buvaneswari');
 check('reveal photo is a real photograph of Amma', ids.get(site.reveal.photo)?.kind === 'photo');
+check('reveal photo is the replacement the family chose (Age 1 to 50/46.1.jpg)', ids.get(site.reveal.photo)?.file === 'Age 1 to 50/46.1.jpg');
 check('final greeting and messages', site.finale.headline === 'Happy 50th Birthday, Amma!'
   && site.finale.subline === '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.'
   && site.finale.message === 'We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.');
-check('music: a file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
-check('Life Journey video is configured as an MP4 path', /\.mp4$/.test(site.videos.lifeJourney.src));
-if (!exists(site.videos.lifeJourney.src)) console.log(`  · waiting for the family's Life Journey video: ${site.videos.lifeJourney.src}`);
-const gifts = json('data/gifts.json');
-check('50 gift slots numbered 1–50', gifts.gifts.length === 50 && gifts.gifts.every((g, i) => g.n === i + 1));
-check('no gift is marked as given unless confirmed (all false by default)', gifts.gifts.every((g) => typeof g.given === 'boolean'));
+check('music: an instrumental file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
+check('music: kept low (volume 0.4 or less)', site.music.volume > 0 && site.music.volume <= 0.4);
+const lj = site.videos.lifeJourney.src;
+check('Life Journey video: not configured yet, or an existing MP4', lj === '' || (/\.mp4$/.test(lj) && exists(lj)), lj);
+if (!lj) console.log("  · waiting for the family's Life Journey video (the scene is left out until then)");
+check("the memories film is the family's own film", site.videos.memories.film === 'film-memories');
 const wishes = json('data/wishes.json');
+const wv = wishes.videos || [];
 check('wishes: the placeholder line is the family’s wording', wishes.emptyMessage === 'Messages filled with love, from the people who make her world special.');
-check('wishes videos are configured as MP4 paths', (wishes.videos || []).length > 0 && wishes.videos.every((v) => /\.mp4$/.test(v.src)));
-(wishes.videos || []).filter((v) => !exists(v.src)).forEach((v) => console.log(`  · waiting for the family's wishes video: ${v.src}`));
+check('wishes: every listed video is an MP4 that exists', wv.every((v) => /\.mp4$/.test(v.src) && exists(v.src)), wv.filter((v) => !exists(v.src)).map((v) => v.src).join(', '));
+check('wishes: numbered 1, 2, 3 … in the family’s order', wv.every((v, i) => v.n === i + 1));
+const leading = (f) => { const m = /^\s*(\d+)/.exec((f || '').split('/').pop()); return m ? Number(m[1]) : Infinity; };
+check('wishes: the order follows the numbers in the family’s filenames', wv.every((v, i) => i === 0 || leading(wv[i - 1].file) <= leading(v.file)));
+check('wishes: captions come only from the filenames', wv.every((v) => !v.from || (v.file || '').includes(v.from)));
+if (!wv.length) console.log('  · waiting for the "Family video wishes" folder (then run: npm run build:wishes)');
+else console.log(`  · ${wv.filter((v) => v.confirmed !== false).length} of ${wv.length} wishes will play; ${wv.filter((v) => v.confirmed === false).length} wait for the family's confirmation`);
 
 // ---------------------------------------------------------------------------
 section('Pages and code');
@@ -115,7 +133,9 @@ const index = read('index.html');
 const indexRefs = [...index.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js|woff2))"/g)].map((m) => m[1]);
 check('index.html: stylesheets, scripts and fonts resolve', indexRefs.every((r) => exists(r)), indexRefs.filter((r) => !exists(r)).join(', '));
 const sceneIds = [...index.matchAll(/data-scene="([a-z-]+)"/g)].map((m) => m[1]);
-check('index.html: the presentation scenes, in order', sceneIds.join() === 'welcome,reveal,journey-film,journey,reasons,memories,gallery,wishes,finale', sceneIds.join());
+check('index.html: the presentation scenes, in order', sceneIds.join() === 'welcome,reveal,journey-film,journey,proud,reasons,memories,wishes,finale', sceneIds.join());
+check('the separate Family Photo Gallery is removed (its photographs stay in "Memory gallery/")', !sceneIds.includes('gallery') && !exists('js/sections/gallery.js') && manifest.collections.gallery.length > 0);
+check('no loading screen before the welcome', !/class="loader"/.test(index));
 check('index.html: the welcome is the scene shown first', /class="scene scene--welcome is-active"/.test(index));
 for (const page of pages.filter((p) => p.startsWith('pages/'))) {
   const target = /url=\.\.\/index\.html#([a-z-]+)/.exec(read(page))?.[1];
@@ -135,9 +155,18 @@ const syntaxErrors = jsFiles.filter((f) => {
 check(`all ${jsFiles.length} JavaScript modules parse`, !syntaxErrors.length, syntaxErrors.join(', '));
 const stale = jsFiles.concat(['index.html']).filter((f) => /assets\/(photos|thumbnails)\//.test(read(f)));
 check('no references to the removed assets/photos or assets/thumbnails folders', !stale.length, stale.join(', '));
-const removed = jsFiles.concat(['index.html', 'data/site.json']).filter((f) => /film-birthday|film-life-journey|film-age|openCinema|filmButton|Watch the Birthday Film|life journey\.mp4|age\.mp4/.test(read(f)));
-check('no trace of the removed Birthday Film button, generated Life Journey film or Age film', !removed.length, removed.join(', '));
-check('three.js is vendored locally (works offline)', exists('js/vendor/three.module.min.js'));
+const presentation = ['js/app.js', 'js/core/deck.js', 'js/core/player.js', 'js/core/audio.js', ...jsFiles.filter((f) => f.startsWith('js/sections/') && !/childhood/.test(f))];
+const removed = presentation.concat(['index.html', 'data/site.json', 'data/photo_inventory.json']).filter((f) => /film-birthday|film-life-journey|film-childhood|film-age|openCinema|filmButton|Watch the Birthday Film|life journey\.mp4|age\.mp4/i.test(read(f)) || /(^|["'\s])VIDEOS\//.test(read(f)));
+check('no trace of the developer-generated films (Life Journey, Age 1 to 50, Childhood) or the Birthday Film button', !removed.length, removed.join(', '));
+const app = read('js/app.js');
+const importsOf = (f) => [...read(f).matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]);
+const reachable = new Set();
+const visit = (f) => { if (reachable.has(f) || !exists(f)) return; reachable.add(f); importsOf(f).forEach((i) => visit(join(f, '..', i).replace(/\\/g, '/'))); };
+visit('js/app.js');
+check('no synthesised "Happy Birthday" song, cake scene or childhood film in the presentation', ![...reachable].some((f) => /birthday-song|cake-scene|childhood/.test(f)) && !/childhood|cake/.test(app), [...reachable].filter((f) => /birthday-song|cake-scene|childhood/.test(f)).join(', '));
+check('50 Reasons: no separate "All 50 Reasons" view', !/All 50 Reasons|id: 'all'/.test(read('js/sections/reasons.js')));
+check('final page: no numbered gift tracker', !/gtile|gtracker|Mark all given/.test(read('js/sections/finale.js')));
+check('welcome: no ordinary Next button (the deck hides it there)', /body\[data-current-scene="welcome"\] \.deck-bar--nav \{ display: none; \}/.test(read('css/deck.css')));
 
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

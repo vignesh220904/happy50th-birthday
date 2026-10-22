@@ -11,14 +11,15 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = {
-    "welcome.html": ("welcome", "Welcome"),
-    "journey.html": ("journey", "Her Life Journey"),
+    "welcome.html": ("welcome", "A Golden Beginning"),
+    "journey.html": ("journey", "A Journey Through Time"),
+    "proud.html": ("proud", "Proud Moments"),
     "reasons.html": ("reasons", "50 Reasons We Love You"),
-    "memories.html": ("memories", "Family Memories"),
-    "wishes.html": ("wishes", "Family Wishes"),
-    "finale.html": ("finale", "50 Gifts Celebration"),
+    "memories.html": ("memories", "Our Memory Film"),
+    "wishes.html": ("wishes", "Messages Filled With Love"),
+    "finale.html": ("finale", "A Final Gift of Love"),
     # The "Age 1 to 50" film was removed from the presentation at the family's request.
-    "age-transition.html": ("welcome", "Welcome"),
+    "age-transition.html": ("welcome", "A Golden Beginning"),
 }
 
 TEMPLATE = """<!DOCTYPE html>

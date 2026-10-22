@@ -28,7 +28,7 @@ export function loadJSON(name) {
 }
 
 export async function loadContent() {
-  const names = ['site', 'photo_inventory', 'timeline', 'reasons', 'gifts', 'wishes'];
+  const names = ['site', 'photo_inventory', 'timeline', 'reasons', 'wishes'];
   const results = await Promise.allSettled(names.map(loadJSON));
   const out = {};
   results.forEach((r, i) => {

@@ -1,87 +1,86 @@
-// Scene 5 — 50 Reasons We Love You (data/reasons.json).
-// Five categories of ten. Choosing a category shows all ten of its reasons
-// together, in two columns of cards. "All 50" shows every reason at once, one
-// column per category. Next walks through the five categories and "All 50",
-// then on to the Family Album. The wording of each reason is exactly the family's.
+// 50 Reasons We Love You (data/reasons.json).
+// The family's five groups of ten. Each group gathers as a gentle cloud of
+// floating bubbles: the ten reasons appear one after another and drift
+// softly in place, large enough to read from the back of the room. Next (or
+// automatic playback) moves to the next group; the group names along the top
+// show where we are and can be tapped. All 50 reasons appear across the five
+// groups, each exactly once, in the family's own words.
 
-import { h, pad, roman, fitText, announce } from '../core/util.js';
+import { h, icons, fitText, announce } from '../core/util.js';
+
+const GROUP_MS = 22000;  // ten reasons to read aloud, comfortably
 
 export async function mount(el, content) {
   const { reasons, chapters, closing } = content.reasons;
   const inChapter = (c) => reasons.filter((r) => r.n >= c.range[0] && r.n <= c.range[1]);
-  const views = [...chapters.map((c, i) => ({ id: c.id, title: c.title, num: roman(i + 1), range: `${c.range[0]}–${c.range[1]}` })), { id: 'all', title: 'All 50 Reasons', num: '50', range: '1–50' }];
   let view = 0;
 
-  const buttons = views.map((v, i) => h('button', {
-    class: `rcat ${v.id === 'all' ? 'rcat--all' : ''}`,
+  const tabs = chapters.map((c, i) => h('button', {
+    class: 'rgroup',
     type: 'button',
     'aria-pressed': 'false',
-    'aria-controls': 'reasons-panel',
+    'aria-controls': 'reasons-cloud',
     onclick: () => show(i),
-  },
-  h('span', { class: 'rcat__num', 'aria-hidden': 'true' }, v.num),
-  h('span', { class: 'rcat__text' }, h('span', { class: 'rcat__title' }, v.title), h('span', { class: 'rcat__range' }, `Reasons ${v.range}`)),
-  ));
+  }, h('span', { class: 'rgroup__title' }, c.title), h('span', { class: 'rgroup__range' }, `${c.range[0]}–${c.range[1]}`)));
 
-  const panel = h('div', { class: 'reasons__panel', id: 'reasons-panel', 'aria-live': 'polite' });
+  const groupTitle = h('p', { class: 'reasons__group' });
+  const cloud = h('ol', { class: 'rcloud', id: 'reasons-cloud', 'aria-live': 'polite' });
   const closingEl = h('p', { class: 'reasons__closing' }, closing);
 
   el.append(h('div', { class: 'scene__frame reasons' },
     h('header', { class: 'reasons__head' },
-      h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, 'From all of us, with love'),
-      h('h2', { class: 'scene-title', id: 'reasons-title', 'data-enter': '', style: { '--enter': 1 }, html: '50 Reasons <em>We Love You</em>' }),
+      h('div', {},
+        h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, 'From all of us, with love'),
+        h('h2', { class: 'scene-title', id: 'reasons-title', 'data-enter': '', style: { '--enter': 1 }, html: '50 Reasons <em>We Love You</em>' }),
+      ),
+      h('div', { class: 'reasons__groups', role: 'group', 'aria-label': 'Groups of reasons', 'data-enter': '', style: { '--enter': 2 } }, tabs),
     ),
-    h('div', { class: 'reasons__cats', role: 'group', 'aria-label': 'Categories of reasons', 'data-enter': '', style: { '--enter': 2 } }, buttons),
-    panel,
+    groupTitle,
+    cloud,
     closingEl,
   ));
 
-  const reasonCard = (r, k) => h('li', { class: 'rcard', style: { '--k': k } },
-    h('span', { class: 'rcard__n', 'aria-hidden': 'true' }, pad(r.n)),
-    h('p', { class: 'rcard__text' }, h('span', { class: 'visually-hidden' }, `Reason ${r.n}: `), r.text),
-  );
+  // a gentle, varied drift so the cloud feels alive without anything racing about
+  const bubble = (r, k) => h('li', {
+    class: `rbubble rbubble--${k % 3}`,
+    style: { '--k': k, '--drift': `${7 + (k % 4) * 1.3}s`, '--phase': `${-(k * 1.7) % 6}s`, '--tilt': `${((k * 37) % 5) - 2}deg` },
+  },
+  h('span', { class: 'rbubble__n', 'aria-hidden': 'true' }, h('span', { html: icons.heart }), h('b', {}, r.n)),
+  h('span', { class: 'rbubble__text' }, h('span', { class: 'visually-hidden' }, `Reason ${r.n}: `), r.text));
 
   function show(i) {
-    view = Math.max(0, Math.min(views.length - 1, i));
-    const v = views[view];
-    buttons.forEach((b, k) => b.setAttribute('aria-pressed', String(k === view)));
-    if (v.id === 'all') {
-      panel.className = 'reasons__panel reasons__panel--all';
-      panel.replaceChildren(...chapters.map((c, ci) => h('section', { class: 'rcol', style: { '--k': ci } },
-        h('h3', { class: 'rcol__title' }, h('span', { class: 'rcol__num', 'aria-hidden': 'true' }, roman(ci + 1)), c.title),
-        h('ol', { class: 'rcol__list' }, inChapter(c).map((r) => h('li', { class: 'rcol__item' },
-          h('span', { class: 'rcol__n', 'aria-hidden': 'true' }, r.n), h('span', {}, r.text)))),
-      )));
-      announce('All 50 reasons are shown.');
-    } else {
-      const c = chapters[view];
-      panel.className = 'reasons__panel';
-      panel.replaceChildren(
-        h('h3', { class: 'visually-hidden' }, c.title),
-        h('ol', { class: 'reasons__grid', start: c.range[0] }, inChapter(c).map(reasonCard)),
-      );
-      announce(`${c.title}: reasons ${c.range[0]} to ${c.range[1]} are shown.`);
-    }
-    panel.classList.remove('is-shown');
-    requestAnimationFrame(() => { fit(); requestAnimationFrame(() => panel.classList.add('is-shown')); });
+    view = Math.max(0, Math.min(chapters.length - 1, i));
+    const c = chapters[view];
+    tabs.forEach((b, k) => {
+      b.setAttribute('aria-pressed', String(k === view));
+      b.classList.toggle('is-past', k < view);
+    });
+    groupTitle.replaceChildren(h('span', { class: 'ornament', 'aria-hidden': 'true' }), h('span', {}, c.title), h('span', { class: 'ornament', 'aria-hidden': 'true' }));
+    cloud.setAttribute('start', c.range[0]);
+    cloud.replaceChildren(...inChapter(c).map(bubble));
+    closingEl.classList.toggle('is-shown', view === chapters.length - 1);
+    announce(`${c.title}: reasons ${c.range[0]} to ${c.range[1]}.`);
+    cloud.classList.remove('is-shown');
+    requestAnimationFrame(() => { fit(); requestAnimationFrame(() => cloud.classList.add('is-shown')); });
   }
 
   function fit() {
-    fitText(panel, { min: 0.55 });
+    fitText(cloud, { min: 0.6 });
   }
 
   show(0);
 
   return {
-    hint: 'Five categories, then all 50 together',
-    enter({ atEnd }) { show(atEnd ? views.length - 1 : 0); },
+    hint: `${chapters.length} groups of ten`,
+    enter({ atEnd }) { show(atEnd ? chapters.length - 1 : 0); },
     step(dir) {
       const target = view + dir;
-      if (target < 0 || target >= views.length) return false;
+      if (target < 0 || target >= chapters.length) return false;
       show(target);
       return true;
     },
-    steps: () => ({ index: view, count: views.length, label: views[view].title }),
+    steps: () => ({ index: view, count: chapters.length, label: chapters[view].title }),
+    auto: () => GROUP_MS,
     fit,
   };
 }

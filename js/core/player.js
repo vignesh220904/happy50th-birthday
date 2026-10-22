@@ -19,7 +19,9 @@ function syncBodyState() {
   if (playing) music.duck(); else music.unduck();
 }
 
-export function createPlayer({ src, poster, title = 'Video', captions = '', onEnded, onError: onErrorCb }) {
+// `fullscreen` (optional) replaces the full-screen button's behaviour, so a
+// scene with its own theatre view can use that instead of element full screen.
+export function createPlayer({ src, poster, title = 'Video', captions = '', onEnded, onError: onErrorCb, fullscreen }) {
   const video = h('video', {
     class: 'player__video',
     preload: 'metadata',
@@ -115,11 +117,13 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
     ccBtn.setAttribute('aria-pressed', String(on));
   });
   fsBtn.addEventListener('click', () => {
+    if (fullscreen) return fullscreen();
     if (document.fullscreenElement === root) document.exitFullscreen();
     else if (root.requestFullscreen) root.requestFullscreen().catch(() => video.webkitEnterFullscreen?.());
     else video.webkitEnterFullscreen?.(); // iOS Safari
   });
   const onFullscreen = () => {
+    if (fullscreen) return;
     const fs = document.fullscreenElement === root;
     fsBtn.innerHTML = fs ? icons.shrink : icons.expand;
     fsBtn.setAttribute('aria-label', fs ? 'Exit full screen' : 'Full screen');
@@ -138,6 +142,7 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
   const api = {
     el: root,
     video,
+    fsButton: fsBtn,
     play: () => video.play().catch(onError),
     pause: () => { if (!video.paused) video.pause(); },
     destroy() {

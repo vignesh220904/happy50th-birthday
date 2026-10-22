@@ -50,8 +50,9 @@
   overflow: clip; /* decorative glows may bleed; the scene itself never scrolls */
 }
 
-/* Elements marked [data-enter] animate in each time their scene opens */
-.scene [data-enter] { opacity: 0; }
+/* Elements marked [data-enter] animate in each time their scene opens
+   (only once the presentation is running, so nothing is hidden without JS) */
+.deck.is-running .scene [data-enter] { opacity: 0; }
 .scene.is-active.has-entered [data-enter] {
   animation: rise-in 1s var(--ease-out) both;
   animation-delay: calc(var(--enter, 0) * 110ms + 120ms);
@@ -135,6 +136,9 @@
 .deck-label__sub { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 
 .music-btn.is-playing svg { animation: float-y 1.6s var(--ease-in-out) infinite; }
+
+/* The welcome has its own "Begin the Celebration" button instead of Next */
+body[data-current-scene="welcome"] .deck-bar--nav { display: none; }
 
 /* Idle: the controls step aside so the projector shows only the scene */
 body.controls-hidden .deck-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
@@ -231,3 +235,22 @@ body.controls-hidden { cursor: none; }
   .deck-next { padding: 0 0.9em; }
   .deck-menu { right: 10px; left: 10px; width: auto; bottom: 70px; }
 }
+
+/* ---------- Automatic playback button ---------- */
+.deck-auto { position: relative; }
+.deck-auto svg { position: relative; z-index: 1; }
+.deck-auto__ring {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  --a: 0;
+  background: conic-gradient(var(--champagne) calc(var(--a) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  opacity: 0;
+}
+@property --a { syntax: "<number>"; inherits: false; initial-value: 0; }
+.deck-auto.is-counting .deck-auto__ring { opacity: 1; animation: auto-ring var(--dwell, 9s) linear forwards; }
+.deck-auto.is-waiting .deck-auto__ring { opacity: 1; --a: 0.25; animation: spin 1.6s linear infinite; }
+@keyframes auto-ring { from { --a: 0; } to { --a: 1; } }
+.deck-bar .deck-auto[aria-pressed="true"] { background: var(--sky); color: var(--ramar-deep); }

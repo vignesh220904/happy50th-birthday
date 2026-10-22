@@ -2,7 +2,9 @@
 // It never starts by itself: only the host's music button (or M) starts it.
 // Volume fades in and out gently. While a video with sound plays, the music
 // fades out ("ducks") and comes back when the video pauses or ends — but only
-// if it was playing before.
+// if it was playing before. Several things can hold it down at once (a video
+// playing, a playlist of wishes between two videos); it returns when the last
+// one lets go.
 
 const listeners = new Set();
 const FADE_MS = 900;
@@ -11,6 +13,7 @@ let audio = null;
 let config = { title: '', volume: 0.4 };
 const state = { available: false, on: false, muted: false, ducked: false, title: '' };
 let fadeRaf = 0;
+const duckers = new Set();
 
 function emit() {
   listeners.forEach((fn) => fn({ ...state }));
@@ -91,16 +94,18 @@ export const music = {
     emit();
     if (audio && state.on && !state.ducked) fadeTo(audibleVolume(), 400);
   },
-  /** A video with sound started: fade the music out. */
-  duck() {
+  /** A video with sound started (or a playlist is running): fade the music out. */
+  duck(reason = 'video') {
+    duckers.add(reason);
     if (state.ducked) return;
     state.ducked = true;
     emit();
     if (audio && state.on) fadeTo(0, 700, () => { if (state.ducked) audio.pause(); });
   },
   /** The video paused or ended: bring the music back if the host had it on. */
-  unduck() {
-    if (!state.ducked) return;
+  unduck(reason = 'video') {
+    duckers.delete(reason);
+    if (!state.ducked || duckers.size) return;
     state.ducked = false;
     emit();
     if (audio && state.on) audio.play().then(() => fadeTo(audibleVolume(), 1400)).catch(() => {});
