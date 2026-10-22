@@ -40,7 +40,7 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
   const muteBtn = h('button', { class: 'player__btn', type: 'button', 'aria-label': 'Mute', html: icons.volume });
   const volume = h('input', { class: 'player__volume', type: 'range', min: 0, max: 1, step: 0.05, value: 1, 'aria-label': 'Volume' });
   const ccBtn = captions ? h('button', { class: 'player__btn', type: 'button', 'aria-label': 'Captions', 'aria-pressed': 'true', html: icons.captions }) : null;
-  const fsBtn = h('button', { class: 'player__btn', type: 'button', 'aria-label': 'Full screen', html: icons.expand });
+  const fsBtn = h('button', { class: 'player__btn player__fs', type: 'button', 'aria-label': 'Full screen', html: icons.expand });
   const errorBox = h('div', { class: 'player__error', hidden: true, role: 'status' },
     h('p', {}, 'This video could not be played.'),
     h('p', { class: 'player__error-hint' }, 'Please check that the file is an MP4 (H.264) video.'),

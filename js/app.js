@@ -51,17 +51,23 @@ async function main() {
   const content = await loadContent();
   if (content.site) music.configure(content.site.music, url);
 
-  const shown = [];
-  for (const scene of SCENES) {
+  // every scene gets ready at the same time (the video scenes check their files
+  // over the network), then they join the presentation in running order
+  const mounted = await Promise.all(SCENES.map(async (scene) => {
     const el = $(`[data-scene="${scene.id}"]`);
-    let ctl = {};
     try {
       if (!content.site) throw new Error('data/site.json could not be loaded');
-      ctl = (await scene.mod.mount(el, content, deck)) || {};
+      return (await scene.mod.mount(el, content, deck)) || {};
     } catch (err) {
       console.error(`[${scene.id}] failed to render`, err);
       sectionError(el, scene.title);
+      return {};
     }
+  }));
+  const shown = [];
+  for (const [i, scene] of SCENES.entries()) {
+    const el = $(`[data-scene="${scene.id}"]`);
+    const ctl = mounted[i];
     if (ctl.absent) { el.remove(); continue; }
     scene.ctl = ctl;
     shown.push(scene);

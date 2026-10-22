@@ -29,17 +29,18 @@ Double-clicking `index.html` does **not** work (browsers block the site's data f
 
 1. Connect the laptop to the projector and open the site. Press **F** (or the ⛶ button) for full screen.
 2. **A Golden Beginning** appears by itself. It is the idle screen while guests arrive and needs no clicks.
-   On every other page **‹ Back**, **Next ›** and **Full screen / Normal screen** stay on screen
-   (only the mouse pointer hides when it rests; **H** hides or shows the controls by hand).
+   On every other page a few clear controls stay on screen: **Full screen / Normal screen** on the left;
+   ❚❚ / ▶ (pause), **‹ Back**, the page name (click it for the list of pages) and **Next ›** on the right.
+   Only the mouse pointer hides when it rests; **H** hides or shows the controls by hand.
 3. When Amma is ready, press **Begin the Celebration** (or →, Space, Enter, or a presentation clicker).
    The gentle instrumental music starts, the browser goes full screen, and the presentation runs **by itself**
    from there to the final gift: the films and the family's video wishes start on their own, one at a time,
    and when a film ends the presentation moves on. Photo slideshows move briskly (about 4½ s for a new milestone,
    3½ s for its other photos). The music fades out under every video and returns afterwards.
 4. Every video page plays its video by itself when you arrive on it (also when the automatic presentation is paused).
-   The video fills the screen with a bar at the bottom: **‹ Back** (previous page), **Close video**, **Replay**,
-   **Full screen / Normal screen** and **Next ›** (next page); the wishes add ‹ › for the previous / next message.
-   The first **Esc** leaves the browser's full screen; the next **Esc** (or **Close video**) closes the video and pauses it.
+   The video fills the screen with just three buttons at the bottom: **‹ Back**, **Full screen / Normal screen** and **Next ›**
+   (among the wishes, Back and Next move between the messages first, then to the previous / next page).
+   The first **Esc** leaves the browser's full screen; the next **Esc** closes the video and pauses it.
 5. If a browser refuses to start a film with sound by itself, the film shows **Press Play to start** and the
    presentation waits; it never skips the film or pretends it is playing. Press the large ▶ once and it continues.
    If full screen was refused, the ⛶ button in the film's bar glows: press it.
@@ -137,12 +138,11 @@ All family-specific content lives in `data/`:
 | `photo_inventory.json` | **Generated** media manifest. Don't edit by hand |
 
 ### Music
-`assets/audio/canon-in-d-major.mp3`: *Canon in D Major* by Kevin MacLeod (incompetech.com), a gentle instrumental
-licensed under Creative Commons: By Attribution 3.0 (via Wikimedia Commons). The credit is shown on the final page.
-It starts only with **Begin the Celebration** (or the ♫ button / M), plays softly, and steps aside for every video
-(it stays down between two wishes, and between two films that follow each other).
+`assets/audio/music.mp3`: *Happy Birthday Songs – 1 Hour Non-Stop Celebration*, supplied by the family. It plays all the way through
+(and loops), starting with **Begin the Celebration** (or M). On ordinary pages it plays at `music.volume` (0.4); under the films and the
+family's video wishes it carries on softly at `music.softVolume` (0.1), and comes back up afterwards. The credit is shown on the final page.
 To change the track, put an MP3 you have permission to use in `assets/audio/`, then set `music.src`, `music.title` and `music.credit`
-in `data/site.json`. `music.volume` (0–1) sets the level; it is 0.3.
+in `data/site.json`. (`canon-in-d-major.mp3`, the earlier instrumental, is still in the folder but no longer used.)
 
 ### Adding photos
 1. Drop photos into `Final Life Journey/`, `Age 1 to 50/` (named by age: `34.jpg`, `34 (2).jpg` …) or `Memory gallery/`.
@@ -197,7 +197,9 @@ Upload `index.html  pages/  css/  js/  data/  assets/` to any static host. All U
 `assets/videos/happy 50th birthday.mp4` (283 MB, HEVC) is the original of the memories film and is not needed online.
 The original photo folders (~935 MB), `VIDEOS/` and `Family video wishes/` are source files only.
 
-**Vercel:** framework preset "Other", no build command, output directory = the project root. `.vercelignore` keeps the
+**Vercel:** framework preset "Other", no build command, output directory = the project root. `vercel.json` lets browsers keep
+photos, films and music for a week (so nothing downloads twice); after replacing a file under the same name, visitors may see
+the old one until their copy expires (a hard refresh, Ctrl + F5, fetches the new one). `.vercelignore` keeps the
 source folders out of a `vercel deploy` upload. Every file the site serves is under 100 MB, so it can also deploy from GitHub
 (`VIDEOS/` and `Family video wishes/` are git-ignored). Online, the films stream from the start (their index is at the front),
 but the venue's internet decides how smoothly they play; the local copy (`Open Birthday Site.bat`) is the safest at the venue.

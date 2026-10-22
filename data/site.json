@@ -92,10 +92,11 @@
     "sign": "With all our love, always"
   },
   "music": {
-    "_note": "Gentle instrumental background music. It starts only when the host presses Begin the Celebration (or the music button / M), stays low, fades out while a video plays and returns afterwards. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
-    "src": "assets/audio/canon-in-d-major.mp3",
-    "title": "Canon in D Major",
-    "volume": 0.3,
-    "credit": "Music: “Canon in D Major” by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
+    "_note": "Background music, all the way through. It starts with Begin the Celebration (or M) and loops. 'volume' (0-1) is its level on ordinary pages; 'softVolume' is the gentle level it keeps under the films and the family's video wishes. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
+    "src": "assets/audio/music.mp3",
+    "title": "Happy Birthday Songs",
+    "volume": 0.4,
+    "softVolume": 0.1,
+    "credit": "Music: “Happy Birthday Songs – 1 Hour Non-Stop Celebration”, supplied by the family"
   }
 }

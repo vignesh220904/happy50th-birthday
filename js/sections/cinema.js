@@ -3,9 +3,9 @@
 // control: the large Play button in the middle of the screen.
 //
 // Playing opens the theatre: the player fills the whole screen, the
-// presentation controls step aside, and a bar at the bottom offers Back (the
-// previous page), Close video, Replay, Full screen / Normal screen and Next
-// (the next page); a playlist adds Previous / Next message. Esc closes it. The page also asks the browser for real full screen, which browsers
+// presentation controls step aside, and a bar at the bottom offers just Back,
+// Full screen / Normal screen and Next (among the wishes, Back and Next move
+// between the messages first). Esc closes the theatre. The page also asks the browser for real full screen, which browsers
 // allow only straight after a click or key press; when that isn't possible the
 // theatre still fills the window and its Full screen button stays in view.
 //
@@ -95,8 +95,6 @@ export async function mountCinema(el, deck, {
     screen.replaceChildren(player.el, upNext, endCard, prompt);
     caption.textContent = label(v);
     bar.label.textContent = label(v) || v.title || title.replace(/<[^>]+>/g, '');
-    bar.prev.disabled = i === 0;
-    bar.next.disabled = i === items.length - 1;
     deck.refresh();
     if (autoplay) start();
   }
@@ -193,20 +191,18 @@ export async function mountCinema(el, deck, {
   const fsIcon = h('span', { html: icons.expand });
   const fsText = h('span', { class: 'theatre-bar__text' }, 'Full screen');
   const text = (t) => h('span', { class: 'theatre-bar__text' }, t);
+  // Just three buttons: Back, Full screen / Normal screen, Next. Among the wishes, Back and
+  // Next move between the messages first, then to the previous / next page. Esc closes the video.
   const bar = {
-    back: h('button', { class: 'btn btn--light', type: 'button', title: 'Back to the previous page', onclick: () => deck.go(deck.index - 1, { dir: -1, atEnd: true }) }, h('span', { html: icons.prev }), text('Back')),
-    close: h('button', { class: 'btn btn--light', type: 'button', title: 'Close the video and show the page  (Esc)', onclick: () => closeTheatre() }, h('span', { html: icons.close }), text('Close video')),
-    prev: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Previous ${itemLabel.toLowerCase()}`, title: `Previous ${itemLabel.toLowerCase()}`, html: icons.prev, onclick: () => step(-1) }),
-    replay: h('button', { class: 'btn btn--light', type: 'button', onclick: () => replay() }, h('span', { html: icons.replay }), text('Replay')),
-    next: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Next ${itemLabel.toLowerCase()}`, title: `Next ${itemLabel.toLowerCase()}`, html: icons.next, onclick: () => step(1) }),
+    back: h('button', { class: 'btn btn--light', type: 'button', title: 'Back  (←)', onclick: () => step(-1) || deck.go(deck.index - 1, { dir: -1, atEnd: true }) }, h('span', { html: icons.prev }), text('Back')),
     fs: h('button', { class: 'btn btn--light theatre-bar__fs', type: 'button', onclick: () => toggleFullscreen() }, fsIcon, fsText),
-    nextPage: h('button', { class: 'btn btn--celebrate', type: 'button', title: 'Next page', onclick: () => deck.go(deck.index + 1, { dir: 1 }) }, text('Next'), h('span', { html: icons.next })),
+    next: h('button', { class: 'btn btn--celebrate', type: 'button', title: 'Next', onclick: () => step(1) || deck.go(deck.index + 1, { dir: 1 }) }, text('Next'), h('span', { html: icons.next })),
     label: h('span', { class: 'theatre-bar__label' }),
   };
   const theatreBar = h('div', { class: 'theatre-bar', role: 'toolbar', 'aria-label': 'Video' },
-    h('span', { class: 'theatre-bar__end' }, bar.back, bar.close),
-    h('span', { class: 'theatre-bar__mid' }, multi ? bar.prev : null, bar.label, multi ? bar.next : null),
-    h('span', { class: 'theatre-bar__end' }, bar.replay, document.fullscreenEnabled ? bar.fs : null, bar.nextPage),
+    bar.back,
+    h('span', { class: 'theatre-bar__mid' }, bar.label),
+    h('span', { class: 'theatre-bar__end' }, document.fullscreenEnabled ? bar.fs : null, bar.next),
   );
   const syncFsButton = () => {
     const on = !!document.fullscreenElement;
@@ -229,7 +225,7 @@ export async function mountCinema(el, deck, {
     player.el.focus({ preventScroll: true });
     document.addEventListener('keydown', onTheatreKey, true);
     enterFullscreen();
-    announce('Playing in full screen. Press Escape or Close video to return to the page.');
+    announce('Playing in full screen. Press Escape to return to the page.');
   }
   function closeTheatre() {
     if (!theatre) return;

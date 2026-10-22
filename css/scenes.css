@@ -454,6 +454,10 @@
 
 /* Theatre: the player fills the screen; the presentation controls step aside */
 .theatre-bar { display: none; }
+/* inside the films and wishes the player keeps only play / pause, the seek bar, the time and mute:
+   volume is set on the laptop, and full screen is the button in the bar below */
+.cinema .player__volume,
+.cinema .player__fs { display: none; }
 /* an entrance animation on an ancestor would trap the fixed theatre inside it */
 .scene.is-theatre [data-enter] { animation: none !important; opacity: 1 !important; transform: none !important; }
 .scene.is-theatre .cinema__screen-wrap {

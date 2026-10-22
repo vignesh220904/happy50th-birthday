@@ -111,7 +111,8 @@ check('reveal photo is the replacement the family chose (Age 1 to 50/46.1.jpg)',
 check('final greeting and messages', site.finale.headline === 'Happy 50th Birthday, Amma!'
   && site.finale.subline === '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.'
   && site.finale.message === 'We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.');
-check('music: an instrumental file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
+check('music: the family’s track is configured, exists, and is credited', site.music.src === 'assets/audio/music.mp3' && exists(site.music.src) && !!site.music.credit);
+check('music: soft under the videos, never silent (softVolume between 0 and the normal volume)', site.music.softVolume > 0 && site.music.softVolume < site.music.volume);
 check('music: kept low (volume 0.4 or less)', site.music.volume > 0 && site.music.volume <= 0.4);
 // The family's three films, from VIDEOS/ (prepared by npm run build:films)
 const FILMS = [['storyFilm', 'VIDEOS/age 1 to 5 story video.mp4'], ['ageFilm', 'VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4'], ['lifeJourney', 'VIDEOS/updated/LIFE JOURNEY-update.mp4']];

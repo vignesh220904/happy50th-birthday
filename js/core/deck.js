@@ -45,20 +45,18 @@ export function createDeck(root, uiMount) {
     h('span', { class: 'deck-auto__ring', 'aria-hidden': 'true' }));
   const prevBtn = h('button', { class: 'deck-prev', type: 'button', 'aria-label': 'Back', title: 'Back  (←)' }, h('i', { html: icons.prev }), h('span', {}, 'Back'));
   const nextBtn = h('button', { class: 'deck-next', type: 'button', 'aria-label': 'Next', title: 'Next  (→ or Space)' }, h('span', {}, 'Next'), h('i', { html: icons.next }));
-  const dots = h('span', { class: 'deck-dots', 'aria-hidden': 'true' });
   const labelTitle = h('span', { class: 'deck-label__title' });
   const labelSub = h('span', { class: 'deck-label__sub' });
   const progressBtn = h('button', { class: 'deck-progress', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'All sections  (G)' },
-    dots, h('span', { class: 'deck-label' }, labelTitle, labelSub));
-  const musicBtn = h('button', { class: 'icon-btn music-btn', type: 'button', 'aria-pressed': 'false', html: icons.music });
-  const muteBtn = h('button', { class: 'icon-btn tool-optional', type: 'button', 'aria-pressed': 'false', html: icons.volume });
+    h('span', { class: 'deck-label' }, labelTitle, labelSub));
   const fsIcon = h('i', { html: icons.expand });
   const fsLabel = h('span', {}, 'Full screen');
   const fsBtn = h('button', { class: 'deck-fs', type: 'button', 'aria-label': 'Full screen', title: 'Full screen  (F)' }, fsIcon, fsLabel);
-  const menuBtn = h('button', { class: 'icon-btn tool-optional', type: 'button', 'aria-label': 'All sections', title: 'All sections  (G)', 'aria-expanded': 'false', html: icons.menu });
 
+  // Few, clear controls: Pause / Play, Back, the page name (opens the list of pages), Next, and Full screen.
+  // Music (M), the page list (G) and hiding the controls (H) are on the keyboard.
   const navBar = h('nav', { class: 'deck-bar deck-bar--nav', 'aria-label': 'Presentation' }, autoBtn, prevBtn, progressBtn, nextBtn);
-  const toolBar = h('div', { class: 'deck-bar deck-bar--tools', role: 'toolbar', 'aria-label': 'Music and screen' }, musicBtn, muteBtn, fsBtn, menuBtn);
+  const toolBar = h('div', { class: 'deck-bar deck-bar--tools', role: 'toolbar', 'aria-label': 'Screen' }, fsBtn);
   const menu = h('div', { class: 'deck-menu', role: 'dialog', 'aria-label': 'All sections', hidden: true });
   uiMount.replaceChildren(navBar, toolBar, menu);
 
@@ -144,7 +142,6 @@ export function createDeck(root, uiMount) {
     labelSub.textContent = `${index + 1} of ${scenes.length}${info && info.count > 1 ? ` · ${info.label || `${info.index + 1}/${info.count}`}` : ''}`;
     progressBtn.dataset.short = `${index + 1}/${scenes.length}`;
     progressBtn.setAttribute('aria-label', `Section ${index + 1} of ${scenes.length}: ${s?.title}. Open the section list.`);
-    dots.replaceChildren(...scenes.map((_, i) => h('span', { class: `deck-dot ${i < index ? 'is-past' : ''} ${i === index ? 'is-current' : ''}` })));
     document.body.dataset.currentScene = s?.id || '';
     scheduleAuto();
   }
@@ -206,7 +203,6 @@ export function createDeck(root, uiMount) {
     );
     menu.hidden = false;
     progressBtn.setAttribute('aria-expanded', 'true');
-    menuBtn.setAttribute('aria-expanded', 'true');
     (menu.querySelector('[aria-current="step"]') || menu.querySelector('button'))?.focus();
   }
   function closeMenu() {
@@ -214,35 +210,18 @@ export function createDeck(root, uiMount) {
     const hadFocus = menu.contains(document.activeElement);
     menu.hidden = true;
     progressBtn.setAttribute('aria-expanded', 'false');
-    menuBtn.setAttribute('aria-expanded', 'false');
     if (hadFocus) progressBtn.focus({ preventScroll: true });
   }
   const toggleMenu = () => (menu.hidden ? openMenu() : closeMenu());
   progressBtn.addEventListener('click', toggleMenu);
-  menuBtn.addEventListener('click', toggleMenu);
   document.addEventListener('pointerdown', (e) => {
-    if (!menu.hidden && !menu.contains(e.target) && !progressBtn.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
+    if (!menu.hidden && !menu.contains(e.target) && !progressBtn.contains(e.target)) closeMenu();
   });
 
   prevBtn.addEventListener('click', prev);
   nextBtn.addEventListener('click', next);
 
-  // ---- Music + full screen -------------------------------------------------------------
-  musicBtn.addEventListener('click', () => music.toggle());
-  muteBtn.addEventListener('click', () => music.setMuted(!music.muted));
-  music.subscribe((st) => {
-    musicBtn.disabled = !st.available;
-    musicBtn.setAttribute('aria-pressed', String(st.on));
-    musicBtn.classList.toggle('is-playing', st.on && !st.ducked);
-    const what = st.title ? ` “${st.title}”` : '';
-    musicBtn.setAttribute('aria-label', !st.available ? 'Music unavailable' : st.on ? `Pause music${what}` : `Play music${what}`);
-    musicBtn.title = !st.available ? 'No music file found (see data/site.json → music.src)' : `${st.on ? 'Pause' : 'Play'} music  (M)`;
-    muteBtn.disabled = !st.available;
-    muteBtn.setAttribute('aria-pressed', String(st.muted));
-    muteBtn.innerHTML = st.muted ? icons.mute : icons.volume;
-    muteBtn.setAttribute('aria-label', st.muted ? 'Unmute music' : 'Mute music');
-    muteBtn.title = st.muted ? 'Unmute music' : 'Mute music';
-  });
+  // ---- Full screen ---------------------------------------------------------------------
 
   const toggleFullscreen = async () => {
     try {

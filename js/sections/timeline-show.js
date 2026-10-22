@@ -22,6 +22,8 @@ const FIRST_PHOTO_MS = 4500;  // a new milestone: time to read its caption
 const NEXT_PHOTO_MS = 3500;   // another photo of the same milestone
 const CARD_MS = 4000;         // a year card without a photograph
 const FADE_MS = 600;          // the cross-fade between two photos (css/scenes.css → .tslide)
+const READY_MAX_MS = 2500;    // a slow photo waits at most this long before its slide shows anyway
+const AHEAD = 3;              // photographs fetched ahead of the one on screen
 const shortYear = (y) => (String(y).match(/\d{4}s?/) || [y])[0];
 
 export function mountTimelineShow(el, content, { chapterId, titleId }) {
@@ -34,7 +36,24 @@ export function mountTimelineShow(el, content, { chapterId, titleId }) {
     const media = m.media.map((ref) => ({ ...ref, item: content.media.get(ref.id) })).filter((r) => r.item);
     return (media.length ? media : [null]).map((ref, k) => ({ m, mi, ref, k, count: media.length }));
   });
-  let index = -1;
+  let index = -1, shown = -1, token = 0;
+
+  // Each photograph is downloaded and decoded once, ahead of time, and kept:
+  // a slide only fades in when its photo is ready, so the frame never shows blank.
+  const ready = new Map();
+  const load = (s) => {
+    const item = s?.ref?.item;
+    if (!item) return Promise.resolve();
+    const src = url(item.lg);
+    if (!ready.has(src)) {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+      ready.set(src, { img, done: (img.decode ? img.decode() : Promise.resolve()).catch(() => {}) });
+    }
+    return ready.get(src).done;
+  };
+  const within = (promise, ms) => Promise.race([promise, new Promise((r) => setTimeout(r, ms))]);
 
   // ---- Layout ----------------------------------------------------------------------------
   const stage = h('div', { class: 'tshow__stage' });
@@ -81,9 +100,17 @@ export function mountTimelineShow(el, content, { chapterId, titleId }) {
 
   function show(i, { animate = true } = {}) {
     const target = Math.max(0, Math.min(slides.length - 1, i));
-    const prev = slides[index];
+    index = target; // the presentation's counter moves at once; the picture follows when it is ready
+    const mine = ++token;
+    for (let k = 1; k <= AHEAD; k++) load(slides[target + k]);
+    within(load(slides[target]), READY_MAX_MS).then(() => { if (mine === token) swap(target, animate); });
+  }
+
+  function swap(target, animate) {
+    if (target === shown && stage.querySelector('.tslide:not(.is-leaving)')) return;
+    const prev = slides[shown];
     const s = slides[target];
-    index = target;
+    shown = target;
     const still = !animate || prefersReducedMotion();
 
     const incoming = slideEl(s);
@@ -111,9 +138,6 @@ export function mountTimelineShow(el, content, { chapterId, titleId }) {
       stop.classList.toggle('is-current', k === s.mi);
     });
     fill.style.transform = `scaleX(${list.length > 1 ? s.mi / (list.length - 1) : 1})`;
-    // the next photograph is ready before it is needed
-    const next = slides[index + 1]?.ref?.item;
-    if (next) new Image().src = url(next.lg);
   }
 
   function fit() { fitText(story, { min: 0.6 }); }
@@ -121,7 +145,10 @@ export function mountTimelineShow(el, content, { chapterId, titleId }) {
   show(0, { animate: false });
 
   return {
+    /** The page before this one is showing: fetch the first photographs now. */
+    prepare() { for (let k = 0; k < AHEAD; k++) load(slides[k]); },
     hint: `${chapter.from} – ${chapter.to} · ${list.length} moments, ${slides.length} photographs`,
+    // (the photo already on screen is not built again, so returning to a slideshow never flashes)
     enter({ atEnd }) { show(atEnd ? slides.length - 1 : 0, { animate: false }); },
     step(dir) {
       const target = index + dir;

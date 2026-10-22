@@ -1,22 +1,23 @@
-// Background music from a file (data/site.json → music.src).
-// It never starts by itself: Begin the Celebration, the music button or M start it.
+// Background music from a file (data/site.json → music.src), all the way through.
+// It never starts by itself: Begin the Celebration (or M) starts it.
 // There is only ever one <audio> for the whole presentation.
-// Volume fades in and out gently. While a video with sound plays, the music
-// fades out ("ducks") and comes back when the video pauses or ends — but only
-// if it was playing before. Several things can hold it down at once (a video
-// playing, a playlist of wishes between two videos); it returns when the last
-// one lets go.
+// Volume fades gently. On ordinary pages it plays at `volume`; while a film or
+// a family wish plays it carries on softly underneath (`softVolume`, "ducked")
+// and returns to its normal level afterwards. Several things can hold it soft
+// at once (a video playing, the wishes between two videos); it returns to
+// normal when the last one lets go. <body data-music> says off / normal / soft.
 
 const listeners = new Set();
 const FADE_MS = 900;
 
 let audio = null;
-let config = { title: '', volume: 0.4 };
+let config = { title: '', volume: 0.4, soft: 0.1 };
 const state = { available: false, on: false, muted: false, ducked: false, title: '' };
 let fadeRaf = 0;
 const duckers = new Set();
 
 function emit() {
+  document.body.dataset.music = !state.on ? 'off' : state.ducked ? 'soft' : 'normal';
   listeners.forEach((fn) => fn({ ...state }));
 }
 
@@ -34,11 +35,12 @@ function fadeTo(target, ms = FADE_MS, done) {
   fadeRaf = requestAnimationFrame(step);
 }
 
-const audibleVolume = () => (state.muted ? 0 : config.volume);
+const audibleVolume = () => (state.muted ? 0 : state.ducked ? config.soft : config.volume);
 
 export const music = {
   configure(cfg = {}, resolveUrl = (p) => p) {
-    config = { title: cfg.title || '', volume: Number.isFinite(cfg.volume) ? cfg.volume : 0.4 };
+    const volume = Number.isFinite(cfg.volume) ? cfg.volume : 0.4;
+    config = { title: cfg.title || '', volume, soft: Number.isFinite(cfg.softVolume) ? cfg.softVolume : volume / 4 };
     state.title = config.title;
     if (!cfg.src) {
       console.info('[music] No music.src set in data/site.json — the music button is disabled.');
@@ -48,7 +50,7 @@ export const music = {
     audio = new Audio();
     audio.src = resolveUrl(cfg.src);
     audio.loop = true;
-    audio.preload = 'auto';
+    audio.preload = 'metadata'; // a long track streams as it plays; nothing big is fetched before Begin
     audio.volume = 0;
     state.available = true;
     audio.addEventListener('error', () => {
@@ -71,7 +73,6 @@ export const music = {
     if (!audio || !state.available) return;
     state.on = true;
     emit();
-    if (state.ducked) return; // a video is playing; the music joins in when it stops
     try {
       await audio.play();
       fadeTo(audibleVolume());
@@ -85,7 +86,7 @@ export const music = {
     if (!audio) return;
     state.on = false;
     emit();
-    fadeTo(0, 600, () => { if (!state.on || state.ducked) audio.pause(); });
+    fadeTo(0, 600, () => { if (!state.on) audio.pause(); });
   },
   toggle() {
     return state.on ? this.pause() : this.play();
@@ -93,23 +94,22 @@ export const music = {
   setMuted(muted) {
     state.muted = !!muted;
     emit();
-    if (audio && state.on && !state.ducked) fadeTo(audibleVolume(), 400);
+    if (audio && state.on) fadeTo(audibleVolume(), 400);
   },
-  /** A video with sound started (or a playlist is running): fade the music out. */
+  /** A film or wish is playing (or the wishes are running): the music carries on softly underneath. */
   duck(reason = 'video') {
     duckers.add(reason);
     if (state.ducked) return;
     state.ducked = true;
     emit();
-    if (audio && state.on) fadeTo(0, 700, () => { if (state.ducked) audio.pause(); });
+    if (audio && state.on) fadeTo(audibleVolume(), 800);
   },
-  /** The video paused or ended: bring the music back if the host had it on. */
+  /** The video paused or ended: back to the normal level. */
   unduck(reason = 'video') {
     duckers.delete(reason);
     if (!state.ducked || duckers.size) return;
     state.ducked = false;
     emit();
-    // a film that follows straight on may duck again before play() resolves: stay quiet then
-    if (audio && state.on) audio.play().then(() => { if (!state.ducked) fadeTo(audibleVolume(), 1400); else audio.pause(); }).catch(() => {});
+    if (audio && state.on) fadeTo(audibleVolume(), 1200);
   },
 };
