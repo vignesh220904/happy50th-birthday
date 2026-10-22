@@ -114,7 +114,7 @@ check('final greeting and messages', site.finale.headline === 'Happy 50th Birthd
 check('music: an instrumental file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
 check('music: kept low (volume 0.4 or less)', site.music.volume > 0 && site.music.volume <= 0.4);
 // The family's three films, from VIDEOS/ (prepared by npm run build:films)
-const FILMS = [['storyFilm', 'VIDEOS/age 1 to 5 story video.mp4'], ['ageFilm', 'VIDEOS/AGE 1 TO 50 - real video.mp4'], ['lifeJourney', 'VIDEOS/LIFE JOURNEY.mp4']];
+const FILMS = [['storyFilm', 'VIDEOS/age 1 to 5 story video.mp4'], ['ageFilm', 'VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4'], ['lifeJourney', 'VIDEOS/updated/LIFE JOURNEY-update.mp4']];
 for (const [key, original] of FILMS) {
   const f = site.videos[key] || {};
   check(`film ${key}: made from the family's own "${original.split('/').pop()}"`, f.source === original && (!existsSync(join(ROOT, 'VIDEOS')) || exists(original)), f.source);
@@ -151,7 +151,7 @@ const index = read('index.html');
 const indexRefs = [...index.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js|woff2))"/g)].map((m) => m[1]);
 check('index.html: stylesheets, scripts and fonts resolve', indexRefs.every((r) => exists(r)), indexRefs.filter((r) => !exists(r)).join(', '));
 const sceneIds = [...index.matchAll(/data-scene="([a-z-]+)"/g)].map((m) => m[1]);
-check('index.html: the presentation scenes, in order: the three films before the wishes, then the cake and the gift', sceneIds.join() === 'welcome,reveal,story-film,age-film,journey-film,journey,proud,reasons,memories,wishes,cake,finale', sceneIds.join());
+check('index.html: the presentation scenes, in order: the story film, …, the wishes, Age 1 to 50, Her Life Journey, the cake, the gift', sceneIds.join() === 'welcome,reveal,story-film,journey,proud,reasons,memories,wishes,age-film,journey-film,cake,finale', sceneIds.join());
 check('the separate Family Photo Gallery is removed (its photographs stay in "Memory gallery/")', !sceneIds.includes('gallery') && !exists('js/sections/gallery.js') && manifest.collections.gallery.length > 0);
 check('no loading screen before the welcome', !/class="loader"/.test(index));
 check('index.html: the welcome is the scene shown first', /class="scene scene--welcome is-active"/.test(index));

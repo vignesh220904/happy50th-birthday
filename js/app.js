@@ -27,20 +27,21 @@ import * as wishes from './sections/wishes.js';
 import * as cake from './sections/cake.js';
 import * as finale from './sections/finale.js';
 
-// The running order of the celebration: the family's three films come straight
-// after the birthday greeting, the video wishes then the cake close the evening.
+// The running order of the celebration: the story film follows the birthday
+// greeting; after the family's video wishes come the Age 1 to 50 and Life
+// Journey films, then the cake ("Happy Birthday, Amma") and the final gift.
 const SCENES = [
   { id: 'welcome', title: 'A Golden Beginning', mod: welcome },
   { id: 'reveal', title: 'Happy 50th Birthday', mod: reveal },
   { id: 'story-film', title: 'Age 1 to 5: Her Story', mod: storyFilm },
-  { id: 'age-film', title: 'Age 1 to 50: The Real Journey', mod: ageFilm },
-  { id: 'journey-film', title: 'Her Life Journey', mod: journeyFilm },
   { id: 'journey', title: 'A Journey Through Time', mod: journey },
   { id: 'proud', title: 'Proud Moments', mod: proud },
   { id: 'reasons', title: '50 Reasons We Love You', mod: reasons },
   { id: 'memories', title: 'Our Memory Film', mod: memories },
   { id: 'wishes', title: 'Messages Filled With Love', mod: wishes },
-  { id: 'cake', title: 'Make a Wish', mod: cake },
+  { id: 'age-film', title: 'Age 1 to 50: The Real Journey', mod: ageFilm },
+  { id: 'journey-film', title: 'Her Life Journey', mod: journeyFilm },
+  { id: 'cake', title: 'Happy Birthday, Amma', mod: cake },
   { id: 'finale', title: 'A Final Gift of Love', mod: finale },
 ];
 

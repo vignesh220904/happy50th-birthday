@@ -3,8 +3,8 @@ Prepare the family's three films (the files they supplied in VIDEOS/) for the
 presentation:
 
     VIDEOS/age 1 to 5 story video.mp4    -> assets/videos/family/age-1-to-5-story.mp4
-    VIDEOS/AGE 1 TO 50 - real video.mp4  -> assets/videos/family/age-1-to-50.mp4
-    VIDEOS/LIFE JOURNEY.mp4              -> assets/videos/family/life-journey.mp4
+    VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4  -> assets/videos/family/age-1-to-50.mp4
+    VIDEOS/updated/LIFE JOURNEY-update.mp4              -> assets/videos/family/life-journey.mp4
 
 Run from the project root:
 
@@ -33,8 +33,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = "assets/videos/family"
 FILMS = [
     ("VIDEOS/age 1 to 5 story video.mp4", f"{OUT_DIR}/age-1-to-5-story.mp4"),
-    ("VIDEOS/AGE 1 TO 50 - real video.mp4", f"{OUT_DIR}/age-1-to-50.mp4"),
-    ("VIDEOS/LIFE JOURNEY.mp4", f"{OUT_DIR}/life-journey.mp4"),
+    # the family's updated versions (VIDEOS/updated/) replace the first ones
+    ("VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4", f"{OUT_DIR}/age-1-to-50.mp4"),
+    ("VIDEOS/updated/LIFE JOURNEY-update.mp4", f"{OUT_DIR}/life-journey.mp4"),
 ]
 MAX_MB = 95       # GitHub refuses files over 100 MB
 AUDIO_KBPS = 160

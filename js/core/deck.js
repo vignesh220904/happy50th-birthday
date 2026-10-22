@@ -16,7 +16,9 @@
 // There is only ever one timer: every move clears it first, so the photo
 // slideshows, the reasons and the scenes can never run conflicting timers.
 // Touching the scene restarts the wait; the photo viewer or the section menu
-// hold it; the final scene ends it. Manual controls always work.
+// hold it; the final scene ends it. Manual controls always work, and they
+// stay on screen on every page (Back, Next, full screen); only the mouse
+// pointer hides when it rests. H hides or shows the controls by hand.
 //
 // The welcome is always the first screen. The current scene is deliberately
 // never stored (not in the URL, not in storage), so a refresh or a new session
@@ -41,7 +43,7 @@ export function createDeck(root, uiMount) {
   // ---- Controls ---------------------------------------------------------------
   const autoBtn = h('button', { class: 'icon-btn deck-auto', type: 'button', 'aria-pressed': 'false', 'aria-label': 'Resume the slideshow', title: 'Start automatic playback  (A)', html: icons.play },
     h('span', { class: 'deck-auto__ring', 'aria-hidden': 'true' }));
-  const prevBtn = h('button', { class: 'icon-btn deck-prev', type: 'button', 'aria-label': 'Previous', title: 'Previous  (←)', html: icons.prev });
+  const prevBtn = h('button', { class: 'deck-prev', type: 'button', 'aria-label': 'Back', title: 'Back  (←)' }, h('i', { html: icons.prev }), h('span', {}, 'Back'));
   const nextBtn = h('button', { class: 'deck-next', type: 'button', 'aria-label': 'Next', title: 'Next  (→ or Space)' }, h('span', {}, 'Next'), h('i', { html: icons.next }));
   const dots = h('span', { class: 'deck-dots', 'aria-hidden': 'true' });
   const labelTitle = h('span', { class: 'deck-label__title' });
@@ -50,7 +52,9 @@ export function createDeck(root, uiMount) {
     dots, h('span', { class: 'deck-label' }, labelTitle, labelSub));
   const musicBtn = h('button', { class: 'icon-btn music-btn', type: 'button', 'aria-pressed': 'false', html: icons.music });
   const muteBtn = h('button', { class: 'icon-btn tool-optional', type: 'button', 'aria-pressed': 'false', html: icons.volume });
-  const fsBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Full screen', title: 'Full screen  (F)', html: icons.expand });
+  const fsIcon = h('i', { html: icons.expand });
+  const fsLabel = h('span', {}, 'Full screen');
+  const fsBtn = h('button', { class: 'deck-fs', type: 'button', 'aria-label': 'Full screen', title: 'Full screen  (F)' }, fsIcon, fsLabel);
   const menuBtn = h('button', { class: 'icon-btn tool-optional', type: 'button', 'aria-label': 'All sections', title: 'All sections  (G)', 'aria-expanded': 'false', html: icons.menu });
 
   const navBar = h('nav', { class: 'deck-bar deck-bar--nav', 'aria-label': 'Presentation' }, autoBtn, prevBtn, progressBtn, nextBtn);
@@ -87,7 +91,7 @@ export function createDeck(root, uiMount) {
       from.el.inert = true;
       from.el.setAttribute('aria-hidden', 'true');
       try { from.ctl.leave?.(); } catch (err) { console.error(`[deck] ${from.id} leave`, err); }
-      setTimeout(() => from.el.classList.remove('is-leaving'), prefersReducedMotion() ? 0 : 950);
+      setTimeout(() => from.el.classList.remove('is-leaving'), prefersReducedMotion() ? 0 : 650); // = --dur-scene + a little
     }
 
     index = to;
@@ -249,8 +253,10 @@ export function createDeck(root, uiMount) {
   fsBtn.addEventListener('click', toggleFullscreen);
   document.addEventListener('fullscreenchange', () => {
     const on = !!document.fullscreenElement;
-    fsBtn.innerHTML = on ? icons.shrink : icons.expand;
-    fsBtn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
+    fsIcon.innerHTML = on ? icons.shrink : icons.expand;
+    fsLabel.textContent = on ? 'Normal screen' : 'Full screen';
+    fsBtn.setAttribute('aria-label', on ? 'Normal screen (leave full screen)' : 'Full screen');
+    fsBtn.title = `${on ? 'Normal screen' : 'Full screen'}  (F)`;
   });
 
   // ---- Keyboard ------------------------------------------------------------------------
@@ -301,20 +307,16 @@ export function createDeck(root, uiMount) {
     ignore: (target) => !!target.closest('.player, input, .no-swipe'),
   });
 
-  // ---- Idle: controls step aside --------------------------------------------------------
+  // ---- Idle: the controls stay; only the mouse pointer hides when it rests -----------------
   let idleTimer = 0;
   function setControls(visible) {
     document.body.classList.toggle('controls-hidden', !visible);
   }
   function showControls() {
-    setControls(true);
+    document.body.classList.remove('pointer-idle');
     clearTimeout(idleTimer);
-    if (isCoarsePointer()) return; // touch screens: keep the controls in reach
-    idleTimer = setTimeout(() => {
-      if (navBar.matches(':hover') || toolBar.matches(':hover') || !menu.hidden) return showControls();
-      if (navBar.contains(document.activeElement) || toolBar.contains(document.activeElement)) document.activeElement.blur();
-      setControls(false);
-    }, IDLE_MS);
+    if (isCoarsePointer()) return;
+    idleTimer = setTimeout(() => document.body.classList.add('pointer-idle'), IDLE_MS);
   }
   ['pointermove', 'pointerdown', 'wheel', 'touchstart'].forEach((ev) => addEventListener(ev, showControls, { passive: true }));
 

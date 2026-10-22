@@ -267,9 +267,10 @@
   line-height: 1.25;
   color: var(--ink-soft);
 }
-.scene.is-active.has-entered .reveal__line2 { animation: amma-in 1.6s var(--ease-out) both; animation-delay: 0.45s; }
+.scene.is-active.has-entered .reveal__line2 { animation: amma-in 1s var(--ease-out) both; animation-delay: 0.3s; }
+/* transform and opacity only: the huge word never re-lays out or re-blurs on every frame */
 @keyframes amma-in {
-  from { opacity: 0; transform: scale(0.86); letter-spacing: 0.3em; filter: blur(8px); }
+  from { opacity: 0; transform: scale(0.86); }
   to { opacity: 1; transform: none; }
 }
 
@@ -479,12 +480,13 @@
   align-items: center;
   justify-content: space-between;
   gap: calc(var(--u) * 1);
-  width: min(100%, calc(var(--u) * 90));
+  width: min(100%, calc(var(--u) * 150));
   color: #fff;
   transition: opacity 600ms var(--ease-out);
 }
 .theatre-bar__mid { display: flex; align-items: center; gap: calc(var(--u) * 1); min-width: 0; }
-.theatre-bar__end { display: flex; align-items: center; gap: calc(var(--u) * 0.8); }
+.theatre-bar__end { display: flex; flex: none; align-items: center; gap: calc(var(--u) * 0.8); }
+.theatre-bar .btn { white-space: nowrap; }
 /* not in full screen (the browser refused it without a click): the button asks to be noticed */
 .theatre-bar__fs.is-offer { box-shadow: 0 0 0 2px var(--champagne); animation: fs-offer 2.4s var(--ease-in-out) 3; }
 @keyframes fs-offer { 50% { box-shadow: 0 0 0 6px rgba(217, 182, 111, 0.35); } }
@@ -522,11 +524,15 @@ body.is-theatre .deck-bar { display: none; }
 }
 .tslide__fill {
   position: absolute;
-  inset: 0;
+  left: -12.5%;
+  top: -12.5%;
+  width: 25%;
+  height: 25%;
   background: center / cover no-repeat;
-  filter: blur(26px) saturate(1.15);
+  filter: blur(5px) saturate(1.15);
   opacity: 0.5;
-  transform: scale(1.25);
+  transform: scale(5); /* a quarter-size blur, scaled up: the same soft fill for far less work per photo */
+  transform-origin: 0 0;
 }
 .tslide__frame {
   position: relative;
@@ -736,11 +742,11 @@ body.is-theatre .deck-bar { display: none; }
   line-height: 1.18;
   color: var(--ink);
 }
-.rcloud .rbubble { opacity: 0; }
+.rcloud .rbubble { opacity: 0; will-change: transform, opacity; } /* each floats on its own layer: no repaint per frame */
 .rcloud.is-shown .rbubble {
   animation:
-    bubble-in 0.9s var(--ease-out) calc(var(--k) * 320ms) both,
-    bubble-float var(--drift) var(--ease-in-out) calc(var(--k) * 320ms + 0.9s) infinite alternate;
+    bubble-in 0.7s var(--ease-out) calc(var(--k) * 200ms) both,
+    bubble-float var(--drift) var(--ease-in-out) calc(var(--k) * 200ms + 0.7s) infinite alternate;
 }
 @keyframes bubble-in {
   from { opacity: 0; transform: translate3d(0, calc(var(--u) * 2), 0) scale(0.8) rotate(var(--tilt)); }
@@ -759,7 +765,7 @@ body.is-theatre .deck-bar { display: none; }
   text-align: center;
   color: var(--ink-soft);
   opacity: 0;
-  transition: opacity 1.2s var(--ease-out) 3.6s;
+  transition: opacity 0.9s var(--ease-out) 2.4s;
 }
 .reasons__closing.is-shown { opacity: 1; }
 
@@ -841,7 +847,7 @@ body.is-theatre .deck-bar { display: none; }
 .fgift > span:last-child { position: absolute; inset: auto 0 0 0; display: block; }
 .fgift__svg { width: 100%; height: auto; overflow: visible; }
 .fgift__shadow { fill: rgba(35, 78, 156, 0.14); }
-.fgift__lid { transform-origin: 160px 136px; transition: transform 1.6s var(--ease-out); } /* the lid's centre, in the drawing's units */
+.fgift__lid { transform-origin: 160px 136px; transition: transform 1.1s var(--ease-out); } /* the lid's centre, in the drawing's units */
 .scene--finale.is-open .fgift__lid { transform: translate(-6px, -112px) rotate(-7deg); }
 .fgift__glow {
   position: absolute;
@@ -853,10 +859,11 @@ body.is-theatre .deck-bar { display: none; }
   transform: translate(-50%, -50%) scale(0.6);
   background: radial-gradient(closest-side, rgba(255, 246, 220, 0.95), rgba(236, 220, 178, 0.5) 45%, transparent 72%);
   opacity: 0;
-  transition: opacity 1.4s var(--ease-out) 0.3s, transform 1.8s var(--ease-out) 0.3s;
+  transition: opacity 1s var(--ease-out) 0.2s, transform 1.2s var(--ease-out) 0.2s;
 }
 .fgift__rays {
   position: absolute;
+  will-change: transform; /* turns slowly on its own layer */
   left: -10%;
   top: -16%;
   width: 120%;
@@ -866,7 +873,7 @@ body.is-theatre .deck-bar { display: none; }
   -webkit-mask: radial-gradient(closest-side, #000 20%, transparent 72%);
   mask: radial-gradient(closest-side, #000 20%, transparent 72%);
   opacity: 0;
-  transition: opacity 1.6s var(--ease-out) 0.5s;
+  transition: opacity 1.1s var(--ease-out) 0.3s;
   animation: spin 60s linear infinite;
 }
 .fgift__fifty {
@@ -884,7 +891,7 @@ body.is-theatre .deck-bar { display: none; }
   filter: drop-shadow(0 calc(var(--u) * 0.15) 0 #fff) drop-shadow(0 calc(var(--u) * 0.6) calc(var(--u) * 1) rgba(185, 142, 62, 0.45));
   opacity: 0;
   transform: translate(-50%, 40%) scale(0.6);
-  transition: opacity 1.4s var(--ease-out) 0.7s, transform 1.8s var(--ease-out) 0.7s;
+  transition: opacity 1s var(--ease-out) 0.4s, transform 1.2s var(--ease-out) 0.4s;
 }
 .fgift__sparks { position: absolute; inset: 0; pointer-events: none; }
 .fgift__sparks i {
@@ -1013,6 +1020,7 @@ body.is-theatre .deck-bar { display: none; }
   .cinema__end-title, .cinema__upnext-name { font-size: 1.5rem; }
   .scene.is-theatre .cinema__screen-wrap { container-type: size; padding: 10px 10px 8px; }
   .theatre-bar .btn { padding-inline: 0.9em; }
+  .theatre-bar__text { display: none; } /* phones: the buttons keep their icons */
   .theatre-bar__label { font-size: 0.8rem; }
 
   .tshow__media { order: 1; }

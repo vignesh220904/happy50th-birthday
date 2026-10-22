@@ -54,8 +54,8 @@
    (only once the presentation is running, so nothing is hidden without JS) */
 .deck.is-running .scene [data-enter] { opacity: 0; }
 .scene.is-active.has-entered [data-enter] {
-  animation: rise-in 1s var(--ease-out) both;
-  animation-delay: calc(var(--enter, 0) * 110ms + 120ms);
+  animation: rise-in 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--enter, 0) * 70ms + 60ms);
 }
 
 /* ---------- Controls ---------- */
@@ -108,6 +108,33 @@
 .deck-next svg { width: 1.3em; height: 1.3em; }
 .deck-next[disabled] { opacity: 0.4; cursor: default; filter: grayscale(0.4); }
 
+/* Back and Full screen: labelled, so they are easy to find on every page */
+.deck-prev,
+.deck-fs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  height: var(--controls-h);
+  padding: 0 1.1em 0 0.8em;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: background var(--dur-fast), transform var(--dur-fast);
+}
+.deck-prev:hover,
+.deck-fs:hover { background: var(--sky); }
+.deck-prev:active,
+.deck-fs:active { transform: scale(0.96); }
+.deck-prev i,
+.deck-fs i { display: grid; width: 1.2em; height: 1.2em; }
+.deck-prev svg,
+.deck-fs svg { width: 100%; height: 100%; }
+.deck-prev[disabled] { opacity: 0.4; cursor: default; }
+
 .deck-progress {
   display: flex;
   align-items: center;
@@ -140,9 +167,10 @@
 /* The welcome has its own "Begin the Celebration" button instead of Next */
 body[data-current-scene="welcome"] .deck-bar--nav { display: none; }
 
-/* Idle: the controls step aside so the projector shows only the scene */
+/* The controls stay on screen; H hides them by hand. A resting mouse pointer hides itself. */
 body.controls-hidden .deck-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
-body.controls-hidden { cursor: none; }
+body.controls-hidden,
+body.pointer-idle { cursor: none; }
 
 /* ---------- Section menu ---------- */
 .deck-menu {
@@ -231,8 +259,8 @@ body.controls-hidden { cursor: none; }
   .deck-bar .tool-optional { display: none; }
   .deck-label, .deck-dots { display: none; }
   .deck-progress::before { content: attr(data-short); font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
-  .deck-next span { display: none; }
-  .deck-next { padding: 0 0.9em; }
+  .deck-next span, .deck-prev span, .deck-fs span { display: none; }
+  .deck-next, .deck-prev, .deck-fs { padding: 0 0.9em; }
   .deck-menu { right: 10px; left: 10px; width: auto; bottom: 70px; }
 }
 

@@ -20,7 +20,7 @@ PAGES = {
     "reasons.html": ("reasons", "50 Reasons We Love You"),
     "memories.html": ("memories", "Our Memory Film"),
     "wishes.html": ("wishes", "Messages Filled With Love"),
-    "cake.html": ("cake", "Make a Wish"),
+    "cake.html": ("cake", "Happy Birthday, Amma"),
     "finale.html": ("finale", "A Final Gift of Love"),
 }
 

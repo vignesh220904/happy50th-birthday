@@ -29,15 +29,17 @@ Double-clicking `index.html` does **not** work (browsers block the site's data f
 
 1. Connect the laptop to the projector and open the site. Press **F** (or the ⛶ button) for full screen.
 2. **A Golden Beginning** appears by itself. It is the idle screen while guests arrive and needs no clicks.
-   The controls fade away when the mouse rests and come back as soon as it moves.
+   On every other page **‹ Back**, **Next ›** and **Full screen / Normal screen** stay on screen
+   (only the mouse pointer hides when it rests; **H** hides or shows the controls by hand).
 3. When Amma is ready, press **Begin the Celebration** (or →, Space, Enter, or a presentation clicker).
    The gentle instrumental music starts, the browser goes full screen, and the presentation runs **by itself**
    from there to the final gift: the films and the family's video wishes start on their own, one at a time,
    and when a film ends the presentation moves on. Photo slideshows move briskly (about 4½ s for a new milestone,
    3½ s for its other photos). The music fades out under every video and returns afterwards.
-4. Films play in a full-screen theatre with **Back**, **Replay** and a full-screen button at the bottom.
-   The first **Esc** leaves the browser's full screen; the next **Esc** (or **Back**) closes the film and pauses it.
-   Nothing else is reset. Press ▶ (or **A**) to carry on.
+4. Every video page plays its video by itself when you arrive on it (also when the automatic presentation is paused).
+   The video fills the screen with a bar at the bottom: **‹ Back** (previous page), **Close video**, **Replay**,
+   **Full screen / Normal screen** and **Next ›** (next page); the wishes add ‹ › for the previous / next message.
+   The first **Esc** leaves the browser's full screen; the next **Esc** (or **Close video**) closes the video and pauses it.
 5. If a browser refuses to start a film with sound by itself, the film shows **Press Play to start** and the
    presentation waits; it never skips the film or pretends it is playing. Press the large ▶ once and it continues.
    If full screen was refused, the ⛶ button in the film's bar glows: press it.
@@ -73,14 +75,14 @@ between the family's video wishes while they play (but not past the last one whi
 | 1 | **A Golden Beginning** | *Fifty Years. A Thousand Memories. One Beautiful Life.* with the approved lines *Celebrating the Beautiful Journey of Buvaneswari*, *50 Years of Love, Strength & Beautiful Memories*, 27 October 1976 – 27 October 2026, a golden "50" in a laurel wreath, and one button: **Begin the Celebration** |
 | 2 | **Happy 50th Birthday** | HAPPY 50TH BIRTHDAY / AMMA / M. BUVANESWARI beside Amma's photograph in the pearl arch frame (the replacement photo the family chose: `Age 1 to 50/46.1.jpg`), with confetti |
 | 3 | **Age 1 to 5: Her Story** | The family's story video (`VIDEOS/age 1 to 5 story video.mp4`, 6 min 54 s) |
-| 4 | **Age 1 to 50: The Real Journey** | The family's real video (`VIDEOS/AGE 1 TO 50 - real video.mp4`, 1 min 2 s) |
-| 5 | **Her Life Journey** | The family's Life Journey video (`VIDEOS/LIFE JOURNEY.mp4`, 21 s) |
-| 6 | **A Journey Through Time** · 1976 – 2005 | An automatic slideshow of the family's photographs, one at a time, never cropped, with the year, title and caption and a year rail |
-| 7 | **Proud Moments** · 2006 – 2026 | The same slideshow for the later milestones |
-| 8 | **50 Reasons We Love You** | The family's five groups of ten, each as a floating cloud of bubbles that appear one by one. All 50 reasons, word for word, each once |
-| 9 | **Our Memory Film** | The family's memories film (6 min 23 s) |
-| 10 | **Messages Filled With Love** | The family's video wishes, played one at a time in their numbered order (see below) |
-| 11 | **Make a Wish** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
+| 4 | **A Journey Through Time** · 1976 – 2005 | An automatic slideshow of the family's photographs, one at a time, never cropped, with the year, title and caption and a year rail |
+| 5 | **Proud Moments** · 2006 – 2026 | The same slideshow for the later milestones |
+| 6 | **50 Reasons We Love You** | The family's five groups of ten, each as a floating cloud of bubbles that appear one by one. All 50 reasons, word for word, each once |
+| 7 | **Our Memory Film** | The family's memories film (6 min 23 s) |
+| 8 | **Messages Filled With Love** | The family's video wishes, played one at a time in their numbered order (see below) |
+| 9 | **Age 1 to 50: The Real Journey** | The family's updated real video (`VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4`, 1 min 2 s) |
+| 10 | **Her Life Journey** | The family's updated Life Journey video (`VIDEOS/updated/LIFE JOURNEY-update.mp4`, 1 min 31 s) |
+| 11 | **Happy Birthday, Amma** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
 | 12 | **A Final Gift of Love** | The family's closing words, her name, date and venue, beside an ivory-and-gold gift that opens to a golden "50". **Start Again** returns to the welcome |
 
 Every film opens in the full-screen theatre (Back, Replay, full screen). A film whose prepared copy is missing is left out, never replaced.
@@ -105,7 +107,7 @@ The 1996 (M.Com) milestone has no approved photograph yet: its slide is a year c
 
 | Folder | | Command |
 |------|---|---|
-| `VIDEOS/` | the three films: `age 1 to 5 story video.mp4`, `AGE 1 TO 50 - real video.mp4`, `LIFE JOURNEY.mp4` | `npm run build:films` → `assets/videos/family/` |
+| `VIDEOS/` | the films: `age 1 to 5 story video.mp4`, and the updated `updated/AGE 1 TO 50 - real video-update.mp4` and `updated/LIFE JOURNEY-update.mp4` | `npm run build:films` → `assets/videos/family/` |
 | `Family video wishes/` | the numbered wishes `1.mp4` … `24.mp4`, `27.mp4`, `28.mp4` | `npm run build:wishes` → `assets/videos/wishes/` + `data/wishes.json` |
 
 Both scripts check that every original can be decoded and report any that can't (they are left out, never replaced).

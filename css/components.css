@@ -158,7 +158,8 @@ img.is-broken,
   transition: opacity var(--dur);
 }
 .player.is-playing:not(:hover):not(:focus-within) .player__controls { opacity: 0; }
-body.controls-hidden .player.is-playing .player__controls { opacity: 0; }
+body.controls-hidden .player.is-playing .player__controls,
+body.pointer-idle .player.is-playing .player__controls { opacity: 0; } /* the film's own seek bar steps aside while it plays */
 .player__btn {
   display: grid;
   place-items: center;

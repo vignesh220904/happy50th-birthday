@@ -42,9 +42,9 @@ export async function mount(el, content) {
     auto: () => HOLD_MS,
     enter({ dir }) {
       if (dir < 0) return; // coming back from the journey: no second celebration
-      timers.push(setTimeout(() => confetti({ x: 0.08, y: 0.95, count: 120, angle: -1.05 }), 650));
-      timers.push(setTimeout(() => confetti({ x: 0.92, y: 0.95, count: 120, angle: -2.1 }), 800));
-      timers.push(setTimeout(() => confetti({ mode: 'rain', count: 140 }), 1500));
+      timers.push(setTimeout(() => confetti({ x: 0.08, y: 0.95, count: 80, angle: -1.05 }), 450));
+      timers.push(setTimeout(() => confetti({ x: 0.92, y: 0.95, count: 80, angle: -2.1 }), 600));
+      timers.push(setTimeout(() => confetti({ mode: 'rain', count: 90 }), 1200));
     },
     leave() {
       timers.forEach(clearTimeout);

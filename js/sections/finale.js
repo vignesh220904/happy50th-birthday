@@ -49,8 +49,8 @@ export async function mount(el, content, deck) {
     el.classList.remove('is-open');
     void el.offsetWidth; // restart the opening
     el.classList.add('is-open');
-    confetti({ mode: 'rain', count: big ? 150 : 90, colors: GOLD });
-    if (big) timers.push(setTimeout(() => confetti({ x: 0.74, y: 0.62, count: 110, colors: GOLD }), 700));
+    confetti({ mode: 'rain', count: big ? 110 : 70, colors: GOLD });
+    if (big) timers.push(setTimeout(() => confetti({ x: 0.74, y: 0.62, count: 80, colors: GOLD }), 500));
   }
 
   el.append(h('div', { class: 'scene__frame finale' },
@@ -78,7 +78,7 @@ export async function mount(el, content, deck) {
     hint: 'The closing words, with a gift that opens',
     enter() {
       el.classList.remove('is-open');
-      timers.push(setTimeout(() => celebrate({ big: false }), 1600));
+      timers.push(setTimeout(() => celebrate({ big: false }), 900));
     },
     leave() {
       timers.forEach(clearTimeout);

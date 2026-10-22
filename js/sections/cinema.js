@@ -3,9 +3,9 @@
 // control: the large Play button in the middle of the screen.
 //
 // Playing opens the theatre: the player fills the whole screen, the
-// presentation controls step aside, and a slim bar at the bottom offers Back,
-// Replay, Full screen and, for a playlist, Previous / Next. Esc or Back closes
-// it. The page also asks the browser for real full screen, which browsers
+// presentation controls step aside, and a bar at the bottom offers Back (the
+// previous page), Close video, Replay, Full screen / Normal screen and Next
+// (the next page); a playlist adds Previous / Next message. Esc closes it. The page also asks the browser for real full screen, which browsers
 // allow only straight after a click or key press; when that isn't possible the
 // theatre still fills the window and its Full screen button stays in view.
 //
@@ -15,18 +15,21 @@
 // that cannot be played is skipped after a moment, with a warning in the
 // console, and never replaced by anything else.
 //
-// Automatic presentation (after Begin the Celebration, or ▶ / A): the title
-// shows for a moment, then the film starts by itself, and when the film (or
-// the last wish) has ended the theatre closes and the presentation moves on.
+// Every video page plays by itself: once the visitor has clicked or pressed a
+// key anywhere (Begin the Celebration, Next …), arriving on the page shows the
+// title for a moment and then starts the video. In the automatic presentation,
+// when the film (or the last wish) has ended the theatre closes and the
+// presentation moves on; when it is paused (A), "Watch again" / "Continue" wait.
 // If the browser still holds the film back until someone clicks, the screen
 // says "Press Play" and the presentation waits; it never claims to be playing.
 
 import { h, icons, announce } from '../core/util.js';
 import { music } from '../core/audio.js';
 import { createPlayer } from '../core/player.js';
+import { url } from '../core/data.js';
 import { videoStage, fileExists } from './shared.js';
 
-const INTRO_MS = 1800;          // automatic: the title shows this long before the film starts
+const INTRO_MS = 1200;          // the title shows this long before the film starts by itself
 const UP_NEXT_MS = 2200;        // between two wishes: who is next
 const END_HOLD_MS = 1200;       // after the film or the last wish: a breath, then on
 const SKIP_MS = 2500;           // a video that cannot be played is skipped after this …
@@ -39,6 +42,8 @@ export async function mountCinema(el, deck, {
 }) {
   const sceneId = el.dataset.scene;
   const here = () => deck.current === sceneId;
+  // browsers let a page play sound once the visitor has interacted with it
+  const mayAutoplay = () => deck.autoplaying || (navigator.userActivation?.hasBeenActive ?? true);
 
   // ---- What can actually be played ----------------------------------------------
   const exists = await Promise.all(playlist.map((v) => fileExists(v.src)));
@@ -47,7 +52,7 @@ export async function mountCinema(el, deck, {
   const multi = items.length > 1;
 
   let current = 0, player = null, theatre = false, started = false, hasPlayed = false, ownsFullscreen = false;
-  let upNextTimer = 0, errorTimer = 0, introTimer = 0, watchdog = 0;
+  let upNextTimer = 0, errorTimer = 0, introTimer = 0, watchdog = 0, prepared = false;
   const clearTimers = () => [upNextTimer, errorTimer, introTimer, watchdog].forEach(clearTimeout);
 
   // ---- The screen ------------------------------------------------------------------------
@@ -174,35 +179,40 @@ export async function mountCinema(el, deck, {
     start();
   }
 
-  /** Automatic presentation: show the title for a moment, then play. */
+  /** Show the title for a moment, then play by itself. */
   function queueAutoStart() {
     clearTimeout(introTimer);
     music.duck('film'); // the music bows out while the title shows, so the film starts in quiet
     introTimer = setTimeout(() => {
-      if (deck.autoplaying && here() && !started) start();
+      if (mayAutoplay() && here() && !started) start();
       else if (!theatre) music.unduck('film');
     }, INTRO_MS);
   }
 
   // ---- Theatre ---------------------------------------------------------------------------
+  const fsIcon = h('span', { html: icons.expand });
+  const fsText = h('span', { class: 'theatre-bar__text' }, 'Full screen');
+  const text = (t) => h('span', { class: 'theatre-bar__text' }, t);
   const bar = {
-    back: h('button', { class: 'btn btn--light', type: 'button', onclick: () => closeTheatre() }, h('span', { html: icons.prev }), 'Back'),
-    prev: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Previous ${itemLabel.toLowerCase()}`, title: 'Previous', html: icons.prev, onclick: () => step(-1) }),
-    replay: h('button', { class: 'btn btn--light', type: 'button', onclick: () => replay() }, h('span', { html: icons.replay }), 'Replay'),
-    next: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Next ${itemLabel.toLowerCase()}`, title: 'Next', html: icons.next, onclick: () => step(1) }),
-    fs: h('button', { class: 'icon-btn icon-btn--light theatre-bar__fs', type: 'button', onclick: () => toggleFullscreen() }),
+    back: h('button', { class: 'btn btn--light', type: 'button', title: 'Back to the previous page', onclick: () => deck.go(deck.index - 1, { dir: -1, atEnd: true }) }, h('span', { html: icons.prev }), text('Back')),
+    close: h('button', { class: 'btn btn--light', type: 'button', title: 'Close the video and show the page  (Esc)', onclick: () => closeTheatre() }, h('span', { html: icons.close }), text('Close video')),
+    prev: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Previous ${itemLabel.toLowerCase()}`, title: `Previous ${itemLabel.toLowerCase()}`, html: icons.prev, onclick: () => step(-1) }),
+    replay: h('button', { class: 'btn btn--light', type: 'button', onclick: () => replay() }, h('span', { html: icons.replay }), text('Replay')),
+    next: h('button', { class: 'icon-btn icon-btn--light', type: 'button', 'aria-label': `Next ${itemLabel.toLowerCase()}`, title: `Next ${itemLabel.toLowerCase()}`, html: icons.next, onclick: () => step(1) }),
+    fs: h('button', { class: 'btn btn--light theatre-bar__fs', type: 'button', onclick: () => toggleFullscreen() }, fsIcon, fsText),
+    nextPage: h('button', { class: 'btn btn--celebrate', type: 'button', title: 'Next page', onclick: () => deck.go(deck.index + 1, { dir: 1 }) }, text('Next'), h('span', { html: icons.next })),
     label: h('span', { class: 'theatre-bar__label' }),
   };
   const theatreBar = h('div', { class: 'theatre-bar', role: 'toolbar', 'aria-label': 'Video' },
-    bar.back,
+    h('span', { class: 'theatre-bar__end' }, bar.back, bar.close),
     h('span', { class: 'theatre-bar__mid' }, multi ? bar.prev : null, bar.label, multi ? bar.next : null),
-    h('span', { class: 'theatre-bar__end' }, bar.replay, document.fullscreenEnabled ? bar.fs : null),
+    h('span', { class: 'theatre-bar__end' }, bar.replay, document.fullscreenEnabled ? bar.fs : null, bar.nextPage),
   );
   const syncFsButton = () => {
     const on = !!document.fullscreenElement;
-    bar.fs.innerHTML = on ? icons.shrink : icons.expand;
-    bar.fs.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
-    bar.fs.title = on ? 'Exit full screen' : 'Full screen';
+    fsIcon.innerHTML = on ? icons.shrink : icons.expand;
+    fsText.textContent = on ? 'Normal screen' : 'Full screen';
+    bar.fs.setAttribute('aria-label', on ? 'Normal screen (leave full screen)' : 'Full screen');
     bar.fs.classList.toggle('is-offer', !on); // not in full screen: the button asks to be noticed
   };
   syncFsButton();
@@ -219,7 +229,7 @@ export async function mountCinema(el, deck, {
     player.el.focus({ preventScroll: true });
     document.addEventListener('keydown', onTheatreKey, true);
     enterFullscreen();
-    announce('Playing in full screen. Press Escape or Back to return.');
+    announce('Playing in full screen. Press Escape or Close video to return to the page.');
   }
   function closeTheatre() {
     if (!theatre) return;
@@ -295,7 +305,16 @@ export async function mountCinema(el, deck, {
     enter() {
       started = false;
       if (items.length && current !== 0 && multi) load(0);
-      if (deck.autoplaying && items.length) queueAutoStart();
+      if (items.length && mayAutoplay()) queueAutoStart();
+    },
+    /** The page before this one is showing: decode the poster now, so this page appears without a stall. */
+    prepare() {
+      const poster = items[0]?.poster;
+      if (!poster || prepared) return;
+      prepared = true;
+      const img = new Image();
+      img.src = url(poster);
+      img.decode?.().catch(() => {});
     },
     leave() {
       clearTimers();

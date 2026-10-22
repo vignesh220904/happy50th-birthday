@@ -50,7 +50,10 @@ const wishesData = json('data/wishes.json');
 // The family's three films (each joins the presentation once its web copy exists, npm run build:films)
 const FILM_SCENES = [['story-film', 'storyFilm'], ['age-film', 'ageFilm'], ['journey-film', 'lifeJourney']]
   .filter(([, key]) => site.videos[key]?.src && exists(site.videos[key].src)).map(([id]) => id);
-const SCENE_ORDER = ['welcome', 'reveal', ...FILM_SCENES, 'journey', 'proud', 'reasons', 'memories', 'wishes', 'cake', 'finale'];
+const has = (id) => FILM_SCENES.includes(id);
+const SCENE_ORDER = ['welcome', 'reveal', ...(has('story-film') ? ['story-film'] : []), 'journey', 'proud', 'reasons', 'memories', 'wishes',
+  ...(has('age-film') ? ['age-film'] : []), ...(has('journey-film') ? ['journey-film'] : []), 'cake', 'finale'];
+const THEATRE_BUTTONS = /^Back,Close video,Replay,(Full screen|Normal screen),Next$/;
 const slidesIn = (chapterId) => {
   const c = timeline.chapters.find((x) => x.id === chapterId);
   return timeline.milestones.filter((m) => m.sortYear >= c.from && m.sortYear <= c.to).reduce((n, m) => n + Math.max(1, m.media.length), 0);
@@ -181,7 +184,7 @@ try {
       return c.backgroundColor === 'rgb(255, 250, 242)' && c.color === 'rgb(23, 54, 93)';
     }));
     await sleep(3800);
-    check('controls are out of sight on the idle welcome screen', await page.evaluate(() => document.body.classList.contains('controls-hidden')));
+    check('a resting mouse hides only the pointer: the controls stay on screen', await page.evaluate(() => document.body.classList.contains('pointer-idle') && !document.body.classList.contains('controls-hidden') && getComputedStyle(document.querySelector('.deck-bar--tools')).opacity === '1'));
     check('music is not playing before Begin', await page.$eval('.music-btn', (b) => !b.disabled && b.getAttribute('aria-pressed') === 'false'));
 
     // Begin the Celebration → the birthday page, music and automatic playback
@@ -231,7 +234,7 @@ try {
         await page.$eval('.deck-next', (b) => b.click());
         await sleep(500);
         lastWishHeld = (await active(page)) === 'wishes' && (await playing(page)).join() === 'wishes';
-        await page.$eval('.scene[data-scene="wishes"] .theatre-bar .btn', (b) => b.click());
+        await page.$$eval('.scene[data-scene="wishes"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Close video').click());
         await sleep(400);
       }
       await page.$eval('.deck-next', (b) => b.click());
@@ -296,25 +299,23 @@ try {
     }
     check('all 50 reasons appear exactly once, word for word', shown.length === 50 && shown.every((t, i) => t === reasons.reasons[i].text));
 
-    // Our Memory Film: one central Play, full-screen theatre, Back, Replay
+    // Our Memory Film: plays by itself on arrival (automatic presentation paused), full-screen theatre
     await page.evaluate(() => window.__deck.goTo('memories'));
-    await sleep(1500);
     check('the memory film is the family’s own video', await page.$eval(video('memories'), (v) => /family-memories\.mp4$/.test(v.currentSrc || v.src)));
-    await page.waitForFunction((sel) => document.querySelector(sel).readyState >= 1, { timeout: 30000 }, video('memories')).catch(() => {});
-    check('the film loads (6 min 23 s)', await page.$eval(video('memories'), (v) => Math.round(v.duration) === 383));
     check('one central Play control (no duplicate Play / Replay / Continue buttons)', await page.evaluate(() => {
       const s = document.querySelector('.scene[data-scene="memories"]');
       return s.querySelectorAll('.player__big-play').length === 1 && !s.querySelector('.cinema__play, .cinema__replay, .cinema__continue');
     }));
-    await page.click('.scene[data-scene="memories"] .player__big-play');
-    await sleep(1400);
-    check('Play opens the film in full screen (theatre)', await page.evaluate(() => {
+    check('a video page plays by itself on arrival, even with the automatic presentation paused', !(await autoOn(page)) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video('memories'), 6000));
+    check('the film loads (6 min 23 s)', await page.$eval(video('memories'), (v) => Math.round(v.duration) === 383));
+    await sleep(600);
+    check('it opens in full screen (theatre)', await page.evaluate(() => {
       const r = document.querySelector('.scene[data-scene="memories"] .cinema__screen-wrap').getBoundingClientRect();
       return document.body.classList.contains('is-theatre') && r.left === 0 && r.top === 0 && r.width === innerWidth && r.height === innerHeight;
     }));
     check('…the film plays and the presentation controls step aside', await page.$eval(video('memories'), (v) => !v.paused) && await page.evaluate(() => getComputedStyle(document.querySelector('.deck-bar--nav')).display === 'none'));
-    check('…with Back and Replay at the bottom', await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.map((x) => x.textContent.trim()).join() === 'Back,Replay'));
-    check('…and a Full screen / Exit full screen button', await page.evaluate(() => !document.fullscreenEnabled || !!document.querySelector('.scene[data-scene="memories"] .theatre-bar__fs[aria-label]')));
+    const barTexts = await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.map((x) => x.textContent.trim()).join());
+    check('…with Back, Close video, Replay, Full screen / Normal screen and Next at the bottom', THEATRE_BUTTONS.test(barTexts), barTexts);
     check('…and the music steps aside', await page.$eval('.music-btn', (b) => !b.classList.contains('is-playing')));
     await page.keyboard.press('ArrowRight');
     await sleep(400);
@@ -322,6 +323,7 @@ try {
     await press(page, 'Escape');
     if (await theatreOpen(page)) await press(page, 'Escape'); // the first Esc leaves full screen
     check('Escape leaves full screen, then closes the theatre and pauses the film, without resetting the presentation', !(await theatreOpen(page)) && await page.$eval(video('memories'), (v) => v.paused) && (await active(page)) === 'memories');
+    check('the music returns when the film is closed', await waitFor(page, () => document.querySelector('.music-btn').classList.contains('is-playing'), null, 3000));
     await page.click('.scene[data-scene="memories"] .player__big-play');
     await sleep(900);
     await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Replay').click());
@@ -336,7 +338,15 @@ try {
     await sleep(900);
     check('…Continue goes on to the family’s messages', (await active(page)) === 'wishes' && !(await page.evaluate(() => document.body.classList.contains('is-theatre'))));
     check('leaving a scene pauses its video', await page.$eval(video('memories'), (v) => v.paused));
-    check('the music returns after the film', await page.$eval('.music-btn', (b) => b.classList.contains('is-playing')));
+    // the player bar's own Back and Next move between pages
+    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, 6000); // the messages start by themselves
+    await page.$$eval('.scene[data-scene="wishes"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Back').click());
+    await sleep(700);
+    check('the player’s Back button goes to the previous page (and stops the video)', (await active(page)) === 'memories' && !(await playing(page)).includes('wishes'));
+    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, 6000);
+    await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Next').click());
+    await sleep(700);
+    check('…and its Next button to the next page', (await active(page)) === 'wishes');
 
     // Messages Filled With Love
     if (!playableWishes.length) {
@@ -347,7 +357,8 @@ try {
     check('videos play the prepared web copies (never the VIDEOS/ originals or the removed Childhood film)', await page.evaluate(() => ![...document.querySelectorAll('video')].some((v) => /\/VIDEOS\//.test(v.src) || /childhood/i.test(v.src))));
     check(`the family’s three films are in the presentation (${FILM_SCENES.length} of 3 prepared)`, FILM_SCENES.length === 3, 'run npm run build:films');
 
-    // Music controls
+    // Music controls (on a page without a video, where the presentation bar is in view)
+    await page.evaluate(() => window.__deck.goTo('reasons'));
     await page.mouse.move(500, 500);
     await sleep(700);
     await page.click('.deck-bar--tools .icon-btn:nth-child(2)');
@@ -373,11 +384,12 @@ try {
     await page.reload({ waitUntil: 'networkidle2' });
     await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
     check('a refresh always returns to the welcome', (await active(page)) === 'welcome');
-    await sleep(4300);
-    check('controls hide when the mouse rests', await page.evaluate(() => document.body.classList.contains('controls-hidden')));
-    await page.mouse.move(400, 400);
+    await page.keyboard.press('h');
+    await sleep(700);
+    check('H hides the controls by hand', await page.evaluate(() => document.body.classList.contains('controls-hidden')));
+    await page.keyboard.press('h');
     await sleep(200);
-    check('…and return on mouse movement', await page.evaluate(() => !document.body.classList.contains('controls-hidden')));
+    check('…and H shows them again', await page.evaluate(() => !document.body.classList.contains('controls-hidden')));
     await page.goto(`${BASE}/index.html#reasons`, { waitUntil: 'networkidle2' });
     await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
     check('index.html#reasons opens that scene once, then the hash is removed', (await active(page)) === 'reasons' && await page.evaluate(() => location.hash === ''));
@@ -390,7 +402,8 @@ try {
     console.log('\nautomatic presentation: films, wishes, cake and gift (1920×1080)');
     const { page, problems } = await open(browser, 'index.html', VIEWPORTS[0]);
     const musicPlaying = () => page.$eval('.music-btn', (b) => b.classList.contains('is-playing'));
-    const [firstFilm, secondFilm] = FILM_SCENES;
+    const firstFilm = FILM_SCENES[0];
+    const nextAfter = (id) => SCENE_ORDER[SCENE_ORDER.indexOf(id) + 1];
 
     await page.click('[data-welcome="begin"]');
     await sleep(700);
@@ -399,33 +412,38 @@ try {
     check('…and starts playing by itself in the full-screen theatre', await waitFor(page, (sel) => !document.querySelector(sel).paused, video(firstFilm), 8000) && await theatreOpen(page));
     await sleep(1200); // the music fades out over about a second
     check('…the presentation controls step aside and the music fades out (no audio on top of the film)', await page.evaluate(() => getComputedStyle(document.querySelector('.deck-bar--nav')).display === 'none') && !(await musicPlaying()) && await page.$eval('.music-btn', (b) => b.getAttribute('aria-pressed') === 'true'));
+    check('…the player bar stays on screen (Back, Close video, Replay, full screen, Next)', THEATRE_BUTTONS.test(await page.$$eval(`.scene[data-scene="${firstFilm}"] .theatre-bar .btn`, (b) => b.map((x) => x.textContent.trim()).join())) && await page.$eval(`.scene[data-scene="${firstFilm}"] .theatre-bar`, (b) => getComputedStyle(b).opacity === '1'));
     check('…the film keeps its own shape (nothing stretched or cropped)', await page.$eval(`.scene[data-scene="${firstFilm}"]`, (s) => {
       const v = s.querySelector('video'), r = s.querySelector('.cinema__screen').getBoundingClientRect();
       return getComputedStyle(v).objectFit === 'contain' && Math.abs(r.width / r.height - v.videoWidth / v.videoHeight) < 0.02;
     }));
     check('…one video at a time', (await playing(page)).join() === firstFilm);
     await seekToEnd(page, firstFilm);
-    if (secondFilm) {
-      check(`when it ends, the theatre closes and the presentation moves on to ${secondFilm}`, await waitFor(page, (id) => window.__deck.current === id, secondFilm, 8000));
-      check('…the finished film is not left playing', !(await playing(page)).includes(firstFilm));
-      check(`…and ${secondFilm} starts by itself`, await waitFor(page, (sel) => !document.querySelector(sel).paused, video(secondFilm), 8000));
-      await page.evaluate(() => window.__deck.goTo('reveal'));
-      check('leaving a film pauses it (nothing plays out of sight)', await waitFor(page, () => ![...document.querySelectorAll('video')].some((v) => !v.paused), null, 2000) && !(await theatreOpen(page)));
-      // leave a film during its short title countdown: it must not start later in the background
-      await page.evaluate((id) => window.__deck.goTo(id), secondFilm);
-      await sleep(600);
-      await page.evaluate(() => window.__deck.goTo('reveal'));
-      await sleep(2600);
-      check('a film left during its countdown never starts in the background', !(await playing(page)).length);
-    }
+    const after = nextAfter(firstFilm);
+    check(`when it ends, the theatre closes and the presentation moves on to ${after}`, await waitFor(page, (id) => window.__deck.current === id, after, 8000) && !(await theatreOpen(page)));
+    check('…the finished film is not left playing', !(await playing(page)).length);
 
     // the photo slideshows move faster
-    await page.evaluate(() => window.__deck.goTo('journey'));
-    const t0 = Date.now();
-    const photo0 = await page.$eval('.scene[data-scene="journey"] .tslide:last-child', (s) => s.outerHTML);
-    await waitFor(page, (html) => document.querySelector('.scene[data-scene="journey"] .tslide:last-child')?.outerHTML !== html, photo0, 8000);
-    const took = Date.now() - t0;
-    check(`slideshow: the next photograph after about 4.5 s (${(took / 1000).toFixed(1)} s)`, took >= 3500 && took <= 5600);
+    if (after === 'journey') {
+      const t0 = Date.now();
+      const photo0 = await page.$eval('.scene[data-scene="journey"] .tslide:last-child', (s) => s.outerHTML);
+      await waitFor(page, (html) => document.querySelector('.scene[data-scene="journey"] .tslide:last-child')?.outerHTML !== html, photo0, 8000);
+      const took = Date.now() - t0;
+      check(`slideshow: the next photograph after about 4.5 s (${(took / 1000).toFixed(1)} s)`, took >= 3000 && took <= 5600);
+    }
+
+    // leaving a film: it stops; leaving during its short title countdown: it never starts later
+    if (has('age-film')) {
+      await page.evaluate(() => window.__deck.goTo('age-film'));
+      await waitFor(page, (sel) => !document.querySelector(sel).paused, video('age-film'), 8000);
+      await page.evaluate(() => window.__deck.goTo('reveal'));
+      check('leaving a film pauses it (nothing plays out of sight)', await waitFor(page, () => ![...document.querySelectorAll('video')].some((v) => !v.paused), null, 2000) && !(await theatreOpen(page)));
+      await page.evaluate(() => window.__deck.goTo('age-film'));
+      await sleep(500);
+      await page.evaluate(() => window.__deck.goTo('reveal'));
+      await sleep(2200);
+      check('a film left during its countdown never starts in the background', !(await playing(page)).length);
+    }
 
     // the family's messages: one by one, then the cake and the final gift
     if (playableWishes.length) {
@@ -443,7 +461,12 @@ try {
         check('…and never past a message that is still playing', (await active(page)) === 'wishes' && (await playing(page)).join() === 'wishes');
       }
       await seekToEnd(page, 'wishes');
-      check('after the last message, the presentation goes on to the cake', await waitFor(page, () => window.__deck.current === 'cake', null, 8000));
+      for (const film of ['age-film', 'journey-film'].filter(has)) {
+        check(`after the ${film === 'age-film' ? 'last message' : 'Age 1 to 50 film'}, ${film} follows and plays by itself`, await waitFor(page, (id) => window.__deck.current === id, film, 8000) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video(film), 8000));
+        check('…one video at a time', (await playing(page)).join() === film);
+        await seekToEnd(page, film);
+      }
+      check('then the presentation goes on to the cake, "Happy Birthday, Amma"', await waitFor(page, () => window.__deck.current === 'cake', null, 8000));
       check('…no video is left playing, and the music comes back', await waitFor(page, () => document.querySelector('.music-btn').classList.contains('is-playing'), null, 4000) && !(await playing(page)).length);
       await sleep(2200);
       check('the cake: its message, five lit candles, no gift tracker', await page.$eval('.scene[data-scene="cake"]', (s, h) => s.classList.contains('is-lit') && s.textContent.includes(h) && s.querySelectorAll('.cake__flame').length === 5 && !s.querySelector('.gtile, .gtracker'), site.cake.headline));

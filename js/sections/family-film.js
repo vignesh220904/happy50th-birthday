@@ -22,7 +22,7 @@ export async function mountFamilyFilm(el, content, deck, key, { titleId, eyebrow
     eyebrow: v.eyebrow || eyebrow,
     title: v.titleAccent ? `${title} <em>${v.titleAccent}</em>` : title,
     lede: v.lede,
-    playlist: [{ src: v.src, poster: v.poster, duration: v.duration, title: v.titleAccent ? `${title}: ${v.titleAccent}` : title }],
+    playlist: [{ src: v.src, poster: v.poster, duration: v.duration, title: v.playerTitle || title }], // playerTitle: the name in the player's bar
     missingText: 'The family’s film will be shown here.',
   });
 }
