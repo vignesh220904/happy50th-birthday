@@ -1,325 +1,322 @@
-[
-  {
-    "displayOrder": 1,
-    "year": "1976",
-    "title": "Birth — The Journey Begins",
-    "description": "On 27 October 1976, M. Buvaneswari was born into a loving family, bringing boundless light and joy that would illuminate generations.",
-    "images": [
-      "assets/photos/lj_1970s.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Childhood",
-    "chapter": 1
-  },
-  {
-    "displayOrder": 2,
-    "year": "1979–1993",
-    "title": "Schooling Years",
-    "description": "Formative school years filled with discipline, sweet childhood friendships, and academic excellence, dressed in her signature school uniform.",
-    "images": [
-      "assets/photos/lj_1980s_-_1_-_Schooling.webp",
-      "assets/illustrations/school_age_chudi.webp",
-      "assets/photos/lj_1980s_-_2_-_Puberty.webp"
-    ],
-    "assetStatus": "photo_and_illustration",
-    "confirmed": true,
-    "category": "Schooling",
-    "chapter": 2
-  },
-  {
-    "displayOrder": 3,
-    "year": "1993–1996",
-    "title": "B.Com Degree",
-    "description": "Pursuing her Bachelor of Commerce degree with dedication, expanding her intellect and building friendships that stood the test of time.",
-    "images": [
-      "assets/photos/lj_Bcom_Photo.webp",
-      "assets/photos/lj_1990s_-_1_-_Pre_college.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Education",
-    "chapter": 3
-  },
-  {
-    "displayOrder": 4,
-    "year": "1996–1997",
-    "title": "M.Com (First Year)",
-    "description": "Taking the ambitious step into postgraduate studies, completing her first year of Master of Commerce with scholarly commitment.",
-    "images": [
-      "assets/photos/lj_1990s_-_1_-_Pre_college.webp"
-    ],
-    "assetStatus": "historical_record",
-    "confirmed": true,
-    "category": "Education",
-    "notes": "Completed first year of M.Com before marriage.",
-    "chapter": 3
-  },
-  {
-    "displayOrder": 5,
-    "year": "1997",
-    "title": "Auspicious Marriage",
-    "description": "The sacred union and beginning of a beautiful partnership built on mutual respect, deep devotion, and everlasting love.",
-    "images": [
-      "assets/photos/lj_1997.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Marriage",
-    "chapter": 4
-  },
-  {
-    "displayOrder": 6,
-    "year": "1997",
-    "title": "First Two-Wheelers: TVS 50 & Hero Honda Splendor",
-    "description": "Early rides of independence and new family adventures across the streets of Chennai on the TVS 50 and Hero Honda Splendor.",
-    "images": [
-      "assets/photos/lj_1997.webp"
-    ],
-    "assetStatus": "nostalgic_memory",
-    "confirmed": true,
-    "category": "Early Family Life",
-    "chapter": 5
-  },
-  {
-    "displayOrder": 7,
-    "year": "1998",
-    "title": "Seemantham & Birth of First Child, Vikky",
-    "description": "The transcendent joy of motherhood arrives with the blessing of her firstborn son, Vikky, filling the home with lullabies and laughter.",
-    "images": [
-      "assets/photos/lj_1998.webp",
-      "assets/illustrations/birth_vikky_1998.webp",
-      "assets/photos/lj_1999.webp",
-      "assets/photos/lj_2000.webp"
-    ],
-    "assetStatus": "photo_and_illustration",
-    "confirmed": true,
-    "category": "Motherhood",
-    "chapter": 6
-  },
-  {
-    "displayOrder": 8,
-    "year": "2002",
-    "title": "Birth of Second Child, Varshu",
-    "description": "The family circle is completed with the birth of beloved daughter Varshu, bringing angelic warmth, sweet smiles, and boundless affection.",
-    "images": [
-      "assets/photos/lj_2002.webp",
-      "assets/illustrations/birth_varshu_2002.webp",
-      "assets/photos/lj_2001_-_1.webp",
-      "assets/photos/lj_2003.webp"
-    ],
-    "assetStatus": "photo_and_illustration",
-    "confirmed": true,
-    "category": "Motherhood",
-    "chapter": 6
-  },
-  {
-    "displayOrder": 9,
-    "year": "2004",
-    "title": "First Housewarming at 3rd Main Road",
-    "description": "Stepping across the threshold of their cherished family sanctuary at 3rd Main Road, boiling milk and creating a haven of happy memories.",
-    "images": [
-      "assets/photos/lj_2004.webp",
-      "assets/photos/lj_2004_1.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "First Home",
-    "chapter": 7
-  },
-  {
-    "displayOrder": 10,
-    "year": "2006",
-    "title": "First Job & Salary",
-    "description": "A proud milestone of professional independence and dignity, earning her first salary and setting a powerful example for her children.",
-    "images": [
-      "assets/photos/lj_2004.webp"
-    ],
-    "assetStatus": "career_milestone",
-    "confirmed": true,
-    "category": "Career",
-    "chapter": 8
-  },
-  {
-    "displayOrder": 11,
-    "year": "2012",
-    "title": "MBA via Distance Education",
-    "description": "Proving that learning knows no age: achieving her Master of Business Administration degree through tireless evening dedication alongside family life.",
-    "images": [
-      "assets/illustrations/mba_achievement_2012.webp",
-      "assets/photos/lj_2012_-_1.webp"
-    ],
-    "assetStatus": "illustration_and_photo",
-    "confirmed": true,
-    "category": "Education & Career",
-    "chapter": 8
-  },
-  {
-    "displayOrder": 12,
-    "year": "2012",
-    "title": "Varshu's Salangai Poojai",
-    "description": "The sacred ghungroos are blessed as daughter Varshu takes her sacred steps into classical Bharatanatyam dance tradition.",
-    "images": [
-      "assets/photos/lj_2012_-_1.webp",
-      "assets/photos/lj_2012_-_2.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Children's Milestones",
-    "chapter": 9
-  },
-  {
-    "displayOrder": 13,
-    "year": "2015",
-    "title": "Varshu's Puberty Function",
-    "description": "A traditional milestone celebration blessed by all elders and extended family in traditional splendor and ceremony.",
-    "images": [
-      "assets/photos/lj_2015_-_1.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Family Celebrations",
-    "chapter": 9
-  },
-  {
-    "displayOrder": 14,
-    "year": "2015",
-    "title": "Varshu's Bharatanatyam Arangetram",
-    "description": "A triumphant moment of maternal pride as Varshu ascends the stage for her full solo Bharatanatyam debut, captivating the audience.",
-    "images": [
-      "assets/photos/lj_2015_-_2.webp",
-      "assets/photos/lj_2015_-_3.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Children's Milestones",
-    "chapter": 9
-  },
-  {
-    "displayOrder": 15,
-    "year": "2019",
-    "title": "Vikky's College Graduation",
-    "description": "Joyous tears and radiant pride seeing eldest son Vikky don the graduation robe and receive his university degree.",
-    "images": [
-      "assets/photos/lj_2019_-_1.webp",
-      "assets/photos/lj_2019_-_2.webp",
-      "assets/photos/lj_2019_-_3.webp",
-      "assets/photos/lj_2019_-_4.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Children's Milestones",
-    "chapter": 9
-  },
-  {
-    "displayOrder": 16,
-    "year": "2021",
-    "title": "Dilli 50th Birthday Celebration",
-    "description": "A landmark family jubilee gathering honoring 50 wonderful years (event title marked for family confirmation).",
-    "images": [
-      "assets/photos/lj_2021_-_1.webp",
-      "assets/photos/lj_2021_-_2.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": false,
-    "category": "Family Achievements",
-    "notes": "“Dilli 50th Birthday” — needs family clarification.",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 17,
-    "year": "2022",
-    "title": "First Family Car",
-    "description": "A proud milestone of prosperity and shared happiness, bringing comfortable road trips, temple visits, and family drives.",
-    "images": [
-      "assets/photos/lj_2022.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Family Achievements",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 18,
-    "year": "2022",
-    "title": "DB 25th Wedding Anniversary (Silver Jubilee)",
-    "description": "Celebrating a quarter century of unwavering companionship, mutual love, and enduring marriage (title marked for confirmation).",
-    "images": [
-      "assets/photos/lj_2022.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": false,
-    "category": "Family Achievements",
-    "notes": "“DB 25th wedding anniversary” — needs family clarification.",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 19,
-    "year": "2025",
-    "title": "Varshu's Degree Graduation",
-    "description": "Celebrating Varshu's university degree completion, witnessing her blossom into a poised, accomplished young woman.",
-    "images": [
-      "assets/photos/lj_2025_-_1.webp",
-      "assets/photos/lj_2025_-_2.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Children's Milestones",
-    "chapter": 9
-  },
-  {
-    "displayOrder": 20,
-    "year": "2025",
-    "title": "Vikky's Engagement",
-    "description": "An auspicious new chapter commences with Vikky's engagement, welcoming new happiness and extended family blessings.",
-    "images": [
-      "assets/photos/lj_2025_-_3.webp",
-      "assets/photos/lj_2025_-_4.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Family Celebrations",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 21,
-    "year": "2026",
-    "title": "Vikky's Grand Wedding",
-    "description": "A magnificent wedding celebration uniting two hearts and filling the family hall with music, joyous blessings, and sacred mantras.",
-    "images": [
-      "assets/photos/lj_2026_-_1.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Family Celebrations",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 22,
-    "year": "2026",
-    "title": "VK Seemandham Function",
-    "description": "Auspicious maternal blessing ceremony welcoming next-generation joy into the family fold (title marked for confirmation).",
-    "images": [
-      "assets/photos/lj_2026_-_2.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": false,
-    "category": "Family Celebrations",
-    "notes": "“VK seemandham” — needs family clarification.",
-    "chapter": 10
-  },
-  {
-    "displayOrder": 23,
-    "year": "2026",
-    "title": "Buvana's 50th Golden Birthday Celebration",
-    "description": "Celebrating five golden decades of our beloved Buvana at Palmshore Restaurant, Ekkatuthangal, Chennai — 50 Years of Love, Memories & Moments.",
-    "images": [
-      "assets/photos/lj_2026_-_1.webp",
-      "assets/photos/lj_2026_-_2.webp"
-    ],
-    "assetStatus": "photo_available",
-    "confirmed": true,
-    "category": "Turning 50",
-    "chapter": 12
-  }
-]
+{
+  "_note": "Life Journey milestones, in story order. 'media' lists ids from data/photo_inventory.json (lj-* = Final Life Journey, age-* = Age 1 to 50, ill-* = illustrations). Entries with an empty media list are shown as typographic scenes. 'needsConfirmation' marks wording the family should double-check; it is not shown on the site.",
+  "eras": [
+    { "id": "childhood", "title": "Childhood", "from": 1976 },
+    { "id": "education", "title": "School & College", "from": 1979 },
+    { "id": "family", "title": "Marriage & Motherhood", "from": 1997 },
+    { "id": "home", "title": "Home & Work", "from": 2004 },
+    { "id": "pride", "title": "Proud Moments", "from": 2012 },
+    { "id": "today", "title": "New Chapters", "from": 2025 }
+  ],
+  "milestones": [
+    {
+      "id": "born",
+      "era": "childhood",
+      "year": "1976",
+      "sortYear": 1976,
+      "title": "Born",
+      "caption": "27 October 1976. The day every story in our family really begins.",
+      "media": [
+        { "id": "lj-1", "alt": "Baby Buvana lying on a mat in an early black-and-white studio portrait" }
+      ]
+    },
+    {
+      "id": "schooling",
+      "era": "education",
+      "year": "1979 – 1993",
+      "sortYear": 1979,
+      "title": "School Days",
+      "caption": "Fourteen years of school. The family still remembers the uniform: a white churidar, a sky-blue shawl and pants.",
+      "media": [
+        { "id": "lj-2", "alt": "Young Buvana standing in a black-and-white portrait from her school years" },
+        { "id": "ill-school-age-chudi", "alt": "Illustration of a schoolgirl in a white churidar with a sky-blue shawl, carrying her books" }
+      ]
+    },
+    {
+      "id": "coming-of-age",
+      "era": "education",
+      "year": "1980s",
+      "sortYear": 1988,
+      "title": "Growing Up",
+      "caption": "A traditional coming-of-age celebration, in a blue silk saree, surrounded by family.",
+      "media": [
+        { "id": "lj-3", "alt": "Teenage Buvana in a blue silk saree, standing in front of a patterned curtain" }
+      ]
+    },
+    {
+      "id": "bcom",
+      "era": "education",
+      "year": "1993 – 1996",
+      "sortYear": 1993,
+      "title": "B.Com",
+      "caption": "College years, and a Bachelor of Commerce degree.",
+      "media": [
+        { "id": "lj-4", "alt": "Buvana in a white shirt and jeans standing outdoors before college" },
+        { "id": "age-17", "alt": "Buvana's college identity photograph" }
+      ]
+    },
+    {
+      "id": "mcom",
+      "era": "education",
+      "year": "1996 – 1997",
+      "sortYear": 1996,
+      "title": "M.Com — First Year",
+      "caption": "She went on to complete the first year of her Master of Commerce.",
+      "media": []
+    },
+    {
+      "id": "marriage",
+      "era": "family",
+      "year": "1997",
+      "sortYear": 1997,
+      "title": "Marriage",
+      "caption": "The beginning of a partnership, and of the family we are today.",
+      "media": [
+        { "id": "lj-5", "alt": "Buvana as a bride wearing a jasmine garland on her wedding day" }
+      ]
+    },
+    {
+      "id": "first-bikes",
+      "era": "family",
+      "year": "1997",
+      "sortYear": 1997,
+      "title": "The First Bikes",
+      "caption": "A TVS 50 and a Hero Honda Splendor. The first wheels of a new family.",
+      "noPhoto": "No original photograph of the bikes exists. This scene is an illustration.",
+      "media": [
+        { "id": "lj-7-png", "alt": "Illustration of the young couple with their Hero Honda Splendor" }
+      ]
+    },
+    {
+      "id": "vikky",
+      "era": "family",
+      "year": "1998",
+      "sortYear": 1998,
+      "title": "Seemantham & Vikky",
+      "caption": "A Seemantham full of blessings, and then the arrival of Vikky. She became Amma.",
+      "media": [
+        { "id": "lj-6", "alt": "Buvana at her Seemantham ceremony in a silk saree and flowers" },
+        { "id": "ill-birth-vikky-1998", "alt": "Illustration of a mother cradling her newborn son" }
+      ]
+    },
+    {
+      "id": "young-family",
+      "era": "family",
+      "year": "1999 – 2001",
+      "sortYear": 1999,
+      "title": "A Young Family",
+      "caption": "Birthday cakes, family gatherings and the everyday joys of a little family growing up together.",
+      "media": [
+        { "id": "lj-7", "alt": "Buvana and her husband with baby Vikky beside a birthday cake, 1999" },
+        { "id": "lj-8", "alt": "Buvana holding young Vikky at home, 2000" },
+        { "id": "lj-9", "alt": "A family gathering with Buvana, 2001" },
+        { "id": "lj-10", "alt": "Buvana, young Vikky and her husband in a family portrait, 2001" }
+      ]
+    },
+    {
+      "id": "varshu",
+      "era": "family",
+      "year": "2002",
+      "sortYear": 2002,
+      "title": "Varshu",
+      "caption": "Varshu arrives, and the family of four is complete.",
+      "media": [
+        { "id": "ill-birth-varshu-2002", "alt": "Illustration of a mother holding her newborn daughter while her young son looks on" },
+        { "id": "lj-11", "alt": "Buvana holding baby Varshu, with Vikky and her husband, 2003" }
+      ]
+    },
+    {
+      "id": "housewarming",
+      "era": "home",
+      "year": "2004",
+      "sortYear": 2004,
+      "title": "First Housewarming",
+      "caption": "A home of their own at 3rd Main Road.",
+      "media": [
+        { "id": "lj-12", "alt": "The family performing the housewarming rituals, 2004" },
+        { "id": "lj-13", "alt": "Buvana and her husband wearing garlands at the housewarming, 2004" }
+      ]
+    },
+    {
+      "id": "first-job",
+      "era": "home",
+      "year": "2006",
+      "sortYear": 2006,
+      "title": "First Job & First Salary",
+      "caption": "Her first job and her first salary. A proud new chapter of her own.",
+      "media": [
+        { "id": "lj-14-2", "alt": "Buvana at her office desk in front of a computer" }
+      ]
+    },
+    {
+      "id": "mba",
+      "era": "home",
+      "year": "2012",
+      "sortYear": 2012,
+      "title": "MBA",
+      "caption": "Learning never stopped: an MBA through distance education.",
+      "media": [
+        { "id": "ill-mba-achievement-2012", "alt": "Illustration of a woman studying at a desk lit by a lamp" }
+      ]
+    },
+    {
+      "id": "salangai-poojai",
+      "era": "pride",
+      "year": "2012",
+      "sortYear": 2012,
+      "title": "Varshu's Salangai Poojai",
+      "caption": "The first blessing of Varshu's dancing bells.",
+      "media": [
+        { "id": "lj-14", "alt": "Varshu in a Bharatanatyam costume with Buvana and her husband" }
+      ]
+    },
+    {
+      "id": "together-2014",
+      "era": "pride",
+      "year": "2014",
+      "sortYear": 2014,
+      "title": "Together",
+      "caption": "The four of them, side by side at home.",
+      "media": [
+        { "id": "lj-15", "alt": "The family seated together at home, 2014" }
+      ]
+    },
+    {
+      "id": "varshu-coming-of-age",
+      "era": "pride",
+      "year": "2015",
+      "sortYear": 2015,
+      "title": "Varshu's Coming-of-Age Ceremony",
+      "caption": "Now it was her daughter's turn to be celebrated.",
+      "media": [
+        { "id": "lj-16", "alt": "Varshu wearing a garland at her ceremony with the family" }
+      ]
+    },
+    {
+      "id": "arangetram",
+      "era": "pride",
+      "year": "2015",
+      "sortYear": 2015,
+      "title": "Varshu's Bharatanatyam Arangetram",
+      "caption": "Varshu's first full solo performance on stage.",
+      "media": [
+        { "id": "lj-17", "alt": "Varshu in her Arangetram costume with Buvana, her husband and an elder" }
+      ]
+    },
+    {
+      "id": "vikky-graduation",
+      "era": "pride",
+      "year": "2019",
+      "sortYear": 2019,
+      "title": "Vikky's Graduation",
+      "caption": "A cap, a gown, a degree. And two very proud parents.",
+      "media": [
+        { "id": "lj-18", "alt": "Vikky receiving his degree on stage at the graduation ceremony" },
+        { "id": "lj-19-jpeg", "alt": "Vikky in his graduation gown with Buvana and his father" }
+      ]
+    },
+    {
+      "id": "new-scooter",
+      "era": "pride",
+      "year": "2019",
+      "sortYear": 2019,
+      "title": "A New Ride",
+      "caption": "New wheels for the family, a long way from that first TVS 50.",
+      "media": [
+        { "id": "lj-20", "alt": "The family with a new scooter at the showroom" }
+      ]
+    },
+    {
+      "id": "dilli-50",
+      "era": "pride",
+      "year": "2021",
+      "sortYear": 2021,
+      "title": "Dilli's 50th Birthday",
+      "caption": "The whole family gathered for a golden fiftieth.",
+      "needsConfirmation": "Family label was 'Dilli 50th Birthday'.",
+      "media": [
+        { "id": "lj-21", "alt": "Buvana and her husband in front of a balloon backdrop" },
+        { "id": "lj-22", "alt": "The family around a 50th birthday cake and balloons" }
+      ]
+    },
+    {
+      "id": "first-car",
+      "era": "pride",
+      "year": "2022",
+      "sortYear": 2022,
+      "title": "The First Family Car",
+      "caption": "From a TVS 50 to the family's very first car.",
+      "media": [
+        { "id": "lj-23-jpeg", "alt": "The family standing beside their new car at the showroom" }
+      ]
+    },
+    {
+      "id": "silver-jubilee",
+      "era": "pride",
+      "year": "2022",
+      "sortYear": 2022,
+      "title": "25 Years Together",
+      "caption": "A silver wedding anniversary, twenty-five years after 1997.",
+      "needsConfirmation": "Family label was 'DB 25th wedding anniversary'.",
+      "media": [
+        { "id": "lj-23", "alt": "Buvana and her husband in front of a 25th anniversary backdrop" },
+        { "id": "lj-24-jpeg", "alt": "Buvana's husband kneeling to present her flowers at the anniversary" }
+      ]
+    },
+    {
+      "id": "varshu-graduation",
+      "era": "today",
+      "year": "2025",
+      "sortYear": 2025,
+      "title": "Varshu's Graduation",
+      "caption": "Another graduation, another proud day for Amma.",
+      "media": [
+        { "id": "lj-25", "alt": "Buvana with Varshu in her graduation gown" },
+        { "id": "lj-26", "alt": "Varshu receiving her degree at the commencement ceremony with her parents" }
+      ]
+    },
+    {
+      "id": "vikky-engagement",
+      "era": "today",
+      "year": "2025",
+      "sortYear": 2025,
+      "title": "Vikky's Engagement",
+      "caption": "A new member joins the family's story.",
+      "media": [
+        { "id": "lj-27", "alt": "Vikky and his fiancée seated with Buvana and the family at the engagement" }
+      ]
+    },
+    {
+      "id": "vikky-wedding",
+      "era": "today",
+      "year": "2026",
+      "sortYear": 2026,
+      "title": "Vikky's Wedding",
+      "caption": "The son she first held in 1998, now beginning a family of his own.",
+      "media": [
+        { "id": "lj-28", "alt": "Buvana with the newly married couple and the family" }
+      ]
+    },
+    {
+      "id": "seemantham-2026",
+      "era": "today",
+      "year": "2026",
+      "sortYear": 2026,
+      "title": "A Seemantham, Once Again",
+      "caption": "Blessings come full circle: the family gathers for a Seemantham, twenty-eight years after her own.",
+      "needsConfirmation": "Family label was 'VK seemandham'.",
+      "media": [
+        { "id": "lj-29", "alt": "The family gathered on stage at the Seemantham ceremony" }
+      ]
+    },
+    {
+      "id": "fifty",
+      "era": "today",
+      "year": "27 October 2026",
+      "sortYear": 2026,
+      "title": "Fifty",
+      "caption": "Fifty years of love, strength, sacrifice and beautiful memories. Celebrated together at Palmshore Restaurant, Ekkatuthangal, Chennai.",
+      "media": []
+    }
+  ]
+}

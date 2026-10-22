@@ -1,137 +1,94 @@
 /* ==========================================================================
-   ANIMATIONS & KEYFRAMES
-   50 Years of Love, Memories & Moments — M. Buvaneswari (Buvana)
+   Motion: keyframes, scroll reveals and the reduced-motion contract
    ========================================================================== */
-
-@keyframes pulseGlow {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.08);
-    opacity: 0.95;
-  }
-}
-
-@keyframes soundWave {
-  0%, 100% {
-    height: 4px;
-  }
-  50% {
-    height: 16px;
-  }
-}
-
-@keyframes lightSweep {
-  0% {
-    transform: translateX(-150%) skewX(-20deg);
-  }
-  100% {
-    transform: translateX(250%) skewX(-20deg);
-  }
-}
-
-@keyframes floatSoft {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(1deg);
-  }
-}
-
-/* Butterfly Animations */
-.animated-butterfly {
-  position: absolute;
-  pointer-events: none;
-  z-index: var(--z-butterflies);
-  transition: transform 0.5s ease;
-  filter: drop-shadow(0 2px 8px rgba(139, 203, 250, 0.45));
-}
-
-.butterfly-wing-left {
-  transform-origin: right center;
-  animation: flapLeft 0.28s infinite alternate ease-in-out;
-}
-
-.butterfly-wing-right {
-  transform-origin: left center;
-  animation: flapRight 0.28s infinite alternate ease-in-out;
-}
-
-@keyframes flapLeft {
-  0% {
-    transform: scaleX(1) skewY(0deg);
-  }
-  100% {
-    transform: scaleX(0.25) skewY(15deg);
-  }
-}
-
-@keyframes flapRight {
-  0% {
-    transform: scaleX(1) skewY(0deg);
-  }
-  100% {
-    transform: scaleX(0.25) skewY(-15deg);
-  }
-}
-
-/* Ken Burns Subtle Zoom for Age Transitions */
-.ken-burns {
-  animation: kenBurnsZoom 6s infinite alternate ease-in-out;
-}
-
-@keyframes kenBurnsZoom {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(1.06);
-  }
-}
-
-/* Golden Shimmer on borders */
-.shimmer-active {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer-active::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(230, 211, 162, 0.25), transparent);
-  animation: lightSweep 4s infinite linear;
-  pointer-events: none;
-}
-
-/* Fade in up reveal class for Scroll Observer */
-.reveal-on-scroll {
+[data-reveal] {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 1s var(--ease-out), transform 1.2s var(--ease-out);
+}
+[data-reveal].is-revealed { opacity: 1; transform: none; }
+
+@keyframes sheen {
+  0%, 60% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+@keyframes kenburns {
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to { transform: scale(1.07) translate3d(-1.2%, -1%, 0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes jtext-in {
+  from { opacity: 0; transform: translate3d(calc(var(--dir, 1) * 40px), 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes jvisual-in {
+  from { opacity: 0; transform: translate3d(calc(var(--dir, 1) * 8%), 0, 240px) rotateY(calc(var(--dir, 1) * -10deg)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes jscene-out {
+  to { opacity: 0; transform: translate3d(calc(var(--dir, 1) * -10%), 0, -320px) rotateY(calc(var(--dir, 1) * 8deg)); }
+}
+@keyframes gitem-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes breathe {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+@keyframes heartbeat {
+  0%, 40%, 100% { transform: scale(1); }
+  20% { transform: scale(1.12); }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes glow-text {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(143, 203, 255, 0)); }
+  50% { filter: drop-shadow(0 0 28px rgba(143, 203, 255, 0.7)); }
 }
 
-.reveal-on-scroll.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Reduced Motion Support */
+/* Reduced motion: no drifting, sweeping or parallax — content simply appears. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-  .reveal-on-scroll {
-    opacity: 1 !important;
-    transform: none !important;
-  }
+  [data-reveal] { opacity: 1; transform: none; }
+  .jframes { transform: none !important; }
+  .jframe { transform: translate(-50%, -50%) translateZ(calc(var(--z) * 1px)) rotateY(var(--ry)) rotateZ(var(--rz)); }
+  .greeting__char { opacity: 1; transform: none; filter: none; }
+}
+
+/* Chapter headings: the eyebrow's lines draw outward, then title and lede rise in turn */
+.chapter-head[data-reveal] { opacity: 1; transform: none; }
+.chapter-head[data-reveal] > * {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s var(--ease-out), transform 1.2s var(--ease-out);
+}
+.chapter-head[data-reveal] .eyebrow::before,
+.chapter-head[data-reveal] .eyebrow::after { width: 0; transition: width 1.2s 0.3s var(--ease-out); }
+.chapter-head.is-revealed > * { opacity: 1; transform: none; }
+.chapter-head.is-revealed .eyebrow::before,
+.chapter-head.is-revealed .eyebrow::after { width: 28px; }
+.chapter-head.is-revealed > :nth-child(2) { transition-delay: 0.15s; }
+.chapter-head.is-revealed > :nth-child(3) { transition-delay: 0.35s; }
+.chapter-head.is-revealed > :nth-child(4) { transition-delay: 0.5s; }
+.chapter-head.is-revealed .chapter-title em {
+  background: linear-gradient(100deg, var(--champagne) 0%, #fff6e0 45%, var(--champagne) 60%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-shimmer 2.4s 0.6s var(--ease-in-out) 1 both;
+}
+@keyframes title-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .chapter-head[data-reveal] > * { opacity: 1; transform: none; }
 }

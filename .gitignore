@@ -19,3 +19,10 @@ __pycache__/
 
 # Local server / environment logs
 *.log
+
+# Dependencies
+node_modules/
+
+# Original HEVC birthday film (270 MB, over GitHub's 100 MB limit).
+# The site plays the converted web copy in assets/media/films/.
+assets/videos/happy 50th birthday.mp4

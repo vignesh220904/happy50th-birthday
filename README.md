@@ -1,149 +1,170 @@
-# 50 Years of Love, Memories & Moments
-### Celebrating M. Buvaneswari (Buvana) — Golden Jubilee (1976 – 2026)
+# 50 Years of Love — M. Buvaneswari
 
-A cinematic, interactive, and emotional 50th birthday celebration website built exclusively with **HTML5, CSS3, and Vanilla JavaScript**.
+A cinematic, interactive birthday gift for **M. Buvaneswari (Buvana / Amma)**,
+born 27 October 1976, celebrated on **27 October 2026** at
+**Palmshore Restaurant, Ekkatuthangal, Chennai**.
 
-Designed for display across mobile devices, tablets, desktop screens, and presentation projection at the birthday celebration at **Palmshore Restaurant, Ekkatuthangal, Chennai** on **27 October 2026**.
-
----
-
-## 🌟 Visual Design & Brand Identity
-
-- **Palette**: Ramar Blue (`#2457A7`), Royal Blue (`#174EA6`), Midnight Blue (`#07162E`), Sky Blue (`#8BCBFA`), Champagne Gold (`#E6D3A2`), Pearl White (`#F7FAFF`), and Silver Mist (`#C8D6E8`).
-- **Typography**: *Playfair Display* & *Cormorant Garamond* for serif headings; *Inter* for body typography.
-- **Atmosphere**: Subtle floating canvas particles, animated SVG fluttering butterflies, glassmorphic panels, and 3D perspective transforms.
+Plain HTML, CSS and JavaScript modules. There's no framework and no build step to view it.
+Real-time 3D uses **Three.js r160**, vendored in `js/vendor/` so the site works offline at the venue.
 
 ---
 
-## 📖 The Seven Chapters
+## Run it locally
 
-### Chapter 01 — Cinematic Welcome
-- Opening screen with gentle floating particles and animated butterflies.
-- Portrait showcase of Buvana with golden filigree frame and blue back-glow.
-- Event metadata: **27 October 2026** at **Palmshore Restaurant, Ekkatuthangal, Chennai**.
-- Primary CTA **"BEGIN HER STORY"** with smooth scroll and interactive ambient music control.
+**Easiest (Windows):** double-click **`Open Birthday Site.bat`**. It starts a small local server and opens the browser.
+Keep that window open while viewing.
 
-### Chapter 02 — Her Life Journey
-- 12 chronological chapters spanning five decades:
-  1. Childhood (1976)
-  2. Schooling (1979–1993)
-  3. College & Education (1993–1997)
-  4. Sacred Marriage (1997)
-  5. Early Family Life & First Bikes (1997)
-  6. Motherhood (1998 Vikky & 2002 Varshu)
-  7. First Home at 3rd Main Road (2004)
-  8. Career & MBA Distance Education (2006 & 2012)
-  9. Children's Milestones (Salangai Poojai, Arangetram, Graduations)
-  10. Family Achievements & First Car
-  11. Recent Celebrations & Engagements
-  12. Turning 50 Golden Jubilee
-- Integrated with original family photographs and requested historical illustrations (School chudi uniform, Birth of Vikky, Birth of Varshu, MBA milestone desk).
+Or from a terminal in this folder:
 
-### Chapter 03 — 50 Reasons Why We Love You
-- Exactly 50 numbered heartfelt tribute cards.
-- Interactive operator controls: *Next Reason*, *Previous Reason*, *Reveal All 50 (Grid View)*, and *Reset*.
-- Fully editable via `data/reasons.json`.
+```bash
+npm start            # opens http://localhost:8080 (uses 8081, 8082 … if 8080 is busy)
+```
 
-### Chapter 04 — Key Memories & Photo Gallery
-- Over 400 original family photographs organized across categories:
-  - *Childhood, Education, Marriage, Family, Travel, Celebrations, Recent Memories, and Candid Moments*.
-- Responsive image grid with progressive lazy loading.
-- Fullscreen Lightbox viewer with Next, Previous, Close, Counter, and Keyboard arrow support.
+If Node isn't installed, any static server works, for example `python -m http.server 8080`.
+Double-clicking `index.html` does **not** work: browsers block the site's data when a file is opened from disk.
+If someone does that, the page explains what to do instead of staying blank.
 
-### Chapter 05 — Family Video Wishes
-- Dedicated video tribute cards for family members (Husband, Vikky, Varshu, Elders, Relatives, Friends).
-- Native HTML5 `<video>` player ensuring only one video plays at a time.
-- Custom poster thumbnails, quote cards, duration badges, and helpful upload fallback indicators.
-- Editable via `data/wishes.json`.
+**What guests see first:** an opening title card. The years count from 1976 to 2026 while the site loads.
+Then a 3D "50" turns into view with *Happy 50th Birthday, Amma*. **Begin the celebration** starts the music and confetti.
+Links straight to a chapter, such as `index.html#memories`, skip the opening.
 
-### Chapter 06 — Age 1 to 50 Transition
-- Chronological photo reel transitioning from childhood (Age 1) through school, college, marriage, motherhood, to Age 50.
-- Interactive controls: *Play Journey (Autoplay)*, *Pause*, *Replay*, *Prev*, *Next*, *Scrubber Timeline*, and *Skip to Finale*.
-- Dynamic stage labels and age badges.
-
-### Chapter 07 — 50 Gifts & Grand Celebration
-- Operator-controlled 3D blue gift box with silver ribbon.
-- Click to animate box opening (lid tilts open in 3D perspective with golden particle bursts).
-- Displays **GIFT 01 OF 50** through **GIFT 50 OF 50**, title, giver, and personal message.
-- Grand Finale screen with celebration headline:
-  > **HAPPY 50TH BIRTHDAY, BUVANA!**  
-  > *“Fifty years of love, strength, kindness, laughter, and beautiful memories. Our family is brighter because of you. We love you — today, tomorrow, and always.”*
-- High-resolution family photo, interactive confetti cannon trigger, and replay navigation.
+**At the venue:** press **P** (or the screen button) for presentation mode, which is full screen with no menu.
+The Life Journey and Age 1 to 50 chapters each have a **Play** button for hands-free viewing.
 
 ---
 
-## 📁 Project Structure
+## The seven chapters
+
+| # | Chapter | What it is | 3D |
+|---|---------|------------|----|
+| – | **Opening** | Loading count 1976 → 2026, then *Happy 50th Birthday, Amma* and *Begin the celebration* | CSS 3D extruded "50", rising sparks |
+| I | **Welcome** | "50 Years of Love" hero. *Begin Her Beautiful Journey* glides into the journey, and *Watch the Birthday Film* opens the family film | **WebGL**: a "50" made of ~4,000 light particles in a tilted wreath of real family photos, with light streaks and dust |
+| II | **Her Life Journey 1976–2026** | 27 milestones with a milestone rail, previous/next, ← → Home End keys, swipe, autoplay, and the family's *Life Journey* film | **WebGL**: the camera flies along a glowing river of time past each milestone's photos (click a photo to enlarge) |
+| III | **50 Reasons We Love You** | 5 chapters × 10 reasons: tabs, a reading card, number chips, and *Read all 50* | **WebGL**: a constellation of 50 selectable lights |
+| IV | **Key Memories** | All 284 photos from `Memory gallery`, grouped by year, with filters and a full-screen lightbox (keyboard, swipe) | CSS depth on hover |
+| V | **Family Wishes** | Theatre-style video player with playlist. Shows *"Beautiful words … are on their way."* until videos are added | – |
+| VI | **Age 1 to 50** | Every photo in `Age 1 to 50`, in age order, with play/pause/replay, an age ruler, the ending card, and the family's *Age* film | CSS 3D reel: the current photo in front, other years fanned out in depth |
+| VII | **The Celebration** | Open the gift; **the Birthday Film** (*Fifty & Fabulous*, 6 min 23 s); 50 configurable gift slots; final greeting; date, venue and countdown; *Replay her journey* | **WebGL**: royal-blue gift with silver ribbons and a ring of 50 small gifts |
+
+Each chapter also works on its own page: `pages/welcome.html`, `journey.html`, `reasons.html`,
+`memories.html`, `wishes.html`, `age-transition.html` and `finale.html`.
+
+### Authentic photos vs. illustrations
+Anything that is not an original photograph carries an **"Illustration"** label on the site and in the photo viewer:
+the school-uniform scene, the 1997 bikes (no original photo exists), the births of Vikky and Varshu, and the MBA desk.
+The Life Journey and Age films are labelled **"AI-animated family film"**. The Birthday Film is labelled **"Family film"**.
+
+### Films
+| Film | Source | Shown in |
+|------|--------|----------|
+| The Birthday Film | `assets/videos/happy 50th birthday.mp4` (HEVC, 283 MB) → web copy `assets/media/films/happy-50th-birthday.mp4` (H.264, 68 MB) | Welcome button, Celebration chapter |
+| The Life Journey Film | `assets/videos/life journey.mp4` | Life Journey chapter |
+| The Age 1 to 50 Film | `assets/videos/age.mp4` | Age 1 to 50 chapter |
+
+Many browsers can't play HEVC, so `npm run build:media` converts films that need it. Use
+`python scripts/build_media.py --films-only` to refresh just the films. It needs `pip install imageio-ffmpeg`.
+
+---
+
+## Editing content (no code needed)
+
+All family-specific content lives in `data/`:
+
+| File | Contents |
+|------|----------|
+| `site.json` | Name, dates, venue, welcome text, final greeting, film titles, music setting, hero photos |
+| `timeline.json` | Life-journey milestones: year, title, caption, photo ids and alt text |
+| `reasons.json` | The 50 reasons, exactly as written, plus the 5 chapter groupings and the closing line |
+| `gifts.json` | 50 gift slots. Fill in `name` / `from` / `note`, and set `given: true` only once a gift has been given |
+| `wishes.json` | Family wishes videos (empty for now) |
+| `photo_inventory.json` | **Generated** media manifest. Don't edit by hand |
+
+### Adding photos
+1. Drop photos into the source folder:
+   - **Age 1 to 50**: name files by age: `34.jpg`, `34 (2).jpg`, `34.1.jpg` …
+   - **Memory gallery**: any name. Dates come from the camera data or the filename.
+   - **Final Life Journey**: numbered in story order. Then add the new id (for example `lj-30`) to a milestone in `timeline.json`.
+2. Run `npm run build:media` (Python with `pip install pillow pillow-heif opencv-python`).
+   This writes web-sized WebP copies to `assets/media/` and refreshes the manifest. Originals are never changed.
+   HEIC photos are converted automatically.
+
+### Adding family wishes videos
+Put MP4 files (H.264 / AAC) in `assets/videos/wishes/` and add entries to `data/wishes.json`:
+
+```json
+{ "id": "wish-1", "title": "From Vikky", "from": "Vikky",
+  "src": "assets/videos/wishes/vikky.mp4", "poster": "assets/videos/wishes/vikky.jpg", "captions": "" }
+```
+
+`poster` (an image) and `captions` (a `.vtt` file) are optional. With two or more videos, a playlist appears.
+
+### Music
+The site plays a soft music box generated in the browser: Happy Birthday, then a gentle loop.
+It starts only after someone presses *Begin*, and the ♫ button toggles it.
+To use a real track, put an MP3 in `assets/audio/` and set `music.src` in `site.json`.
+
+---
+
+## Project structure
 
 ```text
-50yearsofbirthday/
-├── index.html                  # Main grand experience containing all 7 chapters
-├── pages/                      # Standalone direct-link pages
-│   ├── journey.html
-│   ├── reasons.html
-│   ├── memories.html
-│   ├── wishes.html
-│   ├── age-transition.html
-│   └── finale.html
-├── css/                        # Modular Vanilla CSS
-│   ├── variables.css           # Color tokens & design system
-│   ├── global.css              # Typography & layout foundation
-│   ├── components.css          # Navigation, buttons, lightbox, audio widget
-│   ├── chapters.css            # Styles for Chapters 01 to 07
-│   ├── animations.css          # Keyframes, butterflies, particles, reduced-motion
-│   └── responsive.css          # Mobile, tablet, desktop, and 4K stage displays
-├── js/                         # Vanilla JavaScript modules
-│   ├── app.js                  # Master application entrypoint
-│   ├── content.js              # Data store & JSON loader
-│   ├── effects.js              # Canvas particles, butterflies, audio & confetti
-│   ├── navigation.js           # Chapter routing, progress bar, presentation mode
-│   ├── timeline.js             # Life Journey chapter renderer
-│   ├── gallery.js              # Filterable photo gallery & fullscreen lightbox
-│   ├── video-player.js         # Video controller & single playback manager
-│   ├── age-transition.js       # Age 1–50 photo journey player
-│   └── gift-reveal.js          # 3D gift box reveal & 50 reasons logic
-├── data/                       # Content JSON data
-│   ├── timeline.json           # 23 verified milestones
-│   ├── reasons.json            # Exactly 50 reasons why we love Buvana
-│   ├── wishes.json             # Video message slots & quotes
-│   ├── gifts.json              # Exactly 50 gifts for the celebration
-│   ├── photo_inventory.json    # Complete inventory of 404 family photos
-│   └── asset_mapping.json      # Categorized photo mappings
-├── assets/                     # Web-ready optimized media
-│   ├── photos/                 # WebP optimized family photos
-│   ├── thumbnails/             # High-speed gallery thumbnails
-│   ├── illustrations/          # AI family memory illustrations & video posters
-│   ├── audio/                  # Background music track
-│   └── videos/                 # Family video MP4 uploads
-├── scripts/                    # Automation & audit scripts
-│   ├── audit_and_process_assets.py
-│   ├── generate_video_placeholders.py
-│   └── generate_standalone_pages.py
-├── Age 1 to 50/                # Original unedited family photos (Preserved)
-├── Life journey/               # Original unedited family photos (Preserved)
-└── Memory gallery/             # Original unedited family photos (Preserved)
+index.html            all seven chapters
+pages/                standalone chapter pages (generated: npm run build:pages)
+css/                  variables · global · components · chapters · animations
+js/app.js             entry point: loads data, mounts chapters
+js/core/              data, nav, audio, confetti, lightbox, player, utilities
+js/sections/          one module per chapter
+js/three/             stage lifecycle + hero, constellation and gift scenes
+js/vendor/            three.module.min.js (r160, MIT)
+data/                 content (see above)
+assets/media/         generated web images + film posters
+assets/videos/        the family films (life journey.mp4, age.mp4); wishes videos go in wishes/
+assets/illustrations/ illustrations (source files)
+Final Life Journey/ · Age 1 to 50/ · Memory gallery/   original photos (never modified)
+scripts/              build_media.py · build_pages.py · serve.mjs · verify.mjs · smoke.mjs
+tests/fixtures/       the 50 reasons, word for word, used by the tests
 ```
+
+Performance: Three.js loads only when a 3D chapter approaches the screen. Render loops pause off-screen and in background tabs.
+Pixel ratio is capped and particle counts drop on phones. Images are lazy-loaded WebP at two sizes.
+Full-size photos load only in the viewer. With *reduce motion* turned on, all drifting, parallax and confetti stop.
+Without WebGL, every chapter falls back to a CSS version.
 
 ---
 
-## 🚀 Running Locally
+## Tests
 
-You can run this project with any static HTTP server:
-
-### Option A: Using Python (Built-in)
 ```bash
-python -m http.server 8080
+npm test              # content + assets: 50 reasons word for word, milestones, every file reference
+npm run test:browser  # headless Chrome/Edge: 5 screen sizes, all interactions, reduced motion, no-WebGL
 ```
-Then open `http://localhost:8080` in your browser.
 
-### Option B: Using VS Code Live Server
-Right-click on `index.html` and select **"Open with Live Server"**.
-
-### Presentation Mode (For Live Event Display)
-- Press the **P** key on your keyboard or click the **📺** TV icon in the navigation header to enter fullscreen presentation mode.
-- Top navigation is automatically hidden to provide a clean cinematic display for event guests and live stage screens.
+`test:browser` uses the installed Chrome or Edge (set `CHROME_PATH` if needed) and `puppeteer-core`
+(`npm install` once). Set `SMOKE_SHOTS=some/folder` to save screenshots.
 
 ---
 
-## 🔒 Privacy & Preservation
-- All 404 original source photographs remain untouched in their original folders.
-- No third-party tracking scripts or heavy frontend frameworks are used.
+## Deploying
+
+Upload these to any static host (Netlify, Vercel, GitHub Pages, S3 …), about 205 MB:
+
+```
+index.html  pages/  css/  js/  data/  assets/media/  assets/videos/age.mp4  assets/videos/life journey.mp4
+```
+
+`assets/videos/happy 50th birthday.mp4` (283 MB) is the HEVC original. The site plays the converted copy in `assets/media/films/`.
+
+The original photo folders (~935 MB) and `assets/illustrations/` are **source files only**. The site never loads them.
+All URLs are relative, so the site works from any sub-folder.
+
+---
+
+## Still needed from the family
+
+- **Family wishes videos.** See *Adding family wishes videos*.
+- **Gift names** for the 50 gifts (optional), in `data/gifts.json`.
+- **Photos for the missing ages.** 26 of 50 ages have photos: 1, 5, 10, 15, 17, 21, 22, 28–30, 34–49.
+- **Please confirm the wording** of three milestones that came from short family labels:
+  "Dilli 50th Birthday" (2021), "DB 25th wedding anniversary" (2022), "VK seemandham" (2026).
+  The `needsConfirmation` notes in `timeline.json` point to them.
+- Optional: a music track (see *Music*).

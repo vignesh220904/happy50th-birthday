@@ -1,0 +1,70 @@
+{
+  "_note": "Family-specific text and settings for the whole site. Edit freely; every section reads from here.",
+  "person": {
+    "fullName": "M. Buvaneswari",
+    "nickname": "Buvana",
+    "familyName": "Amma",
+    "born": "1976-10-27"
+  },
+  "event": {
+    "date": "2026-10-27",
+    "dateLabel": "27 October 2026",
+    "venue": "Palmshore Restaurant",
+    "area": "Ekkatuthangal, Chennai"
+  },
+  "welcome": {
+    "eyebrow": "27 October 1976 – 27 October 2026",
+    "headline": "50 Years of Love",
+    "supporting": "Celebrating the beautiful journey of M. Buvaneswari.",
+    "message": "Some people make a house a home, ordinary moments into memories, and family into everything. Today, we celebrate the woman who has given us all of that and so much more.",
+    "cta": "Begin Her Beautiful Journey",
+    "theme": "50 Years of Love, Strength, Sacrifice & Beautiful Memories.",
+    "greeting": "Happy 50th Birthday, Amma",
+    "greetingLine": "Fifty years of you. A lifetime of us, loving you back."
+  },
+  "age": {
+    "ending": "From your first little steps to fifty beautiful years — every chapter has been precious."
+  },
+  "finale": {
+    "headline": "Happy 50th Birthday, Amma!",
+    "subline": "50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.",
+    "message": "We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.",
+    "photo": "lj-28"
+  },
+  "films": {
+    "film-birthday": {
+      "title": "The Birthday Film",
+      "description": "“Mom's 50th Birthday — Fifty & Fabulous!” A film of her photographs, made by the family.",
+      "label": "Family film"
+    },
+    "film-life-journey": {
+      "title": "The Life Journey Film",
+      "description": "A short family film of her journey. The road scenes are AI-generated; the photographs in it are real.",
+      "label": "AI-animated family film"
+    },
+    "film-age": {
+      "title": "The Age 1 to 50 Film",
+      "description": "A short film made from her photographs. Movement in the photographs is AI-animated.",
+      "label": "AI-animated family film"
+    }
+  },
+  "music": {
+    "_note": "Leave 'src' empty to use the built-in soft music box (generated in the browser). To use your own track, put an mp3 in assets/audio/ and set its path here.",
+    "src": "",
+    "title": "Music box"
+  },
+  "heroPhotos": [
+    "lj-1",
+    "lj-2",
+    "lj-5",
+    "lj-6",
+    "lj-10",
+    "lj-13",
+    "lj-17",
+    "lj-23",
+    "lj-27",
+    "lj-28",
+    "lj-21",
+    "lj-25"
+  ]
+}

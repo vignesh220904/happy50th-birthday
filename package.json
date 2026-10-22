@@ -1,0 +1,17 @@
+{
+  "name": "buvana-50th-birthday",
+  "version": "2.0.0",
+  "private": true,
+  "description": "50 Years of Love — a cinematic 3D birthday experience for M. Buvaneswari",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs 8080 --open",
+    "test": "node scripts/verify.mjs",
+    "test:browser": "node scripts/smoke.mjs",
+    "build:media": "python scripts/build_media.py",
+    "build:pages": "python scripts/build_pages.py"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}

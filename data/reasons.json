@@ -1,352 +1,63 @@
-[
-  {
-    "id": 1,
-    "title": "Your Radiant Smile",
-    "reason": "The way your smile instantly lights up any room and brings peace to all of us.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Warmth"
-  },
-  {
-    "id": 2,
-    "title": "Unconditional Love",
-    "reason": "How you love every member of the family selflessly without expecting anything in return.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Love"
-  },
-  {
-    "id": 3,
-    "title": "Pillar of Strength",
-    "reason": "Your quiet resilience and inner strength in facing life's hurdles with grace and courage.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Strength"
-  },
-  {
-    "id": 4,
-    "title": "Culinary Magic",
-    "reason": "The aroma and warmth of your cooking that always feels like home and brings us together.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Home"
-  },
-  {
-    "id": 5,
-    "title": "Endless Patience",
-    "reason": "The infinite patience you show in listening to each of our stories, worries, and dreams.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Grace"
-  },
-  {
-    "id": 6,
-    "title": "Heart of Every Celebration",
-    "reason": "The tireless enthusiasm and joy you bring to every festival, pooja, and family gathering.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Celebration"
-  },
-  {
-    "id": 7,
-    "title": "Guiding Wisdom",
-    "reason": "The gentle advice and balanced counsel you give whenever we need clarity and direction.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Wisdom"
-  },
-  {
-    "id": 8,
-    "title": "Sacrifices Made with Grace",
-    "reason": "Putting everyone else’s comfort and happiness before your own every single day.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Devotion"
-  },
-  {
-    "id": 9,
-    "title": "The Warmest Hugs",
-    "reason": "Hugs that heal every bad day and make us feel completely safe and cherished.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Affection"
-  },
-  {
-    "id": 10,
-    "title": "Your Inquiring & Learning Spirit",
-    "reason": "Balancing family and education, pursuing your MBA with relentless determination.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Inspiration"
-  },
-  {
-    "id": 11,
-    "title": "Keeper of Family Traditions",
-    "reason": "How you preserve our sacred rituals, values, and memories across generations.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Tradition"
-  },
-  {
-    "id": 12,
-    "title": "Cheerleader in Every Milestone",
-    "reason": "Standing proudly in the front row for every graduation, achievement, and milestone of Vikky and Varshu.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Pride"
-  },
-  {
-    "id": 13,
-    "title": "Elegance and Poise",
-    "reason": "Your timeless grace in every saree and how effortlessly you carry yourself.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Grace"
-  },
-  {
-    "id": 14,
-    "title": "Forgiving Nature",
-    "reason": "Never holding onto grudges and always keeping our family united with an open heart.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Harmony"
-  },
-  {
-    "id": 15,
-    "title": "Your Contagious Laughter",
-    "reason": "The pure, wholehearted laugh that makes the entire house echo with happiness.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Joy"
-  },
-  {
-    "id": 16,
-    "title": "Creating a Warm Home",
-    "reason": "Turning houses into sanctuaries filled with love, laughter, and fragrant blossoms.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Home"
-  },
-  {
-    "id": 17,
-    "title": "Faith and Devotion",
-    "reason": "Your sincere spiritual prayers every dawn that wrap a shield of blessings around all of us.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Faith"
-  },
-  {
-    "id": 18,
-    "title": "Always Remembering Small Details",
-    "reason": "How you remember everyone's favourite dish, little habits, and cherished moments.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Thoughtfulness"
-  },
-  {
-    "id": 19,
-    "title": "Inspirational Motherhood",
-    "reason": "Being not just a mother, but our greatest confidante, protector, and mentor.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Motherhood"
-  },
-  {
-    "id": 20,
-    "title": "Supportive Life Partner",
-    "reason": "Standing shoulder-to-shoulder through decades of shared dreams, milestones, and triumphs.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Partnership"
-  },
-  {
-    "id": 21,
-    "title": "Your Sense of Duty",
-    "reason": "Dedication to parents, in-laws, children, and relatives with boundless sincerity.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Values"
-  },
-  {
-    "id": 22,
-    "title": "Calm in Every Storm",
-    "reason": "When situations feel chaotic, your steady composure brings calm to the whole family.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Composure"
-  },
-  {
-    "id": 23,
-    "title": "Generosity of Heart",
-    "reason": "Giving generously to anyone in need and always sharing our blessings.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Generosity"
-  },
-  {
-    "id": 24,
-    "title": "Pride in Her Children's Happiness",
-    "reason": "Finding your greatest happiness simply seeing Vikky and Varshu thrive and smile.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Love"
-  },
-  {
-    "id": 25,
-    "title": "Welcoming Hospitaliy",
-    "reason": "Greeting every guest who steps over our threshold like honored royalty.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Hospitality"
-  },
-  {
-    "id": 26,
-    "title": "Love for Ramar Blue",
-    "reason": "The royal and serene shade that complements your regal yet gentle spirit.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Style"
-  },
-  {
-    "id": 27,
-    "title": "Fostering Family Unity",
-    "reason": "Binding relatives near and far through phone calls, festive dinners, and love.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Bonding"
-  },
-  {
-    "id": 28,
-    "title": "A Life Built on Integrity",
-    "reason": "Living by truthful principles and teaching us honesty by living example.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Character"
-  },
-  {
-    "id": 29,
-    "title": "Treasuring Old Memories",
-    "reason": "How tenderly you keep our childhood photos, school reports, and family memorabilia.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Memories"
-  },
-  {
-    "id": 30,
-    "title": "Joy in the Little Things",
-    "reason": "Finding beauty in morning coffee, fresh jasmine flowers, and quiet evening breezes.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Simplicity"
-  },
-  {
-    "id": 31,
-    "title": "Ever-Present Support",
-    "reason": "Even without asking, you somehow instinctively know when one of us needs reassurance.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Intuition"
-  },
-  {
-    "id": 32,
-    "title": "Encouraging Our Dreams",
-    "reason": "Believing in our potentials long before we learned to believe in ourselves.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Belief"
-  },
-  {
-    "id": 33,
-    "title": "Warmth for the Extended Family",
-    "reason": "Making every aunt, uncle, niece, and nephew feel uniquely loved and heard.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Kinship"
-  },
-  {
-    "id": 34,
-    "title": "Practical Life Intelligence",
-    "reason": "Finding ingenious, down-to-earth solutions to any daily household or life puzzle.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Intelligence"
-  },
-  {
-    "id": 35,
-    "title": "The Strength to Start New Chapters",
-    "reason": "Embracing new eras—new homes, new careers, and growing children—with dignity.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Growth"
-  },
-  {
-    "id": 36,
-    "title": "Your Beautiful Eyes",
-    "reason": "Expressive eyes that speak a thousand words of kindness, pride, and protective love.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Beauty"
-  },
-  {
-    "id": 37,
-    "title": "Cheering for Academic Feats",
-    "reason": "The joyous tears of pride during school graduations and university convocation halls.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Milestones"
-  },
-  {
-    "id": 38,
-    "title": "Graceful Adaptability",
-    "reason": "Moving effortlessly from traditional heritage to modern times while staying grounded.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Harmony"
-  },
-  {
-    "id": 39,
-    "title": "Your Kind Words to Everyone",
-    "reason": "Speaking words that uplift, soothe, and build confidence in those around you.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Kindness"
-  },
-  {
-    "id": 40,
-    "title": "The Anchor of 3rd Main Road",
-    "reason": "The sacred warmth and happy memories built inside our cherished family home.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Home"
-  },
-  {
-    "id": 41,
-    "title": "Unmatched Sense of Responsibility",
-    "reason": "Stepping up whenever someone needed a hand, never complaining about fatigue.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Responsibility"
-  },
-  {
-    "id": 42,
-    "title": "Loving Mother-in-Law & Welcoming New Bonds",
-    "reason": "Opening your arms with boundless affection as our family expands and welcomes new happiness.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Warmth"
-  },
-  {
-    "id": 43,
-    "title": "Teaching by Loving Example",
-    "reason": "Instilling humility, compassion, and respect by embodying them day in and day out.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Leadership"
-  },
-  {
-    "id": 44,
-    "title": "A Lifetime of Boundless Energy",
-    "reason": "Your energetic spirit that keeps the whole household thriving from dawn to dusk.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Vitality"
-  },
-  {
-    "id": 45,
-    "title": "Your Comforting Voice",
-    "reason": "Hearing 'Don't worry, everything will be fine' makes every fear vanish completely.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Comfort"
-  },
-  {
-    "id": 46,
-    "title": "Celebrating Five Golden Decades",
-    "reason": "Living fifty meaningful years filled with honesty, resilience, love, and honor.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Golden Jubilee"
-  },
-  {
-    "id": 47,
-    "title": "Being Our Moral Compass",
-    "reason": "Reminding us always to do what is right, kind, and honorable in every situation.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Integrity"
-  },
-  {
-    "id": 48,
-    "title": "Unshakable Family Loyalty",
-    "reason": "Protecting and cherishing this family as your most precious treasure in the universe.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Devotion"
-  },
-  {
-    "id": 49,
-    "title": "The Heartbeat of Our Lives",
-    "reason": "Simply because without you, our family would have no center, no melody, and no light.",
-    "contributor": "Family Tribute (Editable)",
-    "category": "Essence"
-  },
-  {
-    "id": 50,
-    "title": "Just Being You — Our Buvana",
-    "reason": "Because in all the world, across all lifetimes, there is only one irreplaceable you. We love you!",
-    "contributor": "With All Our Hearts — The Entire Family",
-    "category": "Eternal Love"
-  }
-]
+{
+  "_note": "The 50 reasons, written by the family. Keep the wording exactly as given. Each chapter lists the reason numbers it contains.",
+  "closing": "Fifty reasons are only the beginning. The real reason is simple: our lives are more beautiful because you are in them.",
+  "chapters": [
+    { "id": "love", "title": "Your Love", "range": [1, 10] },
+    { "id": "strength", "title": "Your Strength", "range": [11, 20] },
+    { "id": "treasure", "title": "The Things We Treasure", "range": [21, 30] },
+    { "id": "taught", "title": "What You Taught Us", "range": [31, 40] },
+    { "id": "amma", "title": "Forever Our Amma", "range": [41, 50] }
+  ],
+  "reasons": [
+    { "n": 1, "text": "We love you because you make us feel loved in a thousand little ways every single day. ❤️" },
+    { "n": 2, "text": "You make our house feel like home." },
+    { "n": 3, "text": "You always put our happiness before your own." },
+    { "n": 4, "text": "You understand us even when we don't say a word." },
+    { "n": 5, "text": "Your hugs make everything feel better." },
+    { "n": 6, "text": "You are our biggest strength." },
+    { "n": 7, "text": "You believe in us even when we doubt ourselves." },
+    { "n": 8, "text": "You always know how to make us smile." },
+    { "n": 9, "text": "Your food tastes like no one else's." },
+    { "n": 10, "text": "You take care of everyone without expecting anything in return." },
+    { "n": 11, "text": "You remember even the smallest things about us." },
+    { "n": 12, "text": "You are always there when we need you." },
+    { "n": 13, "text": "You taught us the difference between right and wrong." },
+    { "n": 14, "text": "You taught us to be kind to others." },
+    { "n": 15, "text": "You have the most beautiful heart." },
+    { "n": 16, "text": "You are stronger than you realise." },
+    { "n": 17, "text": "You handle every challenge with courage." },
+    { "n": 18, "text": "You find a way to make things work, no matter how difficult they get." },
+    { "n": 19, "text": "You make even ordinary days special." },
+    { "n": 20, "text": "You make every festival and celebration feel magical." },
+    { "n": 21, "text": "We love the way you worry about us, even when we are grown up." },
+    { "n": 22, "text": "We love your little scoldings because we know they come from love." },
+    { "n": 23, "text": "We love how you always ask if we've eaten." },
+    { "n": 24, "text": "We love the way you wait for us to come home." },
+    { "n": 25, "text": "We love how you can recognise our moods instantly." },
+    { "n": 26, "text": "We love your endless advice, even when we pretend not to listen." },
+    { "n": 27, "text": "We love how you celebrate our smallest achievements." },
+    { "n": 28, "text": "We love how you stand by us through every mistake." },
+    { "n": 29, "text": "We love how you make sacrifices without ever counting them." },
+    { "n": 30, "text": "We love how you somehow manage to do a hundred things at once." },
+    { "n": 31, "text": "You taught us what unconditional love truly means." },
+    { "n": 32, "text": "You showed us what it means to be a good human being." },
+    { "n": 33, "text": "You taught us to face life with courage." },
+    { "n": 34, "text": "You taught us the value of family." },
+    { "n": 35, "text": "You taught us to respect and care for others." },
+    { "n": 36, "text": "You gave us a childhood filled with love and memories." },
+    { "n": 37, "text": "You made countless sacrifices to give us a better life." },
+    { "n": 38, "text": "You have been our first teacher and our forever guide." },
+    { "n": 39, "text": "You have given us more than we could ever ask for." },
+    { "n": 40, "text": "You made us who we are today." },
+    { "n": 41, "text": "We love your beautiful smile." },
+    { "n": 42, "text": "We love your laughter that brightens up our day." },
+    { "n": 43, "text": "We love your little habits that make you uniquely you." },
+    { "n": 44, "text": "We love listening to your stories and memories." },
+    { "n": 45, "text": "We love spending time with you, even when we're doing absolutely nothing." },
+    { "n": 46, "text": "We love the way you bring our family together." },
+    { "n": 47, "text": "We love that no matter how old we get, we can always be your little children." },
+    { "n": 48, "text": "We love how your love gives us the courage to chase our dreams." },
+    { "n": 49, "text": "We love you for being you, beyond every role you play in our lives." },
+    { "n": 50, "text": "We love you simply because you are our Amma, and there could never be another you." }
+  ]
+}

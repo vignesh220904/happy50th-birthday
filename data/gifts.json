@@ -1,402 +1,56 @@
-[
-  {
-    "id": 1,
-    "giftNumber": "01",
-    "title": "Gift 01 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A special token of gratitude for five wonderful decades of warmth and care.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 2,
-    "giftNumber": "02",
-    "title": "Gift 02 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Celebrating the joy and light you bring to every corner of our home.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 3,
-    "giftNumber": "03",
-    "title": "Gift 03 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "With heartfelt love on your 50th birthday celebration.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 4,
-    "giftNumber": "04",
-    "title": "Gift 04 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Honoring your selfless devotion and endless kindness.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 5,
-    "giftNumber": "05",
-    "title": "Gift 05 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May your days always be as bright and cheerful as your smile.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 6,
-    "giftNumber": "06",
-    "title": "Gift 06 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "For the one who holds our family together with graceful love.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 7,
-    "giftNumber": "07",
-    "title": "Gift 07 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Wishing you health, happiness, and peace in this golden milestone.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 8,
-    "giftNumber": "08",
-    "title": "Gift 08 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A little treasure to bring joy to your precious heart.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 9,
-    "giftNumber": "09",
-    "title": "Gift 09 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "In celebration of fifty years of boundless love and sweet memories.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 10,
-    "giftNumber": "10",
-    "title": "Gift 10 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "With all our adoration, today, tomorrow, and forever.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 11,
-    "giftNumber": "11",
-    "title": "Gift 11 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Thank you for inspiring us with your strength and gentle heart.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 12,
-    "giftNumber": "12",
-    "title": "Gift 12 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May every dream of yours blossom into reality.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 13,
-    "giftNumber": "13",
-    "title": "Gift 13 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "To our dearest Buvana, wishing you eternal sunshine.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 14,
-    "giftNumber": "14",
-    "title": "Gift 14 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A small gift wrapped in giant blessings from all of us.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 15,
-    "giftNumber": "15",
-    "title": "Gift 15 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "For being our guide, friend, and comforting presence.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 16,
-    "giftNumber": "16",
-    "title": "Gift 16 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May your golden jubilee year be filled with laughter and peace.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 17,
-    "giftNumber": "17",
-    "title": "Gift 17 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Celebrating your unique charm and generous spirit.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 18,
-    "giftNumber": "18",
-    "title": "Gift 18 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Every day is brighter because you are in our lives.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 19,
-    "giftNumber": "19",
-    "title": "Gift 19 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Sending you endless love on this landmark celebration.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 20,
-    "giftNumber": "20",
-    "title": "Gift 20 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "To the queen of our family, with deepest admiration.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 21,
-    "giftNumber": "21",
-    "title": "Gift 21 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Here is to 50 years of elegance, courage, and unconditional love.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 22,
-    "giftNumber": "22",
-    "title": "Gift 22 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May this milestone bring you unending moments of serenity and joy.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 23,
-    "giftNumber": "23",
-    "title": "Gift 23 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Wrapped with boundless love and warm family hugs.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 24,
-    "giftNumber": "24",
-    "title": "Gift 24 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Thank you for filling each day with sweet memories.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 25,
-    "giftNumber": "25",
-    "title": "Gift 25 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Half a century of grace and a lifetime of happiness ahead.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 26,
-    "giftNumber": "26",
-    "title": "Gift 26 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A special delight for a woman who gives so much to others.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 27,
-    "giftNumber": "27",
-    "title": "Gift 27 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May your smile shine brighter with each passing year.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 28,
-    "giftNumber": "28",
-    "title": "Gift 28 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Celebrating your warmth, humility, and beautiful heart.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 29,
-    "giftNumber": "29",
-    "title": "Gift 29 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "To our dearest Buvana, the heart of our household.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 30,
-    "giftNumber": "30",
-    "title": "Gift 30 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May your 50th year bring you as much happiness as you give us.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 31,
-    "giftNumber": "31",
-    "title": "Gift 31 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "With heartfelt gratitude for all your tender sacrifices.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 32,
-    "giftNumber": "32",
-    "title": "Gift 32 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A surprise packed with love and sincere wishes.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 33,
-    "giftNumber": "33",
-    "title": "Gift 33 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Wishing you health, longevity, and peaceful days ahead.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 34,
-    "giftNumber": "34",
-    "title": "Gift 34 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "For the wonderful storyteller and keeper of our home.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 35,
-    "giftNumber": "35",
-    "title": "Gift 35 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "You deserve the very best that this world has to offer.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 36,
-    "giftNumber": "36",
-    "title": "Gift 36 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May this milestone anniversary bring endless blessings.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 37,
-    "giftNumber": "37",
-    "title": "Gift 37 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A reminder of how deeply cherished you are every single moment.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 38,
-    "giftNumber": "38",
-    "title": "Gift 38 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "For the kindest soul, with boundless affection.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 39,
-    "giftNumber": "39",
-    "title": "Gift 39 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Thank you for teaching us love and dignity through your life.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 40,
-    "giftNumber": "40",
-    "title": "Gift 40 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May your days be full of laughter, harmony, and joy.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 41,
-    "giftNumber": "41",
-    "title": "Gift 41 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Celebrating an extraordinary milestone of a phenomenal woman.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 42,
-    "giftNumber": "42",
-    "title": "Gift 42 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A token of reverence, love, and sweet celebration.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 43,
-    "giftNumber": "43",
-    "title": "Gift 43 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "May the divine always protect and bless your journey.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 44,
-    "giftNumber": "44",
-    "title": "Gift 44 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "To our dearest mother and family pillar, with immense love.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 45,
-    "giftNumber": "45",
-    "title": "Gift 45 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Fifty glorious years of touching hearts and creating smiles.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 46,
-    "giftNumber": "46",
-    "title": "Gift 46 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Every step of your life is an inspiration to all of us.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 47,
-    "giftNumber": "47",
-    "title": "Gift 47 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "With all our prayers for abundant happiness and fulfillment.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 48,
-    "giftNumber": "48",
-    "title": "Gift 48 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "A special celebration gift honoring your wonderful life.",
-    "category": "Keepsake"
-  },
-  {
-    "id": 49,
-    "giftNumber": "49",
-    "title": "Gift 49 — Special Surprise",
-    "giver": "Family (To be updated)",
-    "message": "Almost at the golden milestone gift — celebrating your golden heart!",
-    "category": "Keepsake"
-  },
-  {
-    "id": 50,
-    "giftNumber": "50",
-    "title": "Gift 50 — Grand Jubilee Tribute",
-    "giver": "The Entire Family (To be updated)",
-    "message": "The final tribute for 50 golden years of love, memories, and moments. We adore you, Buvana!",
-    "category": "Grand Tribute"
-  }
-]
+{
+  "_note": "The family plans to give 50 gifts. Fill in 'name' (and optionally 'from' and 'note') as gifts are confirmed. Empty entries are shown as numbered, unopened gifts. Nothing here is shown as 'given' unless 'given' is set to true.",
+  "total": 50,
+  "gifts": [
+    {"n": 1, "name": "", "from": "", "note": "", "given": false},
+    {"n": 2, "name": "", "from": "", "note": "", "given": false},
+    {"n": 3, "name": "", "from": "", "note": "", "given": false},
+    {"n": 4, "name": "", "from": "", "note": "", "given": false},
+    {"n": 5, "name": "", "from": "", "note": "", "given": false},
+    {"n": 6, "name": "", "from": "", "note": "", "given": false},
+    {"n": 7, "name": "", "from": "", "note": "", "given": false},
+    {"n": 8, "name": "", "from": "", "note": "", "given": false},
+    {"n": 9, "name": "", "from": "", "note": "", "given": false},
+    {"n": 10, "name": "", "from": "", "note": "", "given": false},
+    {"n": 11, "name": "", "from": "", "note": "", "given": false},
+    {"n": 12, "name": "", "from": "", "note": "", "given": false},
+    {"n": 13, "name": "", "from": "", "note": "", "given": false},
+    {"n": 14, "name": "", "from": "", "note": "", "given": false},
+    {"n": 15, "name": "", "from": "", "note": "", "given": false},
+    {"n": 16, "name": "", "from": "", "note": "", "given": false},
+    {"n": 17, "name": "", "from": "", "note": "", "given": false},
+    {"n": 18, "name": "", "from": "", "note": "", "given": false},
+    {"n": 19, "name": "", "from": "", "note": "", "given": false},
+    {"n": 20, "name": "", "from": "", "note": "", "given": false},
+    {"n": 21, "name": "", "from": "", "note": "", "given": false},
+    {"n": 22, "name": "", "from": "", "note": "", "given": false},
+    {"n": 23, "name": "", "from": "", "note": "", "given": false},
+    {"n": 24, "name": "", "from": "", "note": "", "given": false},
+    {"n": 25, "name": "", "from": "", "note": "", "given": false},
+    {"n": 26, "name": "", "from": "", "note": "", "given": false},
+    {"n": 27, "name": "", "from": "", "note": "", "given": false},
+    {"n": 28, "name": "", "from": "", "note": "", "given": false},
+    {"n": 29, "name": "", "from": "", "note": "", "given": false},
+    {"n": 30, "name": "", "from": "", "note": "", "given": false},
+    {"n": 31, "name": "", "from": "", "note": "", "given": false},
+    {"n": 32, "name": "", "from": "", "note": "", "given": false},
+    {"n": 33, "name": "", "from": "", "note": "", "given": false},
+    {"n": 34, "name": "", "from": "", "note": "", "given": false},
+    {"n": 35, "name": "", "from": "", "note": "", "given": false},
+    {"n": 36, "name": "", "from": "", "note": "", "given": false},
+    {"n": 37, "name": "", "from": "", "note": "", "given": false},
+    {"n": 38, "name": "", "from": "", "note": "", "given": false},
+    {"n": 39, "name": "", "from": "", "note": "", "given": false},
+    {"n": 40, "name": "", "from": "", "note": "", "given": false},
+    {"n": 41, "name": "", "from": "", "note": "", "given": false},
+    {"n": 42, "name": "", "from": "", "note": "", "given": false},
+    {"n": 43, "name": "", "from": "", "note": "", "given": false},
+    {"n": 44, "name": "", "from": "", "note": "", "given": false},
+    {"n": 45, "name": "", "from": "", "note": "", "given": false},
+    {"n": 46, "name": "", "from": "", "note": "", "given": false},
+    {"n": 47, "name": "", "from": "", "note": "", "given": false},
+    {"n": 48, "name": "", "from": "", "note": "", "given": false},
+    {"n": 49, "name": "", "from": "", "note": "", "given": false},
+    {"n": 50, "name": "", "from": "", "note": "", "given": false}
+  ]
+}

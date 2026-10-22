@@ -1,60 +1,67 @@
-/**
- * Master Application Entrypoint
- * Coordinates all chapters, data loading, animations, and interactions
- * 50 Years of Love, Memories & Moments — M. Buvaneswari (Buvana)
- */
+// Entry point. Loads the content files, then mounts every chapter present on
+// the page (index.html has all seven; each pages/*.html has one). A chapter that
+// fails shows a gentle message without affecting the others.
 
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('✦ Initializing Buvana 50th Birthday Celebration Website ✦');
+import { setupNav } from './core/nav.js';
+import { loadContent, url } from './core/data.js';
+import { music } from './core/audio.js';
+import { setupReveal, $, $$ } from './core/util.js';
+import { sectionError } from './sections/shared.js';
+import { createIntro } from './sections/intro.js';
+import { loadThree, webglAvailable } from './three/stage.js';
+import * as welcome from './sections/welcome.js';
+import * as journey from './sections/journey.js';
+import * as reasons from './sections/reasons.js';
+import * as gallery from './sections/gallery.js';
+import * as wishes from './sections/wishes.js';
+import * as age from './sections/age.js';
+import * as finale from './sections/finale.js';
 
-  try {
-    // 1. Initialize data store
-    await ContentStore.init();
+const MODULES = { welcome, journey, reasons, memories: gallery, wishes, age, finale };
 
-    // 2. Initialize visual & audio effects
-    EffectsManager.init();
-
-    // 3. Initialize navigation and routing
-    NavigationManager.init();
-
-    // 4. Initialize Life Journey & Timeline
-    TimelineManager.init();
-
-    // 5. Initialize Photo Gallery
-    GalleryManager.init();
-
-    // 6. Initialize Video Wishes
-    VideoWishesManager.init();
-
-    // 7. Initialize Age 1 to 50 Transition
-    AgeTransitionManager.init();
-
-    // 8. Initialize 50 Gifts Reveal & 50 Reasons
-    GiftRevealManager.init();
-    ReasonsManager.init();
-
-    // 9. Setup Scroll Reveal Animations
-    setupScrollReveals();
-
-    console.log('✓ All 7 Chapters & Systems Loaded Successfully!');
-  } catch (error) {
-    console.error('Fatal initialization error:', error);
-  }
-});
-
-function setupScrollReveals() {
-  const revealElements = document.querySelectorAll('.reveal-on-scroll');
-  const observer = new IntersectionObserver((entries, obs) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
-        obs.unobserve(entry.target);
-      }
+async function main() {
+  setupNav($('[data-nav]'));
+  // The opening title card waits for the real work: content, fonts, first photos, 3D engine
+  const intro = createIntro();
+  const track = (p) => (intro ? intro.track(p) : p);
+  let mounted;
+  track(new Promise((ok) => { mounted = ok; })); // resolved once every chapter is on the page
+  track(document.fonts?.ready);
+  if (intro && webglAvailable()) track(loadThree());
+  const content = await track(loadContent());
+  if (intro) {
+    (content.site?.heroPhotos || []).slice(0, 6).forEach((id) => {
+      const item = content.media.get(id);
+      if (item) track(new Promise((ok) => { const img = new Image(); img.onload = img.onerror = ok; img.src = url(item.sm); }));
     });
-  }, {
-    threshold: 0.1,
-    rootMargin: '0px 0px -40px 0px'
-  });
+  }
+  if (!content.site) {
+    $$('[data-section]').forEach((el) => sectionError(el, 'Celebration'));
+    mounted();
+    return;
+  }
+  music.configure(content.site.music, url);
 
-  revealElements.forEach(el => observer.observe(el));
+  for (const el of $$('[data-section]')) {
+    const mod = MODULES[el.dataset.section];
+    try {
+      await mod.mount(el, content);
+    } catch (err) {
+      console.error(`[${el.dataset.section}] failed to render`, err);
+      el.replaceChildren();
+      sectionError(el, el.getAttribute('aria-label') || el.dataset.section);
+    }
+  }
+
+  setupReveal();
+  mounted();
+  document.documentElement.classList.add('is-loaded');
+
+  // Content is rendered after load, so honour a #chapter link once it exists
+  if (location.hash) {
+    const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    target?.scrollIntoView();
+  }
 }
+
+main().catch((err) => console.error('[app] failed to start', err));
