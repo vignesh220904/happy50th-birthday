@@ -1,11 +1,12 @@
 // Full-screen photo viewer built on <dialog> (native focus trapping, Esc to close,
-// inert background). Shared by the gallery, life journey and age sections.
+// inert background). Shared by the gallery and the life journey. With
+// { autoplay: ms } it becomes a slideshow, with a play / pause button.
 
 import { h, icons, onSwipe, announce, prefersReducedMotion } from './util.js';
 import { url } from './data.js';
 
-let dialog, imgEl, placeholderEl, captionEl, metaEl, counterEl, labelEl, prevBtn, nextBtn;
-let items = [], index = 0, opener = null;
+let dialog, imgEl, placeholderEl, captionEl, metaEl, counterEl, labelEl, prevBtn, nextBtn, playBtn;
+let items = [], index = 0, opener = null, timer = 0, interval = 0;
 
 function build() {
   prevBtn = h('button', { class: 'icon-btn lightbox__nav lightbox__nav--prev', type: 'button', 'aria-label': 'Previous photo', html: icons.prev, onclick: () => go(-1) });
@@ -16,13 +17,17 @@ function build() {
   labelEl = h('span', { class: 'media-label' });
   captionEl = h('p', { class: 'lightbox__caption' });
   metaEl = h('p', { class: 'lightbox__meta' });
+  playBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-pressed': 'false', hidden: true, onclick: () => setPlaying(!timer) });
 
   dialog = h(
     'dialog',
     { class: 'lightbox', 'aria-label': 'Photo viewer' },
     h('div', { class: 'lightbox__bar' },
       counterEl,
-      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Close photo viewer', html: icons.close, onclick: close }),
+      h('div', { class: 'lightbox__tools' },
+        playBtn,
+        h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Close photo viewer', html: icons.close, onclick: close }),
+      ),
     ),
     h('figure', { class: 'lightbox__stage' }, placeholderEl, imgEl),
     prevBtn,
@@ -33,8 +38,10 @@ function build() {
   dialog.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    if ((e.key === ' ' || e.key === 'k') && !playBtn.hidden && e.target === dialog) { e.preventDefault(); setPlaying(!timer); }
   });
   dialog.addEventListener('close', () => {
+    setPlaying(false);
     document.documentElement.classList.remove('has-modal');
     imgEl.removeAttribute('src');
     opener?.focus?.({ preventScroll: true });
@@ -90,15 +97,23 @@ function go(delta) {
   render();
 }
 
+function setPlaying(on) {
+  clearInterval(timer);
+  timer = on && interval ? setInterval(() => go(1), interval) : 0;
+  playBtn.innerHTML = timer ? icons.pause : icons.play;
+  playBtn.setAttribute('aria-pressed', String(!!timer));
+  playBtn.setAttribute('aria-label', timer ? 'Pause slideshow' : 'Play slideshow');
+}
+
 export function close() {
   if (dialog?.open) dialog.close();
 }
 
 /**
- * openLightbox([{ media, alt, caption, meta }], startIndex)
- * `media` is a manifest entry (from data.js).
+ * openLightbox([{ media, alt, caption, meta }], startIndex, { autoplay })
+ * `media` is a manifest entry (from data.js); autoplay is milliseconds per photo.
  */
-export function openLightbox(list, start = 0) {
+export function openLightbox(list, start = 0, { autoplay = 0 } = {}) {
   items = list.filter((i) => i && i.media);
   if (!items.length) return;
   if (!dialog) build();
@@ -107,4 +122,7 @@ export function openLightbox(list, start = 0) {
   render();
   document.documentElement.classList.add('has-modal');
   dialog.showModal();
+  interval = items.length > 1 ? autoplay : 0;
+  playBtn.hidden = !interval;
+  setPlaying(!!interval);
 }

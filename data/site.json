@@ -1,5 +1,5 @@
 {
-  "_note": "Family-specific text and settings for the whole site. Edit freely; every section reads from here.",
+  "_note": "Family-specific text and settings for the whole presentation. Edit freely; every scene reads from here.",
   "person": {
     "fullName": "M. Buvaneswari",
     "nickname": "Buvana",
@@ -13,58 +13,47 @@
     "area": "Ekkatuthangal, Chennai"
   },
   "welcome": {
-    "eyebrow": "27 October 1976 – 27 October 2026",
-    "headline": "50 Years of Love",
-    "supporting": "Celebrating the beautiful journey of M. Buvaneswari.",
-    "message": "Some people make a house a home, ordinary moments into memories, and family into everything. Today, we celebrate the woman who has given us all of that and so much more.",
-    "cta": "Begin Her Beautiful Journey",
-    "theme": "50 Years of Love, Strength, Sacrifice & Beautiful Memories.",
-    "greeting": "Happy 50th Birthday, Amma",
-    "greetingLine": "Fifty years of you. A lifetime of us, loving you back."
+    "_note": "The default screen, shown on the projector while guests arrive. 'photos' are ids from data/photo_inventory.json.",
+    "eyebrow": "Welcome to the celebration",
+    "headline": "Celebrating the Beautiful Journey of Buvaneswari",
+    "supporting": "50 Years of Love, Strength & Beautiful Memories",
+    "dates": "27 October 1976 – 27 October 2026",
+    "photos": ["lj-28", "lj-5", "lj-25", "lj-21"]
   },
-  "age": {
-    "ending": "From your first little steps to fifty beautiful years — every chapter has been precious."
+  "reveal": {
+    "_note": "The birthday reveal, shown when the host presses Next. 'photo' is Amma's portrait (an id from data/photo_inventory.json).",
+    "line1": "Happy 50th Birthday",
+    "line2": "Amma",
+    "line3": "M. Buvaneswari",
+    "message": "Fifty years of you. A lifetime of us, loving you back.",
+    "photo": "age-47",
+    "photoAlt": "Amma, M. Buvaneswari, smiling in a blue silk saree"
+  },
+  "videos": {
+    "_note": "Family-supplied videos. Put the MP4 (H.264 + AAC) at the 'src' path and it appears automatically; until then the scene shows a graceful placeholder. 'poster' (an image) is optional.",
+    "lifeJourney": {
+      "src": "assets/videos/family/life-journey.mp4",
+      "poster": "",
+      "title": "Her Life Journey",
+      "missingText": "Her Life Journey film is on its way."
+    },
+    "memories": {
+      "film": "film-memories",
+      "title": "Our Memories, Together",
+      "description": "A film of her photographs, made by the family."
+    }
   },
   "finale": {
     "headline": "Happy 50th Birthday, Amma!",
     "subline": "50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.",
     "message": "We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.",
-    "photo": "lj-28"
-  },
-  "films": {
-    "film-birthday": {
-      "title": "The Birthday Film",
-      "description": "“Mom's 50th Birthday — Fifty & Fabulous!” A film of her photographs, made by the family.",
-      "label": "Family film"
-    },
-    "film-life-journey": {
-      "title": "The Life Journey Film",
-      "description": "A short family film of her journey. The road scenes are AI-generated; the photographs in it are real.",
-      "label": "AI-animated family film"
-    },
-    "film-age": {
-      "title": "The Age 1 to 50 Film",
-      "description": "A short film made from her photographs. Movement in the photographs is AI-animated.",
-      "label": "AI-animated family film"
-    }
+    "sign": "With all our love, always"
   },
   "music": {
-    "_note": "Leave 'src' empty to use the built-in soft music box (generated in the browser). To use your own track, put an mp3 in assets/audio/ and set its path here.",
-    "src": "",
-    "title": "Music box"
-  },
-  "heroPhotos": [
-    "lj-1",
-    "lj-2",
-    "lj-5",
-    "lj-6",
-    "lj-10",
-    "lj-13",
-    "lj-17",
-    "lj-23",
-    "lj-27",
-    "lj-28",
-    "lj-21",
-    "lj-25"
-  ]
+    "_note": "Background music. Never starts by itself: the host presses the music button (or M). It fades out while a video plays and returns afterwards. To change the track, put an MP3 in assets/audio/ and set 'src' (and 'credit').",
+    "src": "assets/audio/canon-in-d-major.mp3",
+    "title": "Canon in D Major",
+    "volume": 0.4,
+    "credit": "Music: “Canon in D Major” by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 3.0"
+  }
 }

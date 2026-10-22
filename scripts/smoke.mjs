@@ -1,23 +1,25 @@
-// Browser smoke test (npm run test:browser).
-// Serves the site, opens it in headless Chrome/Edge at several screen sizes and
-// checks: no console errors or failed requests, no horizontal overflow, WebGL
-// scenes start, and the main interactions of every chapter work.
+// Browser test for the presentation (npm run test:browser).
+// Serves the site, opens it in headless Chrome/Edge and checks, at projector,
+// laptop and phone sizes: the welcome is the default screen, every scene fits
+// its 16:9 frame, navigation (buttons, keys, menu) is consistent, the reasons,
+// gallery, videos and gifts behave as the family asked, and there are no
+// console errors or broken files.
 //
 // Uses the Chrome or Edge already installed (set CHROME_PATH to override).
-// Screenshots are written to SMOKE_SHOTS (if set).
+// SMOKE_SHOTS=folder saves screenshots; SMOKE_ONLY=layouts|interactions|reduced|pages|fallback runs one group.
 
 import puppeteer from 'puppeteer-core';
-import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { serve } from './serve.mjs';
 
 const PORT = 8765;
 const BASE = `http://localhost:${PORT}`;
 const SHOTS = process.env.SMOKE_SHOTS;
-// SMOKE_ONLY=layouts|interactions|reduced|pages|fallback runs a single group
 const ONLY = process.env.SMOKE_ONLY;
 const run = (group) => !ONLY || ONLY === group;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+const json = (p) => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 
 const browserPath = [
   process.env.CHROME_PATH,
@@ -33,12 +35,18 @@ if (!browserPath) {
 }
 
 const VIEWPORTS = [
-  { name: 'desktop', width: 1440, height: 900 },
-  { name: 'laptop', width: 1280, height: 720 },
-  { name: 'tablet', width: 820, height: 1180, isMobile: true, hasTouch: true },
+  { name: 'projector-1080p', width: 1920, height: 1080 },
+  { name: 'projector-900p', width: 1600, height: 900 },
+  { name: 'laptop-768p', width: 1366, height: 768 },
+  { name: 'hd-720p', width: 1280, height: 720 },
   { name: 'mobile', width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
   { name: 'mobile-landscape', width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
 ];
+const SCENE_ORDER = ['welcome', 'reveal', 'journey-film', 'journey', 'reasons', 'memories', 'gallery', 'wishes', 'finale'];
+// Family videos that have not been delivered yet: their placeholders are expected
+const PENDING = [json('data/site.json').videos.lifeJourney.src, ...json('data/wishes.json').videos.map((v) => v.src)].map((p) => encodeURI(p));
+const exists = (p) => existsSync(new URL(`../${p}`, import.meta.url));
+const pendingMissing = PENDING.filter((p) => !exists(decodeURI(p)));
 
 let failures = 0, passes = 0;
 const check = (name, ok, detail = '') => {
@@ -49,62 +57,66 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function watch(page) {
   const problems = [];
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console: ${m.text()}`); });
+  const expected = (text) => pendingMissing.some((p) => text.includes(p));
+  let lastMissing = false;
+  page.on('response', (r) => {
+    lastMissing = r.status() === 404 && expected(r.url());
+    if (r.status() >= 400 && !lastMissing) problems.push(`HTTP ${r.status()}: ${r.url()}`);
+  });
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    // Chrome reports the expected 404 of a not-yet-delivered video as a console error too
+    if (/Failed to load resource: the server responded with a status of 404/.test(m.text()) && expected(m.location()?.url || '')) return;
+    problems.push(`console: ${m.text()} ${m.location()?.url || ''}`);
+  });
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
   page.on('requestfailed', (r) => {
     const err = r.failure()?.errorText || '';
-    if (!/ERR_ABORTED/.test(err) && !r.url().includes('fonts.g')) problems.push(`requestfailed: ${r.url()} ${err}`);
+    if (!/ERR_ABORTED/.test(err)) problems.push(`requestfailed: ${r.url()} ${err}`);
   });
-  page.on('response', (r) => { if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`); });
   return problems;
 }
 
-async function open(browser, path, viewport, { reduced = false, enter = true } = {}) {
+async function open(browser, path, viewport, { reduced = false } = {}) {
   const page = await browser.newPage();
   await page.setViewport(viewport);
   if (reduced) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   const problems = watch(page);
   await page.goto(`${BASE}/${path}`, { waitUntil: 'networkidle2', timeout: 60000 });
   await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'), { timeout: 30000 });
-  if (enter) await passIntro(page);
   return { page, problems };
 }
 
-/** Wait for the opening title card (if any) and press "Begin the celebration". */
-async function passIntro(page) {
-  if (!(await page.$('#intro:not([hidden])'))) return;
-  await page.waitForSelector('#intro.is-ready', { timeout: 30000 });
-  await page.$eval('.intro__enter', (b) => b.click());
-  await page.waitForFunction(() => document.getElementById('intro')?.hidden !== false, { timeout: 15000 });
-}
+const active = (page) => page.$eval('.scene.is-active', (s) => s.dataset.scene);
+const sub = (page) => page.$eval('.deck-label__sub', (s) => s.textContent);
+const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: join(SHOTS, `${name}.png`) }); };
+const press = async (page, key) => { await page.keyboard.press(key); await sleep(520); };
+/** Wait until the active scene's entrance animations have finished (looping ones excluded). */
+const settle = (page) => page.waitForFunction(() => document.getAnimations()
+  .filter((a) => a.effect?.target?.closest?.('.scene.is-active') && a.effect.getTiming().iterations !== Infinity)
+  .every((a) => a.playState !== 'running'), { timeout: 5000, polling: 100 }).catch(() => {});
 
-async function scrollThrough(page) {
-  await page.evaluate(async () => {
-    const step = innerHeight * 0.8;
-    for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
-      scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 120));
-    }
+/** Visible elements of the active scene that leave the screen (decorative layers excluded). */
+const offscreen = (page) => page.evaluate(() => {
+  const s = document.querySelector('.scene.is-active');
+  const out = [];
+  s.querySelectorAll('.scene__frame *').forEach((el) => {
+    if (el.closest('.welcome__visual, .reveal__portrait, .finale__scene, .gallery__years, svg')) return;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || getComputedStyle(el).visibility === 'hidden') return;
+    if (r.right > innerWidth + 1 || r.bottom > innerHeight + 1 || r.left < -1 || r.top < -1) out.push(`${el.className || el.tagName} (${Math.round(r.left)},${Math.round(r.top)})–(${Math.round(r.right)},${Math.round(r.bottom)})`);
   });
-  await sleep(800);
-}
-
-// compare with clientWidth: on emulated phones innerWidth grows to fit any overflow
-const overflow = (page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-const shot = async (page, name) => { if (SHOTS) { log('shot', name); await page.screenshot({ path: join(SHOTS, `${name}.png`), captureBeyondViewport: false }); } };
-const log = (...a) => process.env.SMOKE_VERBOSE && console.log('    ·', ...a);
-async function shotSection(page, id, name) {
-  log('section', id);
-  await page.evaluate((i) => document.getElementById(i)?.scrollIntoView({ block: 'start' }), id);
-  await sleep(1600);
-  await shot(page, name);
-}
+  return out;
+});
+/** Does any text overflow its own clipped box (cut-off captions or reasons)? */
+const clipped = (page) => page.evaluate(() => [...document.querySelectorAll('.scene.is-active .jcard__text, .scene.is-active .reasons__panel')]
+  .filter((el) => el.scrollHeight > el.clientHeight + 2).map((el) => el.className));
 
 const server = await serve(PORT);
 const browser = await puppeteer.launch({
   executablePath: browserPath,
   headless: true,
-  protocolTimeout: 120000,
+  protocolTimeout: 180000,
   args: ['--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'],
 });
 
@@ -113,213 +125,277 @@ try {
   for (const vp of run('layouts') ? VIEWPORTS : []) {
     console.log(`\n${vp.name} (${vp.width}×${vp.height})`);
     const { page, problems } = await open(browser, 'index.html', vp);
-    await sleep(2500);
-    await shot(page, `${vp.name}-01-welcome`);
-    check('hero 3D scene started', await page.$eval('.welcome__scene', (el) => el.classList.contains('has-webgl')));
-    await scrollThrough(page);
-    check('no horizontal overflow', (await overflow(page)) <= 0, `overflow ${await overflow(page)}px`);
-    const clipped = await page.evaluate(() => [...document.querySelectorAll('h1, h2, h3')].filter((h) => {
-      const r = h.getBoundingClientRect();
-      return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1);
-    }).map((h) => h.textContent.trim().slice(0, 40)));
-    check('no heading runs off screen', !clipped.length, clipped.join(' | '));
-    for (const [id, n] of [['journey', '02'], ['reasons', '03'], ['memories', '04'], ['wishes', '05'], ['age', '06'], ['finale', '07']]) {
-      await shotSection(page, id, `${vp.name}-${n}-${id}`);
+    check('opens on the welcome screen', (await active(page)) === 'welcome');
+    const landscape = vp.width > vp.height && vp.width > 760 && vp.height > 500; // phones scroll inside scenes
+    const ids = await page.evaluate(() => window.__deck.scenes.map((s) => s.id));
+    check('scenes are in the presentation order', ids.join() === SCENE_ORDER.join(), ids.join());
+    for (const [i, id] of ids.entries()) {
+      await page.evaluate((k) => window.__deck.go(k), i);
+      await sleep(950);
+      await settle(page);
+      if (landscape) {
+        const off = await offscreen(page);
+        check(`${id}: fits the 16:9 frame`, !off.length, off.slice(0, 4).join('\n      '));
+        const cut = await clipped(page);
+        check(`${id}: no text cut off`, !cut.length, cut.join(', '));
+      }
+      const overflowX = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (overflowX > 0) check(`${id}: no horizontal page scroll`, false, `${overflowX}px`);
+      await shot(page, `${vp.name}-${String(i + 1).padStart(2, '0')}-${id}`);
     }
-    check('no console errors or failed requests', !problems.length, problems.slice(0, 8).join('\n      '));
+    check('the page itself never scrolls', await page.evaluate(() => scrollY === 0 && document.documentElement.scrollHeight <= innerHeight + 1));
+    check('no console errors or broken files', !problems.length, problems.slice(0, 6).join('\n      '));
     await page.close();
   }
 
   // ---------------------------------------------------------------- interactions
-  console.log('\nopening (desktop)');
   if (run('interactions')) {
-    const { page, problems } = await open(browser, 'index.html', VIEWPORTS[0], { enter: false });
-    check('opening covers the page while loading', (await page.$eval('#intro', (el) => !el.hidden)) && (await page.$eval('main', (m) => m.inert)));
-    await page.waitForSelector('#intro.is-ready', { timeout: 30000 });
-    check('years count up to 2026', (await page.$eval('.intro__year', (e) => e.textContent)) === '2026');
-    check('opening reads "Happy 50th Birthday, Amma"', /Happy\s+50th\s+Birthday,\s+Amma/.test(await page.$eval('#intro-title', (e) => e.textContent)));
-    await sleep(2600);
-    await shot(page, 'opening');
-    await page.$eval('.intro__enter', (b) => b.click());
-    await sleep(1800);
-    check('"Begin the celebration" lifts the opening', (await page.$eval('#intro', (el) => el.hidden)) && (await page.$eval('main', (m) => !m.inert)));
-    check('no console errors during the opening', !problems.length, problems.slice(0, 8).join('\n      '));
-    await page.close();
-    const deep = await open(browser, 'index.html#memories', VIEWPORTS[0], { enter: false });
-    check('deep links (index.html#memories) skip the opening', !(await deep.page.$('#intro')));
-    await deep.page.close();
-  }
-
-  console.log('\ninteractions (desktop)');
-  if (run('interactions')) {
+    console.log('\ninteractions (1920×1080)');
     const { page, problems } = await open(browser, 'index.html', VIEWPORTS[0]);
+    await page.evaluate(() => { try { localStorage.clear(); } catch {} });
 
-    // The opening is checked on its own page load (enter: false)
-    check('music started from "Begin the celebration"', await page.$eval('.nav-tools .icon-btn', (b) => b.getAttribute('aria-pressed') === 'true'));
-    check('page is usable after the opening (not inert)', await page.$eval('main', (m) => !m.inert));
-    await page.click('.nav-tools .icon-btn'); // music off
+    // Default screen
+    check('welcome is the default screen', (await active(page)) === 'welcome');
+    check('welcome shows the requested wording', await page.$eval('.scene[data-scene="welcome"]', (s) =>
+      /Celebrating the\s*Beautiful Journey\s*of Buvaneswari/.test(s.textContent) && s.textContent.includes('50 Years of Love, Strength & Beautiful Memories') && s.textContent.includes('27 October 1976 – 27 October 2026')));
+    check('Previous is disabled on the first screen', await page.$eval('.deck-prev', (b) => b.disabled));
+    check('no "Watch the Birthday Film" anywhere', await page.evaluate(() => !/birthday film/i.test(document.body.textContent) && !document.querySelector('.film-btn, [data-scene="age"], #age')));
+    check('the opening title card is gone', !(await page.$('#intro')));
+    check('palette is light (ivory/sky background, dark-blue text)', await page.evaluate(() => {
+      const c = getComputedStyle(document.body);
+      return c.backgroundColor === 'rgb(255, 253, 248)' && c.color === 'rgb(23, 54, 93)';
+    }));
 
-    // Hero buttons
-    await page.$eval('#welcome .film-btn', (b) => b.click());
-    await sleep(1500);
-    check('hero opens the birthday film', await page.$eval('dialog.cinema', (d) => d.open && /Birthday Film/.test(d.textContent)));
-    check('birthday film (converted to H.264) loads', await page.waitForFunction(() => document.querySelector('.cinema video')?.readyState >= 1, { timeout: 15000 }).then(() => true, () => false));
-    await page.keyboard.press('Escape');
-    await sleep(400);
-    await page.$eval('.welcome__cta', (b) => b.click());
-    await sleep(2500);
-    check('"Begin Her Beautiful Journey" glides to the journey', await page.evaluate(() => Math.abs(document.getElementById('journey').getBoundingClientRect().top) < innerHeight * 0.5));
+    // Reveal (the controls rest out of sight until the mouse moves, as at the venue)
+    check('controls are out of sight on the idle welcome screen', await page.evaluate(() => document.body.classList.contains('controls-hidden')));
+    await page.mouse.move(960, 540);
+    await sleep(700); // the controls glide back in
+    await page.click('.deck-next');
+    await sleep(1600);
+    check('Next opens the birthday reveal', (await active(page)) === 'reveal');
+    check('reveal reads HAPPY 50TH BIRTHDAY / AMMA / M. BUVANESWARI on three lines', await page.evaluate(() => {
+      const t = (s) => document.querySelector(s);
+      const [a, b, c] = ['.reveal__line1', '.reveal__line2', '.reveal__line3'].map(t);
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), rc = c.getBoundingClientRect();
+      const oneLine = (el) => el.getClientRects().length === 1 && el.getBoundingClientRect().height < parseFloat(getComputedStyle(el).fontSize) * 1.6;
+      return /happy 50th birthday/i.test(a.textContent) && /amma/i.test(b.textContent) && /buvaneswari/i.test(c.textContent)
+        && ra.bottom <= rb.top + 2 && rb.bottom <= rc.top + 2 && oneLine(a) && rc.right <= innerWidth;
+    }));
+    check('reveal shows Amma’s real photograph (age-47)', await page.$eval('.reveal__img', (img) => img.complete && img.naturalWidth > 0 && /age-47/.test(img.currentSrc)));
 
-    // Journey
-    await page.evaluate(() => document.querySelector('.journey').scrollIntoView());
-    await sleep(2500);
-    check('journey runs in real 3D', await page.$eval('.journey__space', (el) => el.classList.contains('has-webgl')));
-    await shot(page, 'interaction-journey-3d');
-    const counter = () => page.$eval('.journey__counter', (e) => e.textContent);
-    check('journey starts at milestone 1', (await counter()) === '01 / 27');
-    await page.click('.journey__buttons .icon-btn:last-child');
-    await sleep(1200);
-    check('next button advances the journey', (await counter()) === '02 / 27');
-    await page.focus('.journey');
-    await page.keyboard.press('ArrowRight');
-    await sleep(1200);
-    check('arrow key advances the journey', (await counter()) === '03 / 27');
-    await page.keyboard.press('End');
-    await sleep(1200);
-    check('End jumps to the final milestone (Fifty)', (await page.$eval('.jscene:last-child .jscene__title', (e) => e.textContent)) === 'Fifty');
-    await page.click('.journey__stops li:nth-child(7) button');
-    await sleep(1200);
-    const bikes = await page.$eval('.jscene:last-child', (e) => e.textContent);
-    check('rail jumps to 1997 bikes, noting there is no original photo', /TVS 50/.test(bikes) && /No original photograph/.test(bikes));
-    await page.$eval('.jscene:last-child .jscene__cta', (b) => b.click());
-    await sleep(800);
-    check('journey photo opens in the lightbox', await page.$eval('dialog.lightbox', (d) => d.open));
-    check('lightbox labels the illustration', (await page.$eval('.lightbox .media-label', (e) => e.textContent)).startsWith('Illustration'));
-    await page.keyboard.press('Escape');
-    await sleep(400);
+    // Full walk with the Next button: scene order and internal steps
+    const walk = [];
+    for (let guard = 0; guard < 40; guard++) {
+      walk.push(`${await active(page)}|${await sub(page)}`);
+      if (await page.$eval('.deck-next', (b) => b.disabled)) break;
+      await page.$eval('.deck-next', (b) => b.click());
+      await sleep(560);
+    }
+    const scenesSeen = [...new Set(walk.map((w) => w.split('|')[0]))];
+    check('Next visits every scene in order', scenesSeen.join() === SCENE_ORDER.slice(1).join(), scenesSeen.join());
+    const timelinePages = new Set(json('data/timeline.json').milestones.map((m) => m.era)).size;
+    check(`the journey steps through its era pages (${walk.filter((w) => w.startsWith('journey|')).length})`, walk.filter((w) => w.startsWith('journey|')).length >= timelinePages - 1);
+    check('the reasons step through 5 categories and "All 50"', walk.filter((w) => w.startsWith('reasons|')).length === 6);
+    check('Next is disabled on the final scene', (await active(page)) === 'finale' && await page.$eval('.deck-next', (b) => b.disabled));
 
-    // Reasons
-    await page.evaluate(() => document.getElementById('reasons').scrollIntoView());
-    await sleep(1500);
-    await page.click('#rtab-treasure');
-    await sleep(700);
-    check('chapter tab shows reason 21', (await page.$eval('.reader__position', (e) => e.textContent)) === 'Reason 21 of 50');
-    check('reason text is the family’s wording', (await page.$eval('.reader__text', (e) => e.textContent)) === 'We love the way you worry about us, even when we are grown up.');
-    await page.click('.reader__foot .icon-btn:last-child');
-    await sleep(500);
-    check('next reason works', (await page.$eval('.reader__position', (e) => e.textContent)) === 'Reason 22 of 50');
-    check('constellation 3D scene started', await page.$eval('.sky', (el) => el.classList.contains('has-webgl')));
-    await page.click('.reasons__all-toggle .btn');
-    await sleep(500);
-    check('"Read all 50" lists 50 reasons', (await page.$$eval('.rall__item', (l) => l.length)) === 50);
+    // Previous walks back to the start
+    let back = 0;
+    while (!(await page.$eval('.deck-prev', (b) => b.disabled)) && back < 40) { await page.$eval('.deck-prev', (b) => b.click()); await sleep(520); back++; }
+    check('Previous walks back to the welcome', (await active(page)) === 'welcome' && back === walk.length);
 
-    // Gallery + lightbox
-    await page.evaluate(() => document.getElementById('memories').scrollIntoView());
-    await sleep(800);
-    const total = await page.$$eval('.chip--filter', (c) => Number(c[0].querySelector('.chip__count').textContent));
-    check('gallery lists every photo', total === 284, `count ${total}`);
-    await page.click('.chip--filter[data-filter="album"]');
+    // Keyboard
+    await press(page, 'ArrowRight');
+    check('→ moves forward', (await active(page)) === 'reveal');
+    await press(page, 'ArrowLeft');
+    check('← moves back', (await active(page)) === 'welcome');
+    await press(page, 'PageDown');
+    check('PageDown (presentation clicker) moves forward', (await active(page)) === 'reveal');
+    await press(page, 'End');
+    check('End jumps to the final scene', (await active(page)) === 'finale');
+    await press(page, 'Home');
+    check('Home returns to the welcome', (await active(page)) === 'welcome');
+    await press(page, '5');
+    check('number keys jump to a section (5 → 50 Reasons)', (await active(page)) === 'reasons');
+    check('keys never scroll the page', await page.evaluate(() => scrollY === 0 && document.querySelector('.deck').scrollTop === 0));
+
+    // Section menu
+    await press(page, 'g');
+    check('G opens the section menu with every scene', await page.$$eval('.deck-menu:not([hidden]) li', (l) => l.length) === SCENE_ORDER.length);
+    await page.$$eval('.deck-menu li button', (b) => b[6].click());
     await sleep(600);
-    check('filter shows the Family Album only', (await page.$$eval('.ggroup', (g) => g.map((x) => x.dataset.group).join())) === 'album');
-    await page.click('.gitem');
+    check('choosing a section in the menu goes there', (await active(page)) === 'gallery' && await page.$eval('.deck-menu', (m) => m.hidden));
+
+    // 50 reasons: whole categories at once
+    await page.evaluate(() => window.__deck.goTo('reasons'));
     await sleep(900);
-    check('gallery photo opens in the lightbox', await page.$eval('dialog.lightbox', (d) => d.open));
-    await page.keyboard.press('ArrowRight');
-    await sleep(500);
-    check('lightbox arrow key moves to the next photo', (await page.$eval('.lightbox__counter', (e) => e.textContent)).startsWith('2 /'));
-    check('lightbox full image loaded', await page.waitForFunction(() => document.querySelector('.lightbox__img.is-loaded'), { timeout: 8000 }).then(() => true, () => false));
-    await shot(page, 'interaction-lightbox');
-    await page.keyboard.press('Escape');
-    await sleep(400);
-    check('Escape closes the lightbox', !(await page.$eval('dialog.lightbox', (d) => d.open)));
-    await page.click('.chip--filter[data-filter="all"]');
-
-    // Wishes
-    check('wishes shows the "on their way" message', (await page.$eval('.theatre__empty-text', (e) => e.textContent)) === 'Beautiful words from the people who love you are on their way.');
-
-    // Age
-    await page.evaluate(() => document.getElementById('age').scrollIntoView());
-    await sleep(800);
-    const age = () => page.$eval('.age__num', (e) => e.textContent);
-    check('age sequence starts at age 1', (await age()) === '1');
-    await page.click('.age__controls .icon-btn:nth-child(3)');
-    await sleep(500);
-    check('next photo moves to age 5', (await age()) === '5');
-    await page.click('.age__tick[data-age="34"]');
-    await sleep(500);
-    check('age ruler jumps to age 34', (await age()) === '34' && (await page.$eval('.age__years', (e) => e.textContent)) === '2010 – 11');
-    check('3D reel puts the age-34 photo in front', /age 34/.test(await page.$eval('.age__card.is-current img', (i) => i.alt)) && (await page.$$('.age__card:not(.is-hidden)')).length > 5);
-    await page.click('.age__play');
-    await sleep(2300);
-    check('play advances automatically', (await page.$eval('.age__count', (e) => e.textContent)) === 'Photo 2 of 4');
-    await page.click('.age__play');
-    check('pause stops playback', (await page.$eval('.age__play', (b) => b.getAttribute('aria-pressed'))) === 'false');
-    await page.click('.age__tick[data-age="49"]');
-    await sleep(300);
-    await page.click('.age__controls .icon-btn:nth-child(3)');
+    const reasons = json('data/reasons.json');
+    const shown = [];
+    for (let c = 0; c < 5; c++) {
+      await page.$$eval('.rcat', (b, k) => b[k].click(), c);
+      await sleep(1400);
+      const texts = await page.$$eval('.reasons__grid .rcard__text', (els) => els.map((e) => e.lastChild.textContent));
+      const visible = await page.$$eval('.reasons__grid .rcard', (els) => els.filter((e) => getComputedStyle(e).opacity > 0.9).length);
+      check(`category ${c + 1} shows all ${texts.length} of its reasons at once`, texts.length === 10 && visible === 10);
+      shown.push(...texts);
+    }
+    check('all 50 reasons appear exactly once, word for word', shown.length === 50 && shown.every((t, i) => t === reasons.reasons[i].text));
+    await page.$eval('.rcat--all', (b) => b.click());
     await sleep(900);
-    check('stepping past age 49 shows the ending', await page.$eval('.age__end', (e) => !e.hidden && e.textContent.includes('every chapter has been precious')));
-    // read synchronously after the click: autoplay may advance again within 2 s on a slow machine
-    const afterReplay = await page.$eval('.age__controls .icon-btn:nth-child(4)', (b) => { b.click(); return document.querySelector('.age__num').textContent; });
-    check('replay restarts from age 1 and plays', afterReplay === '1' && (await page.$eval('.age__play', (b) => b.getAttribute('aria-pressed'))) === 'true');
-    await page.click('.age__play');
+    const all = await page.$$eval('.rcol__item', (els) => els.map((e) => e.lastChild.textContent));
+    check('"All 50 Reasons" shows all fifty together', all.length === 50 && all.every((t, i) => t === reasons.reasons[i].text));
+    await shot(page, 'reasons-all-50');
 
-    // Film (cinema)
-    await page.click('#age .film-btn');
+    // Family album: memories film first, then the gallery
+    const memIdx = SCENE_ORDER.indexOf('memories'), galIdx = SCENE_ORDER.indexOf('gallery');
+    check('the memories film comes before the photo gallery', memIdx >= 0 && galIdx === memIdx + 1);
+    await page.evaluate(() => window.__deck.goTo('memories'));
     await sleep(1500);
-    check('film opens in the cinema player', await page.$eval('dialog.cinema', (d) => d.open));
-    check('film video loads metadata', await page.waitForFunction(() => document.querySelector('.cinema video')?.readyState >= 1, { timeout: 10000 }).then(() => true, () => false));
-    await shot(page, 'interaction-film');
-    await page.keyboard.press('Escape');
-    await sleep(400);
+    check('the memories film is the family’s video', await page.$eval('.scene[data-scene="memories"] video', (v) => /family-memories\.mp4$/.test(v.currentSrc || v.src)));
+    await page.waitForFunction(() => document.querySelector('.scene[data-scene="memories"] video').readyState >= 1, { timeout: 30000 }).catch(() => {});
+    check('the memories film loads (6 min 23 s)', await page.$eval('.scene[data-scene="memories"] video', (v) => Math.round(v.duration) === 383));
+    // Keys inside the player belong to the video, not the presentation
+    await page.focus('.scene[data-scene="memories"] .player__btn');
+    await press(page, 'ArrowRight');
+    await press(page, ' ');
+    check('arrow keys and Space inside the video player do not change scene', (await active(page)) === 'memories');
+    await sleep(800);
+    check('the video plays', await page.$eval('.scene[data-scene="memories"] video', (v) => !v.paused));
+    check('presentation controls step aside while a video plays', await page.evaluate(() => document.body.classList.contains('video-playing')));
+    await page.evaluate(() => { const v = document.querySelector('.scene[data-scene="memories"] video'); v.currentTime = v.duration - 0.3; });
+    await page.waitForFunction(() => document.querySelector('.scene[data-scene="memories"] video').ended, { timeout: 15000 }).catch(() => {});
+    await sleep(300);
+    check('after the film, a clear button continues to the gallery', await page.$eval('.scene[data-scene="memories"] .cinema__end', (e) => !e.hidden && /photo gallery/i.test(e.textContent)));
+    await page.$eval('.scene[data-scene="memories"] .cinema__end .btn--primary', (b) => b.click());
+    await sleep(900);
+    check('…and it opens the photo gallery', (await active(page)) === 'gallery');
+    check('leaving a scene pauses its video', await page.$eval('.scene[data-scene="memories"] video', (v) => v.paused));
 
-    // Finale
-    await page.evaluate(() => document.getElementById('finale').scrollIntoView());
-    await sleep(2500);
-    check('gift 3D scene started', await page.$eval('.finale__scene', (el) => el.classList.contains('has-webgl')));
-    await page.$eval('.finale__open .btn', (b) => b.click());
-    await sleep(3000);
-    check('gift opens', (await page.$eval('.finale__open .btn', (b) => b.getAttribute('aria-pressed'))) === 'true');
-    await shot(page, 'interaction-gift-open');
-    await page.evaluate(() => document.getElementById('birthday-film').scrollIntoView());
-    check('birthday film plays inline in the celebration', await page.waitForFunction(() => document.querySelector('#birthday-film video')?.readyState >= 1, { timeout: 15000 }).then(() => true, () => false));
-    check('50 gift slots shown', (await page.$$eval('.gtile', (l) => l.length)) === 50);
-    check('celebration details shown', /Palmshore Restaurant/.test(await page.$eval('.celebration', (e) => e.textContent)));
-    await page.$eval('.celebration__actions .btn--gold', (b) => b.click());
-    await sleep(2600);
-    check('replay returns to the welcome and plays the opening again', (await page.evaluate(() => scrollY < 50)) && (await page.$eval('#intro', (d) => !d.hidden)));
-    await passIntro(page);
+    // Gallery: dated photos only
+    const manifest = json('data/photo_inventory.json').collections.gallery;
+    const dated = manifest.filter((i) => i.date && /^\d{4}$/.test(i.group) && ['exif', 'filename'].includes(i.dateSource));
+    const yearCount = await page.$$eval('.chip--year', (c) => c.map((x) => Number(x.querySelector('.chip__count').textContent)).reduce((a, b) => a + b, 0));
+    check(`the gallery shows only the ${dated.length} dated photographs (${manifest.length - dated.length} undated left out)`, yearCount === dated.length);
+    let tiles = 0, undatedShown = 0;
+    const years = await page.$$eval('.chip--year', (c) => c.map((x) => x.dataset.year));
+    for (const y of years) {
+      await page.$eval(`.chip--year[data-year="${y}"]`, (b) => b.click());
+      await sleep(200);
+      for (let p = 0; p < 10; p++) {
+        const dates = await page.$$eval('.ggrid .gitem__date', (d) => d.map((x) => x.textContent));
+        tiles += dates.length;
+        undatedShown += dates.filter((d) => !/\d{4}$/.test(d)).length;
+        if (await page.$eval('.gpager .icon-btn:last-child', (b) => b.disabled || b.closest('[hidden]') !== null)) break;
+        await page.$eval('.gpager .icon-btn:last-child', (b) => b.click());
+        await sleep(150);
+      }
+    }
+    check('every gallery photo carries its recorded date', tiles === dated.length && undatedShown === 0, `${tiles} tiles, ${undatedShown} undated`);
+    await page.$eval('.gitem', (b) => b.click());
+    await sleep(800);
+    check('a photo opens in the viewer', await page.$eval('.lightbox', (d) => d.open));
+    await press(page, 'ArrowRight');
+    check('arrow keys in the photo viewer do not change scene', (await active(page)) === 'gallery');
+    await press(page, 'Escape');
 
-    check('no console errors during interactions', !problems.length, problems.slice(0, 8).join('\n      '));
+    // Pending family videos show their placeholders
+    await page.evaluate(() => window.__deck.goTo('journey-film'));
+    await sleep(1200);
+    const lj = json('data/site.json').videos.lifeJourney;
+    if (!exists(lj.src)) check('Life Journey film: graceful placeholder until the family’s video is added', await page.$eval('.scene[data-scene="journey-film"] .vstage__missing-text', (e) => e.textContent) === lj.missingText);
+    else check('Life Journey film: the family’s video is integrated', !!(await page.$('.scene[data-scene="journey-film"] video')));
+    check('the old generated Life Journey film is gone', await page.evaluate(() => ![...document.querySelectorAll('video')].some((v) => /life%20journey|life journey/i.test(v.src))));
+    await page.evaluate(() => window.__deck.goTo('wishes'));
+    await sleep(1200);
+    const wishSrc = json('data/wishes.json').videos[0].src;
+    const wishText = !exists(wishSrc) && await page.$eval('.scene[data-scene="wishes"] .vstage__missing-text', (e) => e.textContent);
+    if (!exists(wishSrc)) check('Family Wishes: the requested placeholder line', wishText === 'Messages filled with love, from the people who make her world special.', wishText);
+    else check('Family Wishes: the family’s video is integrated', !!(await page.$('.scene[data-scene="wishes"] video')));
+
+    // Music
+    const musicOk = await page.$eval('.music-btn', (b) => !b.disabled);
+    check('music is available and not playing before the host starts it', musicOk && await page.$eval('.music-btn', (b) => b.getAttribute('aria-pressed') === 'false'));
+    await page.mouse.move(500, 500);
+    await sleep(700);
+    await page.click('.music-btn');
+    await sleep(1200);
+    check('the music button starts the music', await page.$eval('.music-btn', (b) => b.getAttribute('aria-pressed') === 'true' && b.classList.contains('is-playing')));
+    await page.click('.deck-bar--tools .icon-btn:nth-child(2)');
+    await sleep(300);
+    check('the mute button mutes the music', await page.$eval('.deck-bar--tools .icon-btn:nth-child(2)', (b) => b.getAttribute('aria-pressed') === 'true'));
+    await page.click('.deck-bar--tools .icon-btn:nth-child(2)');
+    await page.keyboard.press('m');
+    await sleep(300);
+    check('M pauses the music', await page.$eval('.music-btn', (b) => b.getAttribute('aria-pressed') === 'false'));
+
+    // Finale: 50 gifts
+    await page.evaluate(() => window.__deck.goTo('finale'));
+    await sleep(1500);
+    check('the final scene shows 50 gifts', (await page.$$('.gtile')).length === 50);
+    check('no gift is shown as given until the host marks it', await page.$eval('.gcount__num', (n) => n.textContent === '0') && (await page.$$('.gtile.is-given')).length === 0);
+    check('the greeting, name, date and venue are shown', await page.$eval('.scene[data-scene="finale"]', (s) => ['Happy 50th Birthday, Amma!', '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.', 'We may never be able to give back everything you have given us', 'M. Buvaneswari', '27 October 2026', 'Palmshore Restaurant, Ekkatuthangal, Chennai'].every((t) => s.textContent.includes(t))));
+    check('3D gift scene runs', await page.$eval('.finale__scene', (el) => el.classList.contains('has-webgl')));
+    for (const k of [0, 4, 9]) await page.$$eval('.gtile', (t, i) => t[i].click(), k);
+    await sleep(300);
+    check('tapping gifts marks them as given (counter 3 / 50)', await page.$eval('.gcount__num', (n) => n.textContent === '3'));
+    await page.reload({ waitUntil: 'networkidle2' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
+    check('a refresh always returns to the welcome', (await active(page)) === 'welcome');
+    await page.evaluate(() => window.__deck.goTo('finale'));
+    await sleep(900);
+    check('…and the host’s gift marks are kept', await page.$eval('.gcount__num', (n) => n.textContent === '3'));
+    const resetBtn = await page.$$('.gtracker__actions .btn');
+    await resetBtn[1].click(); await sleep(100); await resetBtn[1].click(); await sleep(300);
+    check('Reset (confirmed) clears the marks', await page.$eval('.gcount__num', (n) => n.textContent === '0'));
+    await resetBtn[0].click(); await sleep(100); await resetBtn[0].click(); await sleep(400);
+    check('"Mark all given" (confirmed) marks all 50', await page.$eval('.gcount__num', (n) => n.textContent === '50'));
+    await shot(page, 'finale-all-given');
+    await resetBtn[1].click(); await sleep(100); await resetBtn[1].click(); await sleep(200);
+    await page.$eval('.finale__actions .btn--gold', (b) => b.click());
+    await sleep(900);
+    check('"Back to the welcome" returns to the welcome', (await active(page)) === 'welcome');
+
+    // Idle: controls step aside and come back
+    await sleep(4300);
+    check('controls hide when the mouse rests', await page.evaluate(() => document.body.classList.contains('controls-hidden')));
+    await page.mouse.move(400, 400);
+    await sleep(200);
+    check('…and return on mouse movement', await page.evaluate(() => !document.body.classList.contains('controls-hidden')));
+    await shot(page, 'welcome-with-controls');
+
+    // Deep link
+    await page.goto(`${BASE}/index.html#reasons`, { waitUntil: 'networkidle2' });
+    await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
+    check('index.html#reasons opens that scene once, then the hash is removed', (await active(page)) === 'reasons' && await page.evaluate(() => location.hash === ''));
+    await page.evaluate(() => { try { localStorage.clear(); } catch {} });
+    check('no console errors or broken files', !problems.length, problems.slice(0, 6).join('\n      '));
     await page.close();
   }
 
   // ---------------------------------------------------------------- reduced motion
-  console.log('\nreduced motion (mobile)');
   if (run('reduced')) {
-    const { page, problems } = await open(browser, 'index.html', VIEWPORTS[3], { reduced: true });
-    await scrollThrough(page);
-    check('journey uses the calm (non-3D) viewer', (await page.$eval('.journey', (j) => !j.classList.contains('journey--3d'))) && (await page.$$('.jframe')).length > 0);
-    check('content visible without animation', await page.$$eval('[data-reveal]', (els) => els.every((e) => getComputedStyle(e).opacity === '1')));
-    check('no console errors', !problems.length, problems.slice(0, 8).join('\n      '));
+    console.log('\nreduced motion');
+    const { page, problems } = await open(browser, 'index.html', VIEWPORTS[2], { reduced: true });
+    for (let i = 0; i < SCENE_ORDER.length; i++) { await page.evaluate((k) => window.__deck.go(k), i); await sleep(300); }
+    check('every scene shows its content with reduced motion', await page.$$eval('.scene.is-active [data-enter]', (els) => els.every((e) => getComputedStyle(e).opacity === '1')));
+    check('no errors with reduced motion', !problems.length, problems.slice(0, 5).join('\n      '));
     await page.close();
   }
 
-  // ---------------------------------------------------------------- standalone pages
-  console.log('\nstandalone pages');
-  for (const file of run('pages') ? readdirSync(new URL('../pages', import.meta.url)) : []) {
-    const { page, problems } = await open(browser, `pages/${file}`, VIEWPORTS[1]);
-    await scrollThrough(page);
-    const rendered = await page.$eval('[data-section]', (el) => el.children.length > 0 && !el.querySelector('.section-error'));
-    check(`pages/${file} renders without errors`, rendered && !problems.length, problems.slice(0, 5).join('\n      '));
-    await page.close();
+  // ---------------------------------------------------------------- short links
+  if (run('pages')) {
+    console.log('\nshort links (pages/)');
+    for (const [file, scene] of [['reasons.html', 'reasons'], ['finale.html', 'finale'], ['age-transition.html', 'welcome']]) {
+      const { page } = await open(browser, `pages/${file}`, VIEWPORTS[3]);
+      check(`pages/${file} opens the presentation at "${scene}"`, (await active(page)) === scene);
+      await page.close();
+    }
   }
 
   // ---------------------------------------------------------------- no WebGL fallback
-  console.log('\nno-WebGL fallback');
   if (run('fallback')) {
+    console.log('\nno-WebGL fallback');
     const page = await browser.newPage();
-    await page.setViewport(VIEWPORTS[1]);
+    await page.setViewport(VIEWPORTS[3]);
     await page.evaluateOnNewDocument(() => {
       const orig = HTMLCanvasElement.prototype.getContext;
       HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
@@ -329,17 +405,10 @@ try {
     const problems = watch(page);
     await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2' });
     await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
-    await passIntro(page);
-    await scrollThrough(page);
-    check('journey falls back to the CSS viewer', (await page.$eval('.journey', (j) => !j.classList.contains('journey--3d'))) && (await page.$$('.jframe')).length > 0);
-    check('scenes fall back gracefully', await page.$eval('.welcome__scene', (el) => el.classList.contains('no-webgl')) && (await page.$$('canvas.scene-canvas')).length === 0);
-    await page.evaluate(() => document.getElementById('finale').scrollIntoView());
-    // element.click(): the gallery may still be appending photos above, shifting the button
-    await page.$eval('.finale__open .btn', (b) => b.click());
-    await sleep(300);
-    check('CSS gift opens without WebGL', await page.$eval('#finale', (el) => el.classList.contains('is-open')));
+    await page.evaluate(() => window.__deck.goTo('finale'));
+    await sleep(900);
+    check('the finale falls back to a CSS gift', await page.$eval('.finale__scene', (el) => el.classList.contains('no-webgl')) && await page.$eval('.finale__fallback', (el) => getComputedStyle(el).display !== 'none'));
     check('no console errors without WebGL', !problems.length, problems.slice(0, 5).join('\n      '));
-    await shotSection(page, 'welcome', 'fallback-welcome');
     await page.close();
   }
 } finally {
@@ -347,5 +416,6 @@ try {
   server.close();
 }
 
+if (pendingMissing.length) console.log(`\nNote: still waiting for the family's video(s): ${pendingMissing.map(decodeURI).join(', ')} (placeholders shown; not counted as errors).`);
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

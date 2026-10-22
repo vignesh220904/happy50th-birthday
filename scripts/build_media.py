@@ -73,25 +73,15 @@ SCAN_DATES = {"2026-10-04", "2026-10-05"}
 
 FILMS = [
     {
-        # 6½-minute family slideshow. The original is HEVC (H.265), which many
-        # browsers cannot play, so a web copy is converted to H.264 (needs imageio-ffmpeg).
-        "id": "film-birthday",
+        # The family's 6½-minute memories film (the video in the "Memory gallery"
+        # Google Drive folder, 101901_1792393489053.mp4). The original is HEVC (H.265),
+        # which many browsers cannot play, so a web copy is converted to H.264
+        # (needs imageio-ffmpeg). It opens the Family Album in the presentation.
+        "id": "film-memories",
         "source": "assets/videos/happy 50th birthday.mp4",
-        "src": "assets/media/films/happy-50th-birthday.mp4",
-        "poster": "assets/media/films/birthday-poster.webp",
+        "src": "assets/media/films/family-memories.mp4",
+        "poster": "assets/media/films/memories-poster.webp",
         "posterAt": 0.03,
-    },
-    {
-        "id": "film-life-journey",
-        "src": "assets/videos/life journey.mp4",
-        "poster": "assets/media/films/life-journey-poster.webp",
-        "posterAt": 0.30,
-    },
-    {
-        "id": "film-age",
-        "src": "assets/videos/age.mp4",
-        "poster": "assets/media/films/age-poster.webp",
-        "posterAt": 0.12,
     },
 ]
 

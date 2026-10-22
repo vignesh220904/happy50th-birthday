@@ -1,113 +1,117 @@
-// Chapter IV — Key Memories.
-// Every photo in "Memory gallery" (via data/photo_inventory.json), grouped by the
-// year recorded in the photo itself. Phone scans of old prints form "The Family
-// Album" because their file dates are scan dates, not when the photo was taken.
-// Every tile is placed at once with its exact aspect ratio, so the page height
-// never changes while scrolling (anchors further down stay where they are);
-// the thumbnails themselves load lazily, the full image only in the lightbox.
+// Scene 7 — The Family Photo Gallery, after the memories film.
+// Only photographs whose date is recorded in the photo itself (camera data, or
+// the camera's own file name) are shown, grouped by year. Scanned prints and
+// photos without a recorded date stay in the "Memory gallery" folder but are
+// left out here, so no date on screen is a guess.
+// Each year is shown a page at a time; "Slideshow" plays the year full screen.
 
-import { h, prefersReducedMotion } from '../core/util.js';
+import { h, icons, fitText } from '../core/util.js';
 import { picture } from '../core/data.js';
 import { openLightbox } from '../core/lightbox.js';
-import { chapterHead } from './shared.js';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const stacked = window.matchMedia('(max-aspect-ratio: 1/1), (max-width: 760px), (max-height: 500px)');
+const PAGE = 12; // 6 × 2 on the landscape screen
 
-const groupTitle = (g) => (g === 'album' ? 'The Family Album' : g === 'undated' ? 'Undated Moments' : g);
-const groupNote = (g) =>
-  g === 'album' ? 'Treasured prints from the years before phones, scanned in 2026' : g === 'undated' ? 'Photographs without a recorded date' : '';
+/** A photo belongs in the dated gallery only if its date was read from the photo itself. */
+export const isDated = (item) => !!item.date && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && ['exif', 'filename'].includes(item.dateSource) && /^\d{4}$/.test(item.group);
 
-function describe(item) {
-  if (item.group === 'album') return { caption: 'From the family album', meta: 'A scanned print · year not recorded' };
-  if (!item.date) return { caption: 'Family photograph', meta: 'Date not recorded' };
+function dateLabel(item) {
   const [y, m, d] = item.date.split('-').map(Number);
-  return { caption: `${d} ${MONTHS[m - 1]} ${y}`, meta: item.dateSource === 'exif' ? 'Date from the photo’s camera information' : 'Date from the photo’s file name' };
+  return `${d} ${MONTHS[m - 1]} ${y}`;
 }
-
-const altFor = (item) =>
-  item.group === 'album' ? 'A scanned family photograph from the family album' : `Family photograph${item.date ? `, ${describe(item).caption}` : ''}`;
 
 export async function mount(el, content) {
   const all = content.media.collection('gallery');
-  const groups = [...new Set(all.map((i) => i.group))].sort((a, b) => {
-    const rank = (g) => (g === 'album' ? -1 : g === 'undated' ? 1e9 : Number(g));
-    return rank(a) - rank(b);
-  });
-  const sorted = groups.flatMap((g) => all.filter((i) => i.group === g).sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+  const dated = all.filter(isDated).sort((a, b) => a.date.localeCompare(b.date));
+  const excluded = all.length - dated.length;
+  if (excluded) console.info(`[gallery] ${dated.length} dated photographs shown; ${excluded} without a recorded date are left out of the dated gallery.`);
+  const years = [...new Set(dated.map((i) => i.group))];
+  let year = years[years.length - 1] || null;
+  let page = 0;
 
-  let filter = 'all', list = sorted;
+  const yearBtns = years.map((y) => h('button', { class: 'chip chip--year', type: 'button', 'aria-pressed': 'false', 'data-year': y, onclick: () => show(y, 0) },
+    y, h('span', { class: 'chip__count' }, dated.filter((i) => i.group === y).length)));
+  const grid = h('div', { class: 'ggrid' });
+  const prevBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Previous photos', html: icons.prev, onclick: () => turn(-1) });
+  const nextBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'More photos', html: icons.next, onclick: () => turn(1) });
+  const pageLabel = h('span', { class: 'gpager__label', 'aria-live': 'polite' });
+  const yearTitle = h('p', { class: 'gallery__year' });
+  const slideshowBtn = h('button', { class: 'btn btn--gold', type: 'button', onclick: () => slideshow() }, h('span', { html: icons.play }), 'Slideshow');
 
-  const chips = [{ id: 'all', label: 'All memories', count: all.length }, ...groups.map((g) => ({ id: g, label: groupTitle(g), count: all.filter((i) => i.group === g).length }))]
-    .map((c) => h('button', { class: 'chip chip--filter', type: 'button', 'aria-pressed': String(c.id === 'all'), 'data-filter': c.id, onclick: () => setFilter(c.id) },
-      c.label, h('span', { class: 'chip__count' }, c.count)));
-  const status = h('p', { class: 'gallery__status', 'aria-live': 'polite' });
-  const groupsEl = h('div', { class: 'gallery__groups' });
-
-  el.append(
-    h('div', { class: 'wrap' },
-      chapterHead({
-        num: 4,
-        id: 'memories-title',
-        title: 'Key <em>Memories</em>',
-        lede: `${all.length} photographs from family albums and phones: festivals, journeys, celebrations and quiet everyday moments.`,
-      }),
-      h('div', { class: 'gallery' },
-        h('div', { class: 'gallery__filters', role: 'group', 'aria-label': 'Show memories from' }, chips),
-        status,
-        groupsEl,
+  el.append(h('div', { class: 'scene__frame gallery' },
+    h('header', { class: 'gallery__head' },
+      h('div', {},
+        h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, 'The Family Album'),
+        h('h2', { class: 'scene-title', id: 'gallery-title', 'data-enter': '', style: { '--enter': 1 }, html: 'Family <em>Photo Gallery</em>' }),
+      ),
+      h('div', { class: 'gallery__summary', 'data-enter': '', style: { '--enter': 2 } },
+        yearTitle,
+        h('p', { class: 'gallery__count' }, `${dated.length} dated photographs · ${years[0] || ''} – ${years[years.length - 1] || ''}`),
       ),
     ),
-  );
+    h('div', { class: 'gallery__years no-swipe', role: 'group', 'aria-label': 'Choose a year', 'data-enter': '', style: { '--enter': 2 } }, yearBtns),
+    h('div', { class: 'gallery__body', 'data-enter': '', style: { '--enter': 3 } }, grid),
+    h('footer', { class: 'gallery__foot' },
+      h('div', { class: 'gpager' }, prevBtn, pageLabel, nextBtn),
+      slideshowBtn,
+    ),
+  ));
 
-  function groupBlock(g) {
-    let block = groupsEl.querySelector(`[data-group="${g}"]`);
-    if (!block) {
-      const count = list.filter((i) => i.group === g).length;
-      block = h('section', { class: 'ggroup', 'data-group': g, 'aria-label': groupTitle(g) },
-        h('header', { class: 'ggroup__head' },
-          h('h3', { class: 'ggroup__title' }, groupTitle(g)),
-          h('p', { class: 'ggroup__meta' }, [groupNote(g), `${count} photograph${count === 1 ? '' : 's'}`].filter(Boolean).join(' · ')),
-        ),
-        h('div', { class: 'ggrid' }),
-      );
-      groupsEl.append(block);
-    }
-    return block.querySelector('.ggrid');
-  }
+  const inYear = () => dated.filter((i) => i.group === year);
+  const perPage = () => (stacked.matches ? Infinity : PAGE);
 
-  function tile(item, i) {
-    const { caption } = describe(item);
-    const alt = altFor(item);
-    const btn = h('button', {
-      class: `gitem gitem--${item.width > item.height * 1.15 ? 'wide' : item.height > item.width * 1.15 ? 'tall' : 'square'}`,
+  const describe = (item) => ({ media: item, alt: `Family photograph, ${dateLabel(item)}`, caption: dateLabel(item), meta: item.dateSource === 'exif' ? 'Date from the photo’s camera information' : 'Date from the camera’s file name' });
+
+  function show(y, p = 0) {
+    if (!y) return;
+    year = y;
+    const list = inYear();
+    const pages = Math.max(1, Math.ceil(list.length / Math.min(perPage(), list.length || 1)));
+    page = Math.max(0, Math.min(pages - 1, p));
+    const size = perPage() === Infinity ? list.length : PAGE;
+    const slice = list.slice(page * size, page * size + size);
+    yearBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.year === y)));
+    // keep the chosen year visible in its row (scroll the row only, never the scene)
+    const chip = yearBtns.find((b) => b.dataset.year === y);
+    const row = chip?.parentElement;
+    if (row && row.scrollWidth > row.clientWidth) row.scrollLeft = chip.offsetLeft - row.clientWidth / 2 + chip.offsetWidth / 2;
+    yearTitle.textContent = `${y} · ${list.length} photograph${list.length === 1 ? '' : 's'}`;
+    grid.style.setProperty('--count', slice.length);
+    grid.replaceChildren(...slice.map((item, i) => h('button', {
+      class: 'gitem',
       type: 'button',
-      style: { '--ar': (item.width / item.height).toFixed(3), '--d': Math.min(i, 24) * 18 },
-      'aria-label': `Open photo: ${alt}`,
-      onclick: () => openLightbox(list.map((it) => ({ media: it, alt: altFor(it), ...describe(it) })), list.indexOf(item)),
+      style: { '--i': i },
+      'aria-label': `Open photo: ${dateLabel(item)}`,
+      onclick: () => openLightbox(list.map(describe), list.indexOf(item)),
     },
-    picture(item, { alt, sizes: '(max-width: 600px) 46vw, (max-width: 1100px) 30vw, 300px', className: 'gitem__img' }),
-    item.date ? h('span', { class: 'gitem__date', 'aria-hidden': 'true' }, caption) : null,
-    );
-    return btn;
+    h('span', { class: 'gitem__frame' }, picture(item, { alt: `Family photograph, ${dateLabel(item)}`, sizes: '(max-width: 760px) 46vw, 15vw', className: 'gitem__img' })),
+    h('span', { class: 'gitem__date' }, dateLabel(item)),
+    )));
+    pageLabel.textContent = pages > 1 ? `Page ${page + 1} of ${pages}` : '';
+    prevBtn.disabled = page === 0;
+    nextBtn.disabled = page >= pages - 1;
+    prevBtn.parentElement.hidden = pages < 2;
+    grid.classList.remove('is-shown');
+    requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.add('is-shown')));
   }
 
-  function renderAll() {
-    list.forEach((item, i) => groupBlock(item.group).append(tile(item, i)));
-    status.textContent = `Showing ${list.length} photograph${list.length === 1 ? '' : 's'}`;
+  function turn(d) { show(year, page + d); }
+  function slideshow() {
+    const list = inYear();
+    openLightbox(list.map(describe), page * (perPage() === Infinity ? 0 : PAGE), { autoplay: 5000 });
   }
 
-  function setFilter(id) {
-    filter = id;
-    chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === id)));
-    list = filter === 'all' ? sorted : sorted.filter((i) => i.group === filter);
-    groupsEl.replaceChildren();
-    renderAll();
-    if (!prefersReducedMotion()) groupsEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400 });
+  if (!dated.length) {
+    grid.replaceWith(h('p', { class: 'empty-note' }, 'Dated photographs will appear here once they are added to the “Memory gallery” folder.'));
+  } else {
+    show(year);
   }
+  stacked.addEventListener?.('change', () => show(year, 0));
 
-  if (!all.length) {
-    groupsEl.append(h('p', { class: 'empty-note' }, 'Photographs will appear here once they are added to the “Memory gallery” folder.'));
-    return;
-  }
-  renderAll();
+  return {
+    hint: `${dated.length} dated photographs by year`,
+    enter() { if (year) show(year, page); },
+    fit() { fitText(yearTitle.parentElement, { min: 0.8 }); },
+  };
 }

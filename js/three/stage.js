@@ -1,15 +1,15 @@
 // Shared lifecycle for every WebGL scene on the site.
 //
-//  * Three.js is imported lazily (dynamic import) the first time a scene is
-//    about to scroll into view, so pages without 3D never download it.
-//  * The render loop runs only while the canvas is on screen and the tab is
-//    visible; otherwise it is fully stopped (no idle GPU work).
+//  * Three.js is imported lazily (dynamic import) when a scene is mounted.
+//  * The render loop runs only while the scene's presentation slide is the
+//    active one and the tab is visible; otherwise it is fully stopped (no idle
+//    GPU work).
 //  * Pixel ratio is capped (lower on small screens) to stay smooth on laptops
 //    and phones. With reduced motion, scenes render calmly with no idle drift.
 //  * If WebGL is unavailable the container gets `.no-webgl` and the section's
 //    CSS fallback is shown instead.
 
-import { whenNear, prefersReducedMotion, isSmallScreen } from '../core/util.js';
+import { prefersReducedMotion, isSmallScreen } from '../core/util.js';
 
 let threePromise;
 // Resolved relative to this module, so it works from index.html and pages/*.html alike.
@@ -30,12 +30,11 @@ export function webglAvailable() {
  * ctx: { renderer, canvas, width, height, reduced, small, requestRender() }
  * Resolves to a controller { ready, scene, dispose() } or null without WebGL.
  */
-export async function mountScene(container, build, { eager = false, alpha = true } = {}) {
+export async function mountScene(container, build, { alpha = true } = {}) {
   if (!webglAvailable()) {
     container.classList.add('no-webgl');
     return null;
   }
-  if (!eager) await whenNear(container, '400px');
 
   let THREE;
   try {
@@ -57,7 +56,10 @@ export async function mountScene(container, build, { eager = false, alpha = true
   canvas.setAttribute('aria-hidden', 'true');
   container.prepend(canvas);
 
-  let visible = false, running = false, raf = 0, last = performance.now(), needsFrame = true;
+  let running = false, raf = 0, last = performance.now(), needsFrame = true;
+  // Visible = the presentation slide holding this scene is on screen
+  const slide = container.closest('.scene');
+  const isVisible = () => !slide || slide.classList.contains('is-active');
   const origin = performance.now();
 
   const ctx = {
@@ -111,7 +113,7 @@ export async function mountScene(container, build, { eager = false, alpha = true
   }
   // With reduced motion there is no continuous loop: frames are drawn on demand only.
   const evaluate = () => {
-    if (!visible || document.hidden) return stop();
+    if (!isVisible() || document.hidden) return stop();
     if (ctx.reduced) ctx.requestRender();
     else start();
   };
@@ -128,9 +130,9 @@ export async function mountScene(container, build, { eager = false, alpha = true
   ro.observe(container);
   resize();
 
-  const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; evaluate(); });
-  io.observe(container);
+  document.addEventListener('deck:change', evaluate);
   document.addEventListener('visibilitychange', evaluate);
+  evaluate();
 
   const onPointer = (e) => {
     if (!scene.pointer) return;
@@ -147,7 +149,7 @@ export async function mountScene(container, build, { eager = false, alpha = true
     dispose() {
       stop();
       ro.disconnect();
-      io.disconnect();
+      document.removeEventListener('deck:change', evaluate);
       document.removeEventListener('visibilitychange', evaluate);
       container.removeEventListener('pointermove', onPointer);
       scene.dispose?.();

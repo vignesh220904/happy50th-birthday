@@ -1,6 +1,7 @@
-// Finale centrepiece: a royal-blue gift with silver ribbons on a dark stage,
-// encircled by a slow ring of 50 small gifts — one for every year. Opening the
-// lid releases light, and the 50 gifts light up one after another.
+// Finale centrepiece: a Ramar-blue gift with champagne-gold ribbons on a light
+// stage, encircled by a slow ring of 50 small gifts — one for every year.
+// Opening the lid releases light and the 50 gifts glow one after another.
+// setGiven(indices) turns the gifts the host has marked as given to gold.
 
 import { mountScene, glowTexture, disposeTree } from './stage.js';
 import { seeded, lerp, easeOutCubic, easeInOutCubic } from '../core/util.js';
@@ -49,7 +50,7 @@ function studioEnvironment(THREE, renderer) {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: 'varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-      fragmentShader: 'varying vec3 vP; void main(){ float y = normalize(vP).y; vec3 c = mix(vec3(0.02,0.06,0.16), vec3(0.35,0.55,0.95), smoothstep(-0.3, 0.9, y)); gl_FragColor = vec4(c,1.0); }',
+      fragmentShader: 'varying vec3 vP; void main(){ float y = normalize(vP).y; vec3 c = mix(vec3(0.55,0.68,0.85), vec3(0.95,0.98,1.0), smoothstep(-0.3, 0.9, y)); gl_FragColor = vec4(c,1.0); }',
     }),
   );
   env.add(dome);
@@ -73,40 +74,44 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
   return mountScene(container, (THREE, ctx) => {
     const rand = seeded(5050);
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x06142e, 14, 30);
+    scene.fog = new THREE.Fog(0xeef6ff, 18, 40);
     scene.environment = studioEnvironment(THREE, ctx.renderer);
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
     const sprite = glowTexture(THREE);
 
-    scene.add(new THREE.HemisphereLight(0xa9d4ff, 0x061230, 0.7));
-    const key = new THREE.DirectionalLight(0xfff4e6, 1.6);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xbbddf8, 1.15));
+    const key = new THREE.DirectionalLight(0xfff4e6, 1.9);
     key.position.set(4, 7, 5);
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x5d95ff, 1.4);
+    const rim = new THREE.DirectionalLight(0x9cc8ff, 1.2);
     rim.position.set(-6, 3, -5);
     scene.add(rim);
     const inner = new THREE.PointLight(0xffe7b8, 0, 9, 1.6);
     inner.position.set(0, 1.1, 0);
     scene.add(inner);
 
-    // ---- Stage ---------------------------------------------------------------
-    const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(60, 72),
-      new THREE.MeshStandardMaterial({ color: 0x061533, roughness: 0.55, metalness: 0.15, envMapIntensity: 0.5 }),
+    // ---- Stage: a pearl plinth and a soft contact shadow -------------------------
+    const plinth = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.3, 2.45, 0.28, 72),
+      new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.35, clearcoat: 0.6, envMapIntensity: 0.9 }),
     );
-    floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
+    plinth.position.y = -0.14;
+    scene.add(plinth);
+    const plinthTrim = new THREE.Mesh(new THREE.TorusGeometry(2.38, 0.035, 12, 96), new THREE.MeshStandardMaterial({ color: 0xd9b66f, roughness: 0.25, metalness: 1 }));
+    plinthTrim.rotation.x = Math.PI / 2;
+    plinthTrim.position.y = -0.01;
+    scene.add(plinthTrim);
     const pool = new THREE.Mesh(
       new THREE.PlaneGeometry(9, 9),
-      new THREE.MeshBasicMaterial({ map: sprite, color: 0x2457d6, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }),
+      new THREE.MeshBasicMaterial({ map: sprite, color: 0x17365d, transparent: true, opacity: 0.22, depthWrite: false }),
     );
     pool.rotation.x = -Math.PI / 2;
-    pool.position.y = 0.01;
+    pool.position.y = -0.3;
     scene.add(pool);
 
     // ---- The gift ------------------------------------------------------------
-    const blue = new THREE.MeshPhysicalMaterial({ color: 0x2457d6, roughness: 0.32, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.18, envMapIntensity: 1 });
-    const silver = new THREE.MeshStandardMaterial({ color: 0xdfe6f2, roughness: 0.22, metalness: 1, envMapIntensity: 1.3 });
+    const blue = new THREE.MeshPhysicalMaterial({ color: 0x2f6fd6, roughness: 0.3, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.16, envMapIntensity: 1 });
+    const silver = new THREE.MeshStandardMaterial({ color: 0xe2c27e, roughness: 0.24, metalness: 1, envMapIntensity: 1.25 }); // champagne-gold ribbon
     const gift = new THREE.Group();
     scene.add(gift);
 
@@ -150,17 +155,17 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
     const beam = new THREE.Mesh(
       new THREE.CylinderGeometry(1.0, 0.85, 7, 40, 1, true),
       new THREE.ShaderMaterial({
-        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+        transparent: true, depthWrite: false, side: THREE.DoubleSide,
         uniforms: { uOpen: { value: 0 }, uTime: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
         fragmentShader: `uniform float uOpen, uTime; varying vec2 vUv;
           void main(){ float fade = pow(1.0 - vUv.y, 1.6); float rays = 0.6 + 0.4 * sin(vUv.x * 40.0 + uTime * 0.8);
-          gl_FragColor = vec4(vec3(1.0, 0.92, 0.78), fade * rays * uOpen * 0.32); }`,
+          gl_FragColor = vec4(vec3(0.95, 0.82, 0.52), fade * rays * uOpen * 0.38); }`,
       }),
     );
     beam.position.y = 1.7 + 3.5;
     gift.add(beam);
-    const glowCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: sprite, color: 0xffe2a8, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const glowCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: sprite, color: 0xf3dca6, transparent: true, opacity: 0, depthWrite: false }));
     glowCore.scale.set(4, 3, 1);
     glowCore.position.y = 1.9;
     gift.add(glowCore);
@@ -171,12 +176,15 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
       roundedBox(THREE, 0.12, 0.52, 0.52, 0.015, 1),
       roundedBox(THREE, 0.52, 0.52, 0.12, 0.015, 1),
     ]);
-    const boxes = new THREE.InstancedMesh(smallBox, new THREE.MeshPhysicalMaterial({ roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.2, emissive: 0x2457d6, emissiveIntensity: 0.0 }), count);
+    const boxes = new THREE.InstancedMesh(smallBox, new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.2, emissive: 0x6daae8, emissiveIntensity: 0.0 }), count);
     const ribbons = new THREE.InstancedMesh(smallRibbon, silver, count);
-    const shades = [0x2457d6, 0x164e9a, 0x2f6be8, 0x8fcbff, 0xc8d3e5, 0x0a2148];
+    const shades = [0x2f6fd6, 0x6daae8, 0xffffff, 0x1f55b0, 0xbbddf8, 0xdce5f0];
+    const shadeOf = (i) => new THREE.Color(shades[i % shades.length]);
+    const gold = new THREE.Color(0xd9b66f);
+    let given = new Set(), colorsDirty = true;
     const ringData = [];
     for (let i = 0; i < count; i++) {
-      boxes.setColorAt(i, new THREE.Color(shades[i % shades.length]));
+      boxes.setColorAt(i, shadeOf(i));
       ringData.push({ a: (i / count) * Math.PI * 2, y: 0.5 + Math.sin(i * 1.7) * 0.45 + rand() * 0.5, r: 4.6 + Math.sin(i * 2.3) * 0.6, spin: rand() * Math.PI, s: 0.6 + rand() * 0.45 });
     }
     boxes.instanceColor.needsUpdate = true;
@@ -184,7 +192,7 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
     // A glow sprite per small gift, revealed in sequence when the gift opens
     const twinkles = new THREE.InstancedMesh(
       new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: sprite, color: 0xbfe0ff, transparent: true, opacity: 0.0, depthWrite: false, blending: THREE.AdditiveBlending }),
+      new THREE.MeshBasicMaterial({ map: sprite, color: 0xf0d595, transparent: true, opacity: 0.0, depthWrite: false }),
       count,
     );
     scene.add(twinkles);
@@ -202,7 +210,7 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
     spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
     spGeo.setAttribute('aSeed', new THREE.BufferAttribute(spSeed, 1));
     const spMat = new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      transparent: true, depthWrite: false,
       uniforms: { uTime: { value: 0 }, uOpen: { value: 0 }, uPR: { value: ctx.renderer.getPixelRatio() }, uSprite: { value: sprite } },
       vertexShader: /* glsl */ `
         uniform float uTime, uOpen, uPR; attribute float aSeed; varying float vA; varying float vWarm;
@@ -214,11 +222,11 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
           gl_Position = projectionMatrix * mv;
           gl_PointSize = (18.0 + aSeed * 30.0) * uPR / -mv.z;
           vA = (0.25 + 0.75 * uOpen) * smoothstep(0.0, 1.0, p.y) * smoothstep(8.0, 5.0, p.y);
-          vWarm = step(0.7, aSeed);
+          vWarm = step(0.45, aSeed);
         }`,
       fragmentShader: /* glsl */ `
         uniform sampler2D uSprite; varying float vA; varying float vWarm;
-        void main(){ float a = texture2D(uSprite, gl_PointCoord).a; vec3 c = mix(vec3(0.75, 0.87, 1.0), vec3(1.0, 0.9, 0.72), vWarm); gl_FragColor = vec4(c, a * vA); }`,
+        void main(){ float a = texture2D(uSprite, gl_PointCoord).a; vec3 c = mix(vec3(0.43, 0.67, 0.91), vec3(0.85, 0.71, 0.44), vWarm); gl_FragColor = vec4(c, a * vA * 0.85); }`,
     });
     scene.add(new THREE.Points(spGeo, spMat));
 
@@ -241,7 +249,7 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
 
     function resize(w, h) {
       camera.aspect = w / h;
-      camDist = w / h < 0.8 ? 21 : w / h < 1.2 ? 17 : 14.5;
+      camDist = w / h < 0.8 ? 20 : w / h < 1.2 ? 16 : w / h < 1.7 ? 13.5 : 12.5;
       // fog follows the camera distance: the gift stays crisp, the floor's edge dissolves
       scene.fog.near = camDist + 2;
       scene.fog.far = camDist + 20;
@@ -270,7 +278,9 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
       for (let i = 0; i < count; i++) {
         const d = ringData[i];
         const a = d.a + (ctx.reduced ? 0 : t * 0.06);
-        const lit = ctx.reduced ? (open ? 1 : 0) : open ? easeOutCubic(Math.min(1, Math.max(0, (since - i * 0.06) / 0.8))) : 0;
+        const opened = ctx.reduced ? (open ? 1 : 0) : open ? easeOutCubic(Math.min(1, Math.max(0, (since - i * 0.06) / 0.8))) : 0;
+        d.g = lerp(d.g || 0, given.has(i) ? 1 : 0, ctx.reduced ? 1 : Math.min(1, dt * 4));
+        const lit = Math.max(opened, d.g);
         pV.set(Math.cos(a) * d.r, d.y + lit * 0.9 + (ctx.reduced ? 0 : Math.sin(t * 0.9 + i) * 0.08), Math.sin(a) * d.r);
         e.set(0.15, d.spin + (ctx.reduced ? 0 : t * 0.3), 0.1);
         q.setFromEuler(e);
@@ -284,15 +294,19 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
         m4.compose(pV, q, sV);
         twinkles.setMatrixAt(i, m4);
       }
-      boxes.material.emissiveIntensity = o * 0.35;
+      if (colorsDirty) {
+        for (let i = 0; i < count; i++) boxes.setColorAt(i, given.has(i) ? gold : shadeOf(i));
+        boxes.instanceColor.needsUpdate = true;
+        colorsDirty = false;
+      }
+      boxes.material.emissiveIntensity = o * 0.25;
       twinkles.material.opacity = 0.7;
       boxes.instanceMatrix.needsUpdate = ribbons.instanceMatrix.needsUpdate = twinkles.instanceMatrix.needsUpdate = true;
 
       // Camera: a gentle orbit that leans toward the pointer
       const ca = ctx.reduced ? 0.25 : 0.25 + Math.sin(t * 0.07) * 0.18 + pointer.x * 0.12;
-      // looking above the gift places it in the lower half, clear of the headline
-      camera.position.set(Math.sin(ca) * camDist, 4.6 + o * 0.6 - pointer.y * 0.4, Math.cos(ca) * camDist);
-      camera.lookAt(0, 2.9 + o * 0.4, 0);
+      camera.position.set(Math.sin(ca) * camDist, 5.2 + o * 0.6 - pointer.y * 0.4, Math.cos(ca) * camDist);
+      camera.lookAt(0, 0.95 + o * 0.35, 0);
       ctx.renderer.render(scene, camera);
     }
 
@@ -309,6 +323,8 @@ export function mountGiftScene(container, { count = 50, onOpenChange } = {}) {
       resize,
       setOpen,
       get open() { return open; },
+      /** Gifts the host has marked as given (0-based indices) turn gold and rise. */
+      setGiven(indices) { given = new Set(indices); colorsDirty = true; ctx.requestRender(); },
       pointer(x, y) {
         pointer.x = x; pointer.y = y;
         ndc.set(x, y);

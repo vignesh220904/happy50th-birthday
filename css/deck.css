@@ -1,0 +1,233 @@
+/* ==========================================================================
+   The presentation deck: scenes stacked in one 16:9 viewport, transitions,
+   and the live-event controls (previous / progress / next, section menu,
+   music, full screen). Controls fade away when the mouse rests and return
+   on any movement, touch or key press.
+   ========================================================================== */
+.deck {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  perspective: 1800px;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  visibility: hidden;
+  opacity: 0;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translate3d(calc(var(--dir, 1) * 4%), 0, 0) scale(0.985);
+  transition:
+    opacity var(--dur-scene) var(--ease-out),
+    transform var(--dur-scene) var(--ease-out),
+    visibility 0s linear var(--dur-scene);
+}
+.scene.is-active {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+.scene.is-leaving {
+  visibility: visible;
+  opacity: 0;
+  transform: translate3d(calc(var(--dir, 1) * -3%), 0, 0) scale(0.99);
+  transition-delay: 0s;
+}
+.scene:focus { outline: none; }
+
+/* The safe frame inside each scene: everything important lives here */
+.scene__frame {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--safe-top) var(--safe-x) var(--safe-bottom);
+  overflow: clip; /* decorative glows may bleed; the scene itself never scrolls */
+}
+
+/* Elements marked [data-enter] animate in each time their scene opens */
+.scene [data-enter] { opacity: 0; }
+.scene.is-active.has-entered [data-enter] {
+  animation: rise-in 1s var(--ease-out) both;
+  animation-delay: calc(var(--enter, 0) * 110ms + 120ms);
+}
+
+/* ---------- Controls ---------- */
+.deck-ui {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 200;
+  pointer-events: none;
+}
+.deck-bar {
+  position: absolute;
+  bottom: max(12px, calc(var(--u) * 1.5));
+  display: flex;
+  align-items: center;
+  gap: max(6px, calc(var(--u) * 0.5));
+  padding: max(5px, calc(var(--u) * 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 2px 6px rgba(23, 54, 93, 0.08), 0 14px 34px -14px rgba(23, 54, 93, 0.4);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  pointer-events: auto;
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+}
+.deck-bar--nav { right: var(--safe-x); }
+.deck-bar--tools { left: var(--safe-x); }
+.deck-bar .icon-btn { border-color: transparent; background: transparent; box-shadow: none; }
+.deck-bar .icon-btn:hover { background: rgba(109, 170, 232, 0.16); }
+.deck-bar .icon-btn[aria-pressed="true"] { background: var(--ramar); color: #fff; }
+
+.deck-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  height: var(--controls-h);
+  padding: 0 1.15em 0 1.4em;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--ramar), var(--ramar-deep));
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 8px 20px -8px rgba(31, 85, 176, 0.8);
+  transition: transform var(--dur-fast), filter var(--dur-fast);
+}
+.deck-next:hover { filter: brightness(1.08); }
+.deck-next:active { transform: scale(0.96); }
+.deck-next svg { width: 1.3em; height: 1.3em; }
+.deck-next[disabled] { opacity: 0.4; cursor: default; filter: grayscale(0.4); }
+
+.deck-progress {
+  display: flex;
+  align-items: center;
+  gap: max(8px, calc(var(--u) * 0.7));
+  height: var(--controls-h);
+  padding: 0 calc(var(--u) * 0.9) 0 calc(var(--u) * 0.6);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.deck-progress:hover { background: rgba(109, 170, 232, 0.12); }
+.deck-dots { display: flex; align-items: center; gap: max(4px, calc(var(--u) * 0.32)); }
+.deck-dot {
+  width: max(7px, calc(var(--u) * 0.48));
+  height: max(7px, calc(var(--u) * 0.48));
+  border-radius: 50%;
+  background: var(--powder);
+  transition: width var(--dur) var(--ease-out), background var(--dur);
+}
+.deck-dot.is-past { background: var(--sapphire-light); }
+.deck-dot.is-current { width: max(20px, calc(var(--u) * 1.4)); border-radius: 999px; background: var(--ramar); }
+.deck-label { display: grid; line-height: 1.15; white-space: nowrap; }
+.deck-label__title { font-size: var(--fs-sm); font-weight: 800; }
+.deck-label__sub { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+.music-btn.is-playing svg { animation: float-y 1.6s var(--ease-in-out) infinite; }
+
+/* Idle: the controls step aside so the projector shows only the scene */
+body.controls-hidden .deck-bar { opacity: 0; transform: translateY(calc(100% + 24px)); pointer-events: none; }
+body.controls-hidden { cursor: none; }
+
+/* ---------- Section menu ---------- */
+.deck-menu {
+  position: fixed;
+  right: var(--safe-x);
+  bottom: calc(var(--controls-h) + max(28px, calc(var(--u) * 2.8)));
+  z-index: 210;
+  width: min(92vw, max(320px, calc(var(--u) * 26)));
+  max-height: calc(100dvh - 140px);
+  overflow-y: auto;
+  padding: max(10px, calc(var(--u) * 0.8));
+  border: 1px solid #fff;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-deep);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  animation: rise-in 360ms var(--ease-out);
+}
+.deck-menu__title {
+  margin: 4px 10px 8px;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--gold-text);
+}
+.deck-menu ol { margin: 0; padding: 0; list-style: none; }
+.deck-menu button {
+  display: grid;
+  grid-template-columns: max(30px, calc(var(--u) * 2.2)) 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: max(8px, calc(var(--u) * 0.55)) 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+}
+.deck-menu button:hover { background: var(--sky); }
+.deck-menu button[aria-current="step"] { background: linear-gradient(90deg, var(--sky), rgba(217, 238, 255, 0.3)); }
+.deck-menu__num {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--line-gold);
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--gold-text);
+}
+.deck-menu__name { font-size: var(--fs-body); font-weight: 700; }
+.deck-menu__hint { display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--ink-muted); }
+.deck-menu__keys {
+  margin: 10px 10px 4px;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+.deck-menu__keys kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  padding: 0 0.4em;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: 0.95em;
+  text-align: center;
+}
+
+/* ---------- Phones & portrait screens ---------- */
+@media (max-aspect-ratio: 1/1), (max-width: 760px), (max-height: 500px) {
+  .scene {
+    display: block; /* the frame grows with its content instead of stretching to the screen */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    transform: translate3d(calc(var(--dir, 1) * 8%), 0, 0);
+  }
+  .scene__frame { flex: none; width: 100%; min-height: 100%; height: auto; }
+  .deck-bar--tools { left: 10px; bottom: 10px; }
+  .deck-bar--nav { right: 10px; bottom: 10px; }
+  .deck-bar .tool-optional { display: none; }
+  .deck-label, .deck-dots { display: none; }
+  .deck-progress::before { content: attr(data-short); font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .deck-next span { display: none; }
+  .deck-next { padding: 0 0.9em; }
+  .deck-menu { right: 10px; left: 10px; width: auto; bottom: 70px; }
+}

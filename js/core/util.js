@@ -65,31 +65,11 @@ export function seeded(seed = 1) {
   };
 }
 
-/** Run cb(isVisible) whenever el enters / leaves the viewport. Returns a disconnect fn. */
-export function watchVisibility(el, cb, rootMargin = '0px') {
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => cb(e.isIntersecting, e)), { rootMargin });
-  io.observe(el);
-  return () => io.disconnect();
-}
-
-/** Resolve once el is near the viewport — used to lazy-start heavy scenes. */
-export function whenNear(el, rootMargin = '300px') {
-  return new Promise((resolve) => {
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        io.disconnect();
-        resolve();
-      }
-    }, { rootMargin });
-    io.observe(el);
-  });
-}
-
-/** Horizontal swipe detection with pointer events (touch + pen + mouse drag). */
-export function onSwipe(el, { left, right, threshold = 48 }) {
+/** Horizontal swipe detection with pointer events (touch + pen). `ignore(target)` skips gestures that start on, e.g., a video. */
+export function onSwipe(el, { left, right, threshold = 48, ignore = null }) {
   let x0 = null, y0 = null, id = null;
   el.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse') return;
+    if (e.pointerType === 'mouse' || ignore?.(e.target)) return;
     x0 = e.clientX; y0 = e.clientY; id = e.pointerId;
   });
   el.addEventListener('pointerup', (e) => {
@@ -101,6 +81,21 @@ export function onSwipe(el, { left, right, threshold = 48 }) {
   el.addEventListener('pointercancel', () => { x0 = null; });
 }
 
+/**
+ * Shrink a block's text until it fits its box (never grows past 1). The block's
+ * CSS multiplies its font sizes by var(--fit). Keeps long captions and the
+ * reasons readable on every screen size without ever overflowing the scene.
+ */
+export function fitText(el, { min = 0.62, step = 0.03 } = {}) {
+  if (!el || !el.isConnected || !el.clientHeight) return;
+  let fit = 1;
+  el.style.setProperty('--fit', fit);
+  while (fit > min && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)) {
+    fit = Math.max(min, fit - step);
+    el.style.setProperty('--fit', fit.toFixed(3));
+  }
+}
+
 /** Announce a message to screen readers through a shared live region. */
 let liveRegion;
 export function announce(message) {
@@ -110,24 +105,6 @@ export function announce(message) {
   }
   liveRegion.textContent = '';
   requestAnimationFrame(() => { liveRegion.textContent = message; });
-}
-
-/** Reveal elements with [data-reveal] as they scroll into view. */
-export function setupReveal(root = document) {
-  const items = $$('[data-reveal]:not(.is-revealed)', root);
-  if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
-    items.forEach((el) => el.classList.add('is-revealed'));
-    return;
-  }
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) {
-        e.target.classList.add('is-revealed');
-        io.unobserve(e.target);
-      }
-    });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-  items.forEach((el) => io.observe(el));
 }
 
 const svg = (body, extra = '') =>
@@ -156,5 +133,7 @@ export const icons = {
   pin: svg('<path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/>'),
   calendar: svg('<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
   list: svg('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  home: svg('<path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/>'),
   captions: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"/>'),
 };

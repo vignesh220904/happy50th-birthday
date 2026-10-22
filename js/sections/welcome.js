@@ -1,80 +1,43 @@
-// Chapter I — The Birthday Welcome.
-// A cinematic hero over the 3D "50" installation. The opening title card
-// (intro.js) plays first; when it lifts, the particle "50" gathers again so the
-// hero comes alive in front of the guest. "Begin Her Beautiful Journey" glides
-// into the life journey; the family's birthday film is one tap away.
+// Scene 1 — Welcome: the default idle screen on the projector while guests arrive.
+// The text is already in index.html (so it paints immediately); this fills it
+// from data/site.json and adds a layered 3D composition of real family
+// photographs around a silver-blue "50". Nothing here needs interaction.
 
-import { h, icons, prefersReducedMotion } from '../core/util.js';
-import { mountHeroScene } from '../three/hero-scene.js';
-import { fullExperienceHref, isStandalone } from '../core/nav.js';
-import { getIntro } from './intro.js';
-import { filmButton } from './shared.js';
-import { confetti } from '../core/confetti.js';
-import { music } from '../core/audio.js';
+import { h, $ } from '../core/util.js';
+import { picture } from '../core/data.js';
 
-let heroController = null;
+// Positions of the framed photographs in the 3D composition (percent of the visual box, depth in --u)
+const SLOTS = [
+  { x: 58, y: 63, w: 56, z: 4, r: -2 },   // the main photograph, below the "50"
+  { x: 16, y: 72, w: 27, z: 10, r: -6 },
+  { x: 88, y: 25, w: 23, z: 2, r: 6 },
+  { x: 90, y: 82, w: 21, z: 12, r: 4 },
+];
 
 export async function mount(el, content) {
-  const w = content.site.welcome;
-  const journeyHref = isStandalone() ? fullExperienceHref('journey') : '#journey';
-  const enterBtn = h('a', { class: 'btn btn--primary welcome__cta', href: journeyHref },
-    h('span', {}, w.cta),
-    h('span', { class: 'welcome__cta-icon', html: icons.next }),
-  );
-  enterBtn.addEventListener('click', (e) => {
-    if (isStandalone()) return;
-    e.preventDefault();
-    if (!music.on) music.play();
-    document.getElementById('journey')?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-  });
-
-  const scene = h('div', { class: 'welcome__scene' },
-    h('div', { class: 'welcome__fallback', 'aria-hidden': 'true' }, h('span', {}, '50')),
+  const w = content.site.welcome || {};
+  const set = (key, text) => { const n = $(`[data-welcome="${key}"]`, el); if (n && text) n.textContent = text; };
+  set('eyebrow', w.eyebrow);
+  set('supporting', w.supporting);
+  set('dates', w.dates);
+  // Headline: keep the designed three-line break when it matches the default wording
+  const title = $('#welcome-title', el);
+  const m = /^(Celebrating the)\s+(Beautiful Journey)\s+(of .+)$/i.exec(w.headline || '');
+  if (w.headline && !m) title.textContent = w.headline;
+  else if (m) title.replaceChildren(
+    h('span', { class: 'welcome__line welcome__line--lead' }, m[1]),
+    h('span', { class: 'welcome__line' }, m[2]),
+    h('span', { class: 'welcome__line welcome__line--name' }, m[3]),
   );
 
-  el.append(
-    scene,
-    h('div', { class: 'welcome__scrim', 'aria-hidden': 'true' }),
-    h('div', { class: 'wrap welcome__content' },
-      h('p', { class: 'welcome__dates' }, w.eyebrow),
-      h('h1', { class: 'welcome__title', id: 'welcome-title' },
-        h('span', { class: 'welcome__line' }, '50 Years'),
-        ' ',
-        h('span', { class: 'welcome__line welcome__line--accent' }, 'of Love'),
-      ),
-      h('p', { class: 'welcome__supporting' }, w.supporting),
-      h('p', { class: 'welcome__message' }, w.message),
-      h('div', { class: 'welcome__actions' }, enterBtn, filmButton(content, 'film-birthday')),
-      h('p', { class: 'welcome__theme' }, w.theme),
-    ),
-    h('a', { class: 'welcome__scroll', href: journeyHref, 'aria-label': 'Scroll to her life journey' },
-      h('span', {}, 'Her journey'),
-      h('span', { class: 'welcome__scroll-icon', html: icons.arrowDown }),
-    ),
-  );
+  const photos = (w.photos || []).map((id) => content.media.get(id)).filter(Boolean).slice(0, SLOTS.length);
+  $('.welcome__photos', el).replaceChildren(...photos.map((item, i) => {
+    const s = SLOTS[i];
+    return h('figure', {
+      class: `wphoto ${i === 0 ? 'wphoto--main' : ''}`,
+      style: { '--x': s.x, '--y': s.y, '--w': s.w, '--z': s.z, '--r': `${s.r}deg`, '--ar': (item.width / item.height).toFixed(3), '--i': i },
+    }, picture(item, { alt: '', eager: true, sizes: '(max-width: 760px) 50vw, 26vw', className: 'wphoto__img' }));
+  }));
 
-  const photos = (content.site.heroPhotos || []).map((id) => content.media.get(id)).filter(Boolean);
-  mountHeroScene(scene, { photos }).then((c) => { heroController = c; });
-
-  const intro = getIntro();
-  const reveal = () => {
-    el.classList.remove('is-ready');
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-ready')));
-    heroController?.scene.replay?.();
-  };
-  if (intro) intro.on((event) => { if (event === 'enter') reveal(); });
-  else requestAnimationFrame(() => el.classList.add('is-ready'));
-}
-
-/** Replay the opening (the finale's "Replay her journey"). */
-export function replayWelcome() {
-  document.getElementById('welcome')?.scrollIntoView({ behavior: 'instant' });
-  const intro = getIntro();
-  if (intro) {
-    intro.replay();
-  } else {
-    heroController?.scene.replay?.();
-    confetti({ x: 0.5, y: 0.7, count: 180 });
-    music.play({ fromStart: true });
-  }
+  return {};
 }

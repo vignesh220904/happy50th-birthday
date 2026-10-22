@@ -1,9 +1,10 @@
-// Tasteful confetti: blue, silver, pearl and a little champagne. One shared
-// full-screen canvas, created on first use and stopped as soon as it is empty.
+// Tasteful confetti for a light background: Ramar and sapphire blues, powder
+// blue, champagne gold and a little silver. One shared full-screen canvas,
+// created on first use and stopped as soon as it is empty.
 
 import { prefersReducedMotion } from './util.js';
 
-const COLORS = ['#2457d6', '#2f6be8', '#8fcbff', '#c8d3e5', '#f7faff', '#e4cf9f', '#164e9a'];
+const COLORS = ['#2f6fd6', '#1f55b0', '#6daae8', '#bbddf8', '#d9b66f', '#c9a14f', '#e8d6a6', '#9fb3cc'];
 let canvas, ctx, pieces = [], raf = 0, dpr = 1;
 
 function ensureCanvas() {
@@ -24,9 +25,9 @@ function ensureCanvas() {
 
 /**
  * burst({ x, y }) — x/y are 0..1 fractions of the viewport.
- * mode 'cannon' fires upward from the origin, 'rain' falls from the top.
+ * mode 'cannon' fires from the origin (straight up, or toward `angle` in radians), 'rain' falls from the top.
  */
-export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon' } = {}) {
+export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon', angle: aim = -Math.PI / 2 } = {}) {
   if (prefersReducedMotion()) return; // a still page is kinder than falling paper
   ensureCanvas();
   // A modal <dialog> lives in the browser's top layer; follow it so confetti stays visible.
@@ -35,7 +36,7 @@ export function confetti({ x = 0.5, y = 0.6, count = 160, mode = 'cannon' } = {}
   const w = innerWidth, hgt = innerHeight;
   const n = innerWidth < 700 ? Math.round(count * 0.6) : count;
   for (let i = 0; i < n; i++) {
-    const angle = mode === 'rain' ? Math.PI / 2 : -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
+    const angle = mode === 'rain' ? Math.PI / 2 : aim + (Math.random() - 0.5) * 1.1;
     const speed = mode === 'rain' ? 1 + Math.random() * 2 : 9 + Math.random() * 9;
     pieces.push({
       x: mode === 'rain' ? Math.random() * w : x * w,

@@ -55,6 +55,10 @@ check('age photos all have an age read from the filename', manifest.collections.
 for (const film of manifest.films) {
   check(`film "${film.src}" and its poster exist`, exists(film.src) && exists(film.poster));
 }
+check('the family memories film is in the manifest', manifest.films.some((f) => f.id === 'film-memories'));
+check('the generated Life Journey film and the Age 1 to 50 film are removed', !manifest.films.some((f) => /life-journey|film-age|age\.mp4|life journey/.test(`${f.id} ${f.src}`)) && !exists('assets/videos/life journey.mp4') && !exists('assets/videos/age.mp4'));
+const datedGallery = manifest.collections.gallery.filter((i) => i.date && /^\d{4}$/.test(i.group) && ['exif', 'filename'].includes(i.dateSource));
+check(`gallery: ${datedGallery.length} photos have a recorded date (${manifest.collections.gallery.length - datedGallery.length} without one are left out of the dated gallery)`, datedGallery.length > 0 && datedGallery.every((i) => i.date.startsWith(i.group)));
 check('no absolute or Windows paths in the manifest', !/[A-Za-z]:[\\/]|\\\\/.test(read('data/photo_inventory.json')));
 
 // ---------------------------------------------------------------------------
@@ -86,29 +90,39 @@ check('name is M. Buvaneswari', site.person.fullName === 'M. Buvaneswari');
 check('born 27 October 1976', site.person.born === '1976-10-27');
 check('celebration on 27 October 2026', site.event.date === '2026-10-27');
 check('venue: Palmshore Restaurant, Ekkatuthangal, Chennai', site.event.venue === 'Palmshore Restaurant' && site.event.area === 'Ekkatuthangal, Chennai');
-check('welcome headline + CTA', site.welcome.headline === '50 Years of Love' && site.welcome.cta === 'Begin Her Beautiful Journey');
-check('final greeting', site.finale.headline === 'Happy 50th Birthday, Amma!');
-check('age ending message', site.age.ending === 'From your first little steps to fifty beautiful years — every chapter has been precious.');
-check('hero photo ids exist', site.heroPhotos.every((id) => ids.has(id)));
-check('finale photo id exists', ids.has(site.finale.photo));
+check('welcome: the requested wording', site.welcome.headline === 'Celebrating the Beautiful Journey of Buvaneswari' && site.welcome.supporting === '50 Years of Love, Strength & Beautiful Memories' && site.welcome.dates === '27 October 1976 – 27 October 2026');
+check('welcome photo ids exist', site.welcome.photos.every((id) => ids.has(id)));
+check('reveal: HAPPY 50TH BIRTHDAY / AMMA / M. BUVANESWARI', /^happy 50th birthday$/i.test(site.reveal.line1) && /^amma$/i.test(site.reveal.line2) && site.reveal.line3 === 'M. Buvaneswari');
+check('reveal photo is a real photograph of Amma', ids.get(site.reveal.photo)?.kind === 'photo');
+check('final greeting and messages', site.finale.headline === 'Happy 50th Birthday, Amma!'
+  && site.finale.subline === '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.'
+  && site.finale.message === 'We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.');
+check('music: a file is configured, exists, and is credited', !!site.music.src && exists(site.music.src) && /Creative Commons/.test(site.music.credit || ''));
+check('Life Journey video is configured as an MP4 path', /\.mp4$/.test(site.videos.lifeJourney.src));
+if (!exists(site.videos.lifeJourney.src)) console.log(`  · waiting for the family's Life Journey video: ${site.videos.lifeJourney.src}`);
 const gifts = json('data/gifts.json');
 check('50 gift slots numbered 1–50', gifts.gifts.length === 50 && gifts.gifts.every((g, i) => g.n === i + 1));
 check('no gift is marked as given unless confirmed (all false by default)', gifts.gifts.every((g) => typeof g.given === 'boolean'));
 const wishes = json('data/wishes.json');
-check('wishes manifest has an empty-state message', !!wishes.emptyMessage);
-check('every listed wishes video exists', (wishes.videos || []).every((v) => exists(v.src)));
+check('wishes: the placeholder line is the family’s wording', wishes.emptyMessage === 'Messages filled with love, from the people who make her world special.');
+check('wishes videos are configured as MP4 paths', (wishes.videos || []).length > 0 && wishes.videos.every((v) => /\.mp4$/.test(v.src)));
+(wishes.videos || []).filter((v) => !exists(v.src)).forEach((v) => console.log(`  · waiting for the family's wishes video: ${v.src}`));
 
 // ---------------------------------------------------------------------------
 section('Pages and code');
 const pages = ['index.html', ...readdirSync(join(ROOT, 'pages')).map((p) => `pages/${p}`)];
-for (const page of pages) {
-  const html = read(page);
-  const base = page.startsWith('pages/') ? 'pages/' : '';
-  const refs = [...html.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js))"/g)].map((m) => m[1]);
-  const broken = refs.filter((r) => !exists(join(base, r)));
-  check(`${page}: stylesheets and scripts resolve`, !broken.length, broken.join(', '));
-  check(`${page}: has at least one chapter`, /data-section="/.test(html));
+const index = read('index.html');
+const indexRefs = [...index.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js|woff2))"/g)].map((m) => m[1]);
+check('index.html: stylesheets, scripts and fonts resolve', indexRefs.every((r) => exists(r)), indexRefs.filter((r) => !exists(r)).join(', '));
+const sceneIds = [...index.matchAll(/data-scene="([a-z-]+)"/g)].map((m) => m[1]);
+check('index.html: the presentation scenes, in order', sceneIds.join() === 'welcome,reveal,journey-film,journey,reasons,memories,gallery,wishes,finale', sceneIds.join());
+check('index.html: the welcome is the scene shown first', /class="scene scene--welcome is-active"/.test(index));
+for (const page of pages.filter((p) => p.startsWith('pages/'))) {
+  const target = /url=\.\.\/index\.html#([a-z-]+)/.exec(read(page))?.[1];
+  check(`${page}: opens the presentation at an existing scene`, sceneIds.includes(target), target);
 }
+const fontsCss = read('css/fonts.css');
+check('fonts are vendored locally (works offline)', [...fontsCss.matchAll(/url\(\.\.\/([^)]+)\)/g)].every((m) => exists(m[1])) && !/fonts\.googleapis/.test(index));
 const jsFiles = [];
 const walk = (dir) => readdirSync(join(ROOT, dir), { withFileTypes: true }).forEach((d) => {
   if (d.isDirectory()) { if (d.name !== 'vendor') walk(`${dir}/${d.name}`); }
@@ -121,6 +135,8 @@ const syntaxErrors = jsFiles.filter((f) => {
 check(`all ${jsFiles.length} JavaScript modules parse`, !syntaxErrors.length, syntaxErrors.join(', '));
 const stale = jsFiles.concat(['index.html']).filter((f) => /assets\/(photos|thumbnails)\//.test(read(f)));
 check('no references to the removed assets/photos or assets/thumbnails folders', !stale.length, stale.join(', '));
+const removed = jsFiles.concat(['index.html', 'data/site.json']).filter((f) => /film-birthday|film-life-journey|film-age|openCinema|filmButton|Watch the Birthday Film|life journey\.mp4|age\.mp4/.test(read(f)));
+check('no trace of the removed Birthday Film button, generated Life Journey film or Age film', !removed.length, removed.join(', '));
 check('three.js is vendored locally (works offline)', exists('js/vendor/three.module.min.js'));
 
 console.log(`\n${passes} passed, ${failures} failed`);

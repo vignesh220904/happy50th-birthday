@@ -1,282 +1,139 @@
-// Chapter II — Her Life Journey, 1976–2026.
-// With WebGL, the journey is a real 3D flight (three/journey-scene.js): the
-// camera travels a glowing river of time past each milestone's photographs,
-// while the year, title and caption appear beside them.
-// Without WebGL (or with reduced motion) it falls back to a documentary-style
-// viewer with photographs in CSS 3D depth over a blurred backdrop.
-// Navigation: previous/next, a milestone rail, ← → / Home / End keys, swipe,
-// and an optional autoplay for the venue screen.
+// Scene 4 — Her Life Journey, 1976–2026 (data/timeline.json).
+// The milestones are grouped into era pages of up to five, laid out across the
+// landscape screen as framed cards with their real photographs. Next moves
+// through the eras, then on to the 50 Reasons. Tapping a card opens its photos.
 
-import { h, icons, pad, onSwipe, announce, prefersReducedMotion, watchVisibility, $$ } from '../core/util.js';
+import { h, icons, pad, fitText, $$, prefersReducedMotion } from '../core/util.js';
 import { picture, url } from '../core/data.js';
 import { openLightbox } from '../core/lightbox.js';
-import { chapterHead, filmButton, mediaLabel } from './shared.js';
-import { hrefFor } from '../core/nav.js';
-import { webglAvailable } from '../three/stage.js';
-import { mountJourneyScene } from '../three/journey-scene.js';
+import { mediaLabel } from './shared.js';
 
-const AUTOPLAY_MS = 7000;
-// "1979 – 1993" → "1979", "1980s" → "1980s", "27 October 2026" → "2026" (for the compact rail)
-const shortYear = (y) => (y.match(/\d{4}s|\d{4}/) || [y])[0];
+const PER_PAGE = 5;
+const shortYear = (y) => (String(y).match(/\d{4}s?/) || [y])[0];
+
+/** Group milestones by era, merge small neighbouring eras, split long ones. */
+function paginate(eras, milestones) {
+  const byEra = eras.map((e) => ({ eras: [e], items: milestones.filter((m) => m.era === e.id) })).filter((g) => g.items.length);
+  const merged = [];
+  for (const g of byEra) {
+    const last = merged[merged.length - 1];
+    if (last && last.items.length + g.items.length <= PER_PAGE && (last.items.length < 3 || g.items.length < 3)) {
+      last.eras.push(...g.eras);
+      last.items.push(...g.items);
+    } else merged.push({ eras: [...g.eras], items: [...g.items] });
+  }
+  return merged.flatMap((g) => {
+    const parts = Math.ceil(g.items.length / PER_PAGE);
+    const size = Math.ceil(g.items.length / parts);
+    return Array.from({ length: parts }, (_, i) => ({
+      title: g.eras.map((e) => e.title).join(' · '),
+      part: parts > 1 ? `Part ${i + 1} of ${parts}` : '',
+      items: g.items.slice(i * size, (i + 1) * size),
+    }));
+  });
+}
 
 export async function mount(el, content) {
   const { eras, milestones } = content.timeline;
-  const eraTitle = Object.fromEntries(eras.map((e) => [e.id, e.title]));
+  const pages = paginate(eras, milestones);
   const resolve = (m) => m.media.map((ref) => ({ ...ref, item: content.media.get(ref.id) })).filter((r) => r.item);
+  let page = 0;
 
-  let index = 0, timer = null;
-  let mode = webglAvailable() && !prefersReducedMotion() ? '3d' : 'css';
-  let space = null; // 3D controller once mounted
-  const spaceEl = h('div', { class: 'journey__space', 'aria-hidden': 'true' });
-  const lightboxFor = (m) => resolve(m).map((r) => ({ media: r.item, alt: r.alt, caption: `${m.year} · ${m.title}`, meta: r.item.kind === 'illustration' ? 'An illustration, not an original photograph.' : m.caption }));
+  const lightboxFor = (m) => resolve(m).map((r) => ({
+    media: r.item,
+    alt: r.alt,
+    caption: `${m.year} · ${m.title}`,
+    meta: r.item.kind === 'illustration' ? 'An illustration, not an original photograph.' : m.caption,
+  }));
 
-  const backdrop = h('div', { class: 'journey__backdrop', 'aria-hidden': 'true' });
-  const stage = h('div', { class: 'journey__stage' });
-  const counter = h('p', { class: 'journey__counter', 'aria-hidden': 'true' });
-  const prevBtn = h('button', { class: 'icon-btn icon-btn--lg', type: 'button', 'aria-label': 'Previous milestone', html: icons.prev });
-  const nextBtn = h('button', { class: 'icon-btn icon-btn--lg', type: 'button', 'aria-label': 'Next milestone', html: icons.next });
-  const playBtn = h('button', { class: 'btn btn--ghost journey__play', type: 'button', 'aria-pressed': 'false' });
-  const fill = h('span', { class: 'journey__rail-fill', 'aria-hidden': 'true' });
-
-  // ---- Milestone rail (eras above, one stop per milestone) -------------------
-  const stops = milestones.map((m, i) =>
-    h('li', {},
-      h('button', {
-        class: 'journey__stop',
-        type: 'button',
-        'aria-label': `${m.year}: ${m.title}`,
-        onclick: () => { stopAutoplay(); go(i); },
-      }, h('span', { class: 'journey__stop-dot', 'aria-hidden': 'true' }), h('span', { class: 'journey__stop-year' }, shortYear(m.year))),
-    ),
-  );
-  const eraBands = eras.map((era) => {
-    const first = milestones.findIndex((m) => m.era === era.id);
-    const count = milestones.filter((m) => m.era === era.id).length;
-    return h('span', { class: 'journey__era', style: { gridColumn: `${first + 1} / span ${count}` }, title: era.title }, era.title);
-  });
-  const railList = h('ol', { class: 'journey__stops', style: { '--count': milestones.length } }, stops);
-  const rail = h('nav', { class: 'journey__rail', 'aria-label': 'Life journey milestones' },
-    h('div', { class: 'journey__rail-track', style: { '--count': milestones.length } },
-      h('div', { class: 'journey__eras', 'aria-hidden': 'true' }, eraBands),
-      h('div', { class: 'journey__line', 'aria-hidden': 'true' }, fill),
-      railList,
-    ),
-  );
-
-  const viewer = h('div', {
-    class: `journey ${mode === '3d' ? 'journey--3d' : ''}`,
-    role: 'region',
-    'aria-roledescription': 'carousel',
-    'aria-label': 'Her life journey, 1976 to 2026. Use the left and right arrow keys to move between milestones.',
-    tabindex: '0',
-  },
-  mode === '3d' ? spaceEl : null,
-  backdrop,
-  stage,
-  h('div', { class: 'journey__controls wrap' },
-    h('div', { class: 'journey__buttons' }, prevBtn, counter, nextBtn),
-    playBtn,
-  ),
-  rail,
-  );
-
-  el.append(
-    h('div', { class: 'wrap' },
-      chapterHead({
-        num: 2,
-        id: 'journey-title',
-        title: 'Her Life Journey <em>1976 – 2026</em>',
-        lede: 'From a little girl in a black-and-white portrait to the heart of a family: fifty years, one chapter at a time.',
-        actions: [filmButton(content, 'film-life-journey')],
-      }),
-    ),
-    viewer,
-  );
-
-  // ---- Scenes --------------------------------------------------------------
-  function buildScene(m, i) {
+  function card(m, i) {
     const media = resolve(m);
-    const layout = media.length === 0 ? 'type' : media.length === 1 ? 'single' : media.length === 2 ? 'duo' : 'cluster';
-    const lightboxItems = lightboxFor(m);
-
-    const frames = media.map((r, k) =>
-      h('button', {
-        class: `jframe jframe--${k === 0 ? 'main' : 'side'} ${r.item.kind === 'illustration' ? 'is-illustration' : ''}`,
+    const main = media[0];
+    const visual = main
+      ? h('button', {
+        class: `jcard__photo ${main.item.kind === 'illustration' ? 'is-illustration' : ''}`,
         type: 'button',
-        style: { '--k': k, '--ar': (r.item.width / r.item.height).toFixed(3) },
-        'aria-label': `View larger: ${r.alt}`,
-        onclick: () => openLightbox(lightboxItems, k),
+        'aria-label': `View ${media.length > 1 ? `the ${media.length} photos` : 'the photo'}: ${m.title}`,
+        onclick: () => openLightbox(lightboxFor(m), 0),
       },
-      picture(r.item, { alt: r.alt, eager: i === 0 && k === 0, sizes: k === 0 ? '(max-width: 760px) 86vw, 46vw' : '(max-width: 760px) 40vw, 22vw', className: 'jframe__img' }),
-      mediaLabel(r.item),
+      picture(main.item, { alt: main.alt, sizes: '(max-width: 760px) 90vw, 20vw', className: 'jcard__img' }),
+      media[1] ? h('span', { class: 'jcard__inset', 'aria-hidden': 'true' }, picture(media[1].item, { alt: '', sizes: '8vw', className: 'jcard__inset-img' }), mediaLabel(media[1].item)) : null,
+      media.length > 1 ? h('span', { class: 'jcard__count' }, h('span', { html: icons.grid }), `${media.length}`) : null,
+      mediaLabel(main.item),
+      )
+      : h('div', { class: `jcard__photo jcard__photo--type ${m.id === 'fifty' ? 'is-fifty' : ''}`, 'aria-hidden': 'true' },
+        h('span', {}, m.id === 'fifty' ? '50' : shortYear(m.year)));
+
+    return h('article', { class: 'jcard', style: { '--i': i } },
+      visual,
+      h('div', { class: 'jcard__text' },
+        h('p', { class: 'jcard__year' }, m.year),
+        h('h3', { class: 'jcard__title' }, m.title),
+        h('p', { class: 'jcard__caption' }, m.caption),
+        m.noPhoto ? h('p', { class: 'jcard__note' }, m.noPhoto) : null,
       ),
     );
+  }
 
-    let visual;
-    if (mode === '3d') {
-      visual = null; // the photographs live in the 3D space behind the text
-    } else if (layout === 'type') {
-      const big = m.id === 'fifty' ? '50' : m.year.replace(/\s/g, '').split('–')[0];
-      visual = h('div', { class: `jtype ${m.id === 'fifty' ? 'jtype--fifty' : ''}`, 'aria-hidden': 'true' },
-        h('span', { class: 'jtype__num' }, big),
-        h('span', { class: 'jtype__ring' }),
-      );
-    } else {
-      visual = h('div', { class: `jframes jframes--${layout}`, style: { '--n': media.length } }, frames);
-    }
+  const eraTabs = pages.map((p, i) => h('button', {
+    class: 'jera',
+    type: 'button',
+    'aria-label': `${p.title}${p.part ? `, ${p.part.toLowerCase()}` : ''}`,
+    onclick: () => show(i),
+  }, h('span', { class: 'jera__years' }, `${shortYear(p.items[0].year)}`), h('span', { class: 'jera__dot', 'aria-hidden': 'true' })));
+  const pageTitle = h('h2', { class: 'scene-title journey__title', id: 'journey-title' });
+  const pagePart = h('p', { class: 'journey__part' });
+  const cardsEl = h('div', { class: 'journey__cards' });
+  const fillEl = h('span', { class: 'jrail__fill', 'aria-hidden': 'true' });
 
-    const note = m.noPhoto || (media.some((r) => r.item.kind === 'illustration') ? 'Scenes marked “Illustration” are drawings created for this story, not original photographs.' : '');
-    const extra = m.id === 'fifty'
-      ? h('a', { class: 'btn btn--gold jscene__cta', href: hrefFor('finale') }, h('span', { html: icons.gift }), 'To the celebration')
-      : mode === '3d' && media.length
-        ? h('button', { class: 'btn btn--ghost jscene__cta', type: 'button', onclick: () => openLightbox(lightboxItems, 0) },
-          h('span', { html: icons.expand }), media.length > 1 ? `View the ${media.length} photos` : 'View the photo')
-        : null;
-
-    return h('article', { class: `jscene jscene--${layout}`, 'aria-roledescription': 'slide', 'aria-label': `${i + 1} of ${milestones.length}` },
-      h('div', { class: 'jscene__text' },
-        h('p', { class: 'jscene__era' }, eraTitle[m.era] || ''),
-        h('p', { class: `jscene__year ${m.year.length > 6 ? 'jscene__year--long' : ''}` }, m.year),
-        h('h3', { class: 'jscene__title' }, m.title),
-        h('p', { class: 'jscene__caption' }, m.caption),
-        note ? h('p', { class: 'jscene__note' }, note) : null,
-        extra,
+  el.append(h('div', { class: 'scene__frame journey' },
+    h('header', { class: 'journey__head' },
+      h('div', {},
+        h('p', { class: 'eyebrow', 'data-enter': '', style: { '--enter': 0 } }, 'Her Life Journey · 1976 – 2026'),
+        h('div', { class: 'journey__heading', 'data-enter': '', style: { '--enter': 1 } }, pageTitle, pagePart),
       ),
-      visual ? h('div', { class: 'jscene__visual' }, visual) : null,
-    );
-  }
+      h('nav', { class: 'jrail', 'aria-label': 'Eras of her life', 'data-enter': '', style: { '--enter': 2 } },
+        h('div', { class: 'jrail__line', 'aria-hidden': 'true' }, fillEl), h('div', { class: 'jrail__stops' }, eraTabs)),
+    ),
+    cardsEl,
+  ));
 
-  function setBackdrop(m) {
-    if (mode === '3d') return;
-    const first = resolve(m)[0];
-    const previous = $$('.journey__backdrop-layer', backdrop);
-    const layer = h('div', { class: 'journey__backdrop-layer' });
-    if (first) layer.style.backgroundImage = `url("${url(first.item.sm)}")`;
-    backdrop.append(layer);
-    requestAnimationFrame(() => layer.classList.add('is-visible'));
-    previous.forEach((p) => {
-      p.classList.remove('is-visible');
-      setTimeout(() => p.remove(), 1400);
+  function show(i, { animate = true } = {}) {
+    page = Math.max(0, Math.min(pages.length - 1, i));
+    const p = pages[page];
+    const first = shortYear(p.items[0].year), last = shortYear(p.items[p.items.length - 1].year);
+    pageTitle.textContent = p.title;
+    pagePart.textContent = [first === last ? first : `${first} – ${last}`, p.part].filter(Boolean).join(' · ');
+    cardsEl.style.setProperty('--n', p.items.length);
+    cardsEl.replaceChildren(...p.items.map(card));
+    cardsEl.classList.toggle('is-animating', animate && !prefersReducedMotion());
+    eraTabs.forEach((t, k) => {
+      t.classList.toggle('is-active', k === page);
+      t.classList.toggle('is-past', k < page);
+      if (k === page) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current');
     });
+    fillEl.style.transform = `scaleX(${pages.length > 1 ? page / (pages.length - 1) : 1})`;
+    // preload the next page's photos
+    pages[page + 1]?.items.forEach((m) => resolve(m).slice(0, 1).forEach((r) => { new Image().src = url(r.item.sm); }));
+    requestAnimationFrame(fit);
   }
 
-  function preload(i) {
-    const m = milestones[i];
-    if (!m) return;
-    resolve(m).forEach((r) => { new Image().src = url(r.item.lg); });
+  function fit() {
+    $$('.jcard__text', cardsEl).forEach((t) => fitText(t, { min: 0.7 }));
   }
 
-  function go(i, { direction } = {}) {
-    // A scene still on its way out is dropped immediately so fast clicks stay responsive
-    stage.querySelectorAll('.jscene.is-leaving').forEach((s) => s.remove());
-    const target = (i + milestones.length) % milestones.length;
-    const dir = direction ?? (target >= index ? 1 : -1);
-    const old = stage.querySelector('.jscene');
-    old?.classList.remove('is-entering');
-    index = target;
-    const m = milestones[index];
-    const scene = buildScene(m, index);
-    stage.append(scene);
-    setBackdrop(m);
-    update();
-    if (mode === '3d') space?.scene.goTo(index);
-    else preload(index + 1);
+  show(0, { animate: false });
 
-    if (old) {
-      if (prefersReducedMotion()) {
-        old.remove();
-      } else {
-        old.classList.add('is-leaving');
-        old.style.setProperty('--dir', dir);
-        scene.style.setProperty('--dir', dir);
-        scene.classList.add('is-entering');
-        const done = () => old.remove();
-        old.addEventListener('animationend', (e) => { if (e.target === old) done(); });
-        setTimeout(done, 1100); // safety net
-      }
-    }
-    announce(`${m.year}. ${m.title}. ${m.caption}`);
-  }
-
-  function update() {
-    counter.textContent = `${pad(index + 1)} / ${pad(milestones.length)}`;
-    fill.style.transform = `scaleX(${milestones.length > 1 ? index / (milestones.length - 1) : 1})`;
-    stops.forEach((li, i) => {
-      const b = li.firstChild;
-      b.classList.toggle('is-active', i === index);
-      b.classList.toggle('is-past', i < index);
-      if (i === index) b.setAttribute('aria-current', 'step');
-      else b.removeAttribute('aria-current');
-    });
-    // keep the active stop visible on narrow screens (scroll the rail only, never the page)
-    const active = stops[index].firstChild;
-    const r = rail.getBoundingClientRect(), a = active.getBoundingClientRect();
-    if (a.left < r.left + 40 || a.right > r.right - 40) {
-      rail.scrollTo({ left: rail.scrollLeft + (a.left - r.left) - r.width / 2 + a.width / 2, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-    }
-  }
-
-  // ---- Autoplay ------------------------------------------------------------
-  function setPlayLabel() {
-    const on = !!timer;
-    playBtn.replaceChildren(h('span', { html: on ? icons.pause : icons.play }), h('span', {}, on ? 'Pause' : 'Play the story'));
-    playBtn.setAttribute('aria-pressed', String(on));
-    viewer.classList.toggle('is-autoplaying', on);
-  }
-  function startAutoplay() {
-    clearInterval(timer);
-    timer = setInterval(() => go(index + 1, { direction: 1 }), AUTOPLAY_MS);
-    setPlayLabel();
-  }
-  function stopAutoplay() {
-    clearInterval(timer);
-    timer = null;
-    setPlayLabel();
-  }
-  playBtn.addEventListener('click', () => (timer ? stopAutoplay() : startAutoplay()));
-  watchVisibility(viewer, (visible) => { if (!visible && timer) stopAutoplay(); });
-
-  // ---- Input ---------------------------------------------------------------
-  prevBtn.addEventListener('click', () => { stopAutoplay(); go(index - 1, { direction: -1 }); });
-  nextBtn.addEventListener('click', () => { stopAutoplay(); go(index + 1, { direction: 1 }); });
-  viewer.addEventListener('keydown', (e) => {
-    if (e.target.closest('dialog')) return;
-    const map = { ArrowRight: () => go(index + 1, { direction: 1 }), ArrowLeft: () => go(index - 1, { direction: -1 }), Home: () => go(0), End: () => go(milestones.length - 1) };
-    if (map[e.key]) { e.preventDefault(); stopAutoplay(); map[e.key](); }
-  });
-  onSwipe(stage, { left: () => { stopAutoplay(); go(index + 1, { direction: 1 }); }, right: () => { stopAutoplay(); go(index - 1, { direction: -1 }); } });
-
-  // Pointer parallax: frames at different depths drift by different amounts
-  if (!prefersReducedMotion()) {
-    viewer.addEventListener('pointermove', (e) => {
-      if (e.pointerType !== 'mouse') return;
-      const r = viewer.getBoundingClientRect();
-      viewer.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
-      viewer.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
-    });
-    viewer.addEventListener('pointerleave', () => { viewer.style.setProperty('--px', 0); viewer.style.setProperty('--py', 0); });
-  }
-
-  setPlayLabel();
-  go(0);
-
-  if (mode === '3d') {
-    const stations = milestones.map((m) => ({ year: m.year, special: m.id === 'fifty' ? 'fifty' : null, media: resolve(m) }));
-    mountJourneyScene(spaceEl, {
-      stations,
-      onPick: (station, k) => openLightbox(lightboxFor(milestones[station]), k),
-    }).then((controller) => {
-      if (controller) {
-        space = controller;
-        space.scene.goTo(index);
-        return;
-      }
-      // No WebGL after all: switch to the CSS viewer without losing the place
-      mode = 'css';
-      viewer.classList.remove('journey--3d');
-      spaceEl.remove();
-      stage.replaceChildren();
-      go(index);
-    });
-  }
+  return {
+    hint: `${milestones.length} milestones in ${pages.length} pages`,
+    enter({ atEnd }) { show(atEnd ? pages.length - 1 : 0); },
+    step(dir) {
+      const target = page + dir;
+      if (target < 0 || target >= pages.length) return false;
+      show(target);
+      return true;
+    },
+    steps: () => ({ index: page, count: pages.length, label: `${pad(page + 1)} / ${pad(pages.length)}` }),
+    fit,
+  };
 }

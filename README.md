@@ -1,18 +1,18 @@
-# 50 Years of Love — M. Buvaneswari
+# Happy 50th Birthday, Amma — M. Buvaneswari
 
-A cinematic, interactive birthday gift for **M. Buvaneswari (Buvana / Amma)**,
+A landscape, projector-first birthday presentation for **M. Buvaneswari (Buvana / Amma)**,
 born 27 October 1976, celebrated on **27 October 2026** at
 **Palmshore Restaurant, Ekkatuthangal, Chennai**.
 
-Plain HTML, CSS and JavaScript modules. There's no framework and no build step to view it.
-Real-time 3D uses **Three.js r160**, vendored in `js/vendor/` so the site works offline at the venue.
+Plain HTML, CSS and JavaScript modules. There's no framework and no build step.
+Fonts, Three.js (r160) and all media are local, so it works **offline at the venue**.
 
 ---
 
-## Run it locally
+## Run it
 
 **Easiest (Windows):** double-click **`Open Birthday Site.bat`**. It starts a small local server and opens the browser.
-Keep that window open while viewing.
+Keep that window open while presenting.
 
 Or from a terminal in this folder:
 
@@ -21,48 +21,82 @@ npm start            # opens http://localhost:8080 (uses 8081, 8082 … if 8080 
 ```
 
 If Node isn't installed, any static server works, for example `python -m http.server 8080`.
-Double-clicking `index.html` does **not** work: browsers block the site's data when a file is opened from disk.
-If someone does that, the page explains what to do instead of staying blank.
-
-**What guests see first:** an opening title card. The years count from 1976 to 2026 while the site loads.
-Then a 3D "50" turns into view with *Happy 50th Birthday, Amma*. **Begin the celebration** starts the music and confetti.
-Links straight to a chapter, such as `index.html#memories`, skip the opening.
-
-**At the venue:** press **P** (or the screen button) for presentation mode, which is full screen with no menu.
-The Life Journey and Age 1 to 50 chapters each have a **Play** button for hands-free viewing.
+Double-clicking `index.html` does **not** work (browsers block the site's data from `file://`); the page explains this.
 
 ---
 
-## The seven chapters
+## At the venue
 
-| # | Chapter | What it is | 3D |
-|---|---------|------------|----|
-| – | **Opening** | Loading count 1976 → 2026, then *Happy 50th Birthday, Amma* and *Begin the celebration* | CSS 3D extruded "50", rising sparks |
-| I | **Welcome** | "50 Years of Love" hero. *Begin Her Beautiful Journey* glides into the journey, and *Watch the Birthday Film* opens the family film | **WebGL**: a "50" made of ~4,000 light particles in a tilted wreath of real family photos, with light streaks and dust |
-| II | **Her Life Journey 1976–2026** | 27 milestones with a milestone rail, previous/next, ← → Home End keys, swipe, autoplay, and the family's *Life Journey* film | **WebGL**: the camera flies along a glowing river of time past each milestone's photos (click a photo to enlarge) |
-| III | **50 Reasons We Love You** | 5 chapters × 10 reasons: tabs, a reading card, number chips, and *Read all 50* | **WebGL**: a constellation of 50 selectable lights |
-| IV | **Key Memories** | All 284 photos from `Memory gallery`, grouped by year, with filters and a full-screen lightbox (keyboard, swipe) | CSS depth on hover |
-| V | **Family Wishes** | Theatre-style video player with playlist. Shows *"Beautiful words … are on their way."* until videos are added | – |
-| VI | **Age 1 to 50** | Every photo in `Age 1 to 50`, in age order, with play/pause/replay, an age ruler, the ending card, and the family's *Age* film | CSS 3D reel: the current photo in front, other years fanned out in depth |
-| VII | **The Celebration** | Open the gift; **the Birthday Film** (*Fifty & Fabulous*, 6 min 23 s); 50 configurable gift slots; final greeting; date, venue and countdown; *Replay her journey* | **WebGL**: royal-blue gift with silver ribbons and a ring of 50 small gifts |
+1. Connect the laptop to the projector and open the site. Press **F** (or the ⛶ button) for full screen.
+2. The **Welcome** screen appears by itself. It is the idle screen while guests arrive and needs no clicks.
+   The controls fade away when the mouse rests and come back as soon as it moves.
+3. When Amma is ready, press **→**, **Space**, or **Next** (or a presentation clicker) for the **birthday reveal**.
+4. Press the **♫** button (or **M**) whenever you want the music. It never starts by itself.
+   It fades out while a video plays and returns afterwards.
 
-Each chapter also works on its own page: `pages/welcome.html`, `journey.html`, `reasons.html`,
-`memories.html`, `wishes.html`, `age-transition.html` and `finale.html`.
+A refresh, or opening the site again, always starts at the Welcome screen.
 
-### Authentic photos vs. illustrations
-Anything that is not an original photograph carries an **"Illustration"** label on the site and in the photo viewer:
-the school-uniform scene, the 1997 bikes (no original photo exists), the births of Vikky and Varshu, and the MBA desk.
-The Life Journey and Age films are labelled **"AI-animated family film"**. The Birthday Film is labelled **"Family film"**.
+| Keys | |
+|------|---|
+| → · Space · Enter · PageDown | Next (presentation clickers work too) |
+| ← · Backspace · PageUp | Previous |
+| Home / End | First / last scene |
+| 1 – 9 | Jump to a scene |
+| G | Section list |
+| M | Music on / off |
+| F | Full screen |
+| H | Hide / show the controls |
 
-### Films
-| Film | Source | Shown in |
-|------|--------|----------|
-| The Birthday Film | `assets/videos/happy 50th birthday.mp4` (HEVC, 283 MB) → web copy `assets/media/films/happy-50th-birthday.mp4` (H.264, 68 MB) | Welcome button, Celebration chapter |
-| The Life Journey Film | `assets/videos/life journey.mp4` | Life Journey chapter |
-| The Age 1 to 50 Film | `assets/videos/age.mp4` | Age 1 to 50 chapter |
+Inside a video player, the arrow keys and Space control the video, so the presentation never moves by accident.
+Press **Esc** to leave the player and then → to continue. A clicker's PageDown still moves on.
+When a film ends, a **Continue** button appears on the screen. Nothing advances on its own.
 
-Many browsers can't play HEVC, so `npm run build:media` converts films that need it. Use
-`python scripts/build_media.py --films-only` to refresh just the films. It needs `pip install imageio-ffmpeg`.
+---
+
+## The running order
+
+| # | Scene | What it shows |
+|---|-------|---------------|
+| 1 | **Welcome** (default) | *Celebrating the Beautiful Journey of Buvaneswari*, *50 Years of Love, Strength & Beautiful Memories*, 27 October 1976 – 27 October 2026, beside a layered 3D composition of real family photographs and a silver-blue "50" |
+| 2 | **Birthday reveal** | HAPPY 50TH BIRTHDAY / AMMA / M. BUVANESWARI, beside Amma's photograph in a pearl arch frame (confetti on entry) |
+| 3 | **Life Journey film** | The family's Life Journey video (placeholder until it is added; see below) |
+| 4 | **Her Life Journey** | 27 milestones on 6 landscape era pages. Next moves through the eras; tap a card for its photos |
+| 5 | **50 Reasons We Love You** | Pick a category and all ten reasons appear together. Next moves through the five categories, then **All 50 Reasons** |
+| 6 | **Family Memories film** | The family's memories film (6 min 23 s), with a button to the photographs when it ends |
+| 7 | **Family Photo Gallery** | 222 dated photographs by year, a page at a time, with a full-screen **Slideshow** |
+| 8 | **Family Wishes** | The family members' wishes video (placeholder until it is added) |
+| 9 | **50 Gifts Celebration** | The final greeting, her name, the date and venue, a 3D gift in a ring of 50 gifts, and the gift-distribution tracker |
+
+**Gift tracker:** tap a gift to mark it as given (tap again to undo). The counter shows *N / 50 gifts given*.
+**Mark all given** and **Reset** ask for a second click to confirm.
+Marks are remembered on this computer, so a refresh during the event keeps them.
+Nothing shows as given unless the host marks it. Gift names from `data/gifts.json` appear when filled in.
+
+**What was removed at the family's request:** the opening title card, the *Watch the Birthday Film* button and card,
+the internally generated Life Journey film, and the unfinished *Age 1 to 50* transformation film.
+Their files remain in git history. The `Age 1 to 50` photo folder is untouched.
+
+**Undated photographs:** the gallery shows only photos whose date is recorded in the photo itself
+(camera data, or the camera's own file name). The 51 scanned prints and 11 photos without a recorded date
+stay in `Memory gallery/` but are not shown, so no date on screen is a guess.
+
+---
+
+## Media still needed from the family
+
+| File to add | Shown in | Configured in |
+|-------------|----------|---------------|
+| `assets/videos/family/life-journey.mp4` | Scene 3, Life Journey film | `data/site.json` → `videos.lifeJourney.src` |
+| `assets/videos/family/family-wishes.mp4` | Scene 8, Family Wishes | `data/wishes.json` → `videos[0].src` |
+
+Save the file with exactly that name and it replaces the placeholder automatically. No code changes are needed.
+Use MP4 (H.264 video, AAC audio). Phone videos (HEVC) may need converting; see `assets/videos/family/README.txt`.
+
+The shared *Life Journey* Google Drive folder contains only photographs (the `Final Life Journey` images and the year-labelled originals),
+so no Life Journey video could be integrated yet.
+
+The *Memory gallery* Drive folder's video (`101901_1792393489053.mp4`, 282,682,775 bytes) is byte-for-byte the film already in this project
+(`assets/videos/happy 50th birthday.mp4`). Its browser-ready copy, `assets/media/films/family-memories.mp4`, opens the Family Album.
 
 ---
 
@@ -72,99 +106,64 @@ All family-specific content lives in `data/`:
 
 | File | Contents |
 |------|----------|
-| `site.json` | Name, dates, venue, welcome text, final greeting, film titles, music setting, hero photos |
+| `site.json` | Name, dates, venue; welcome and reveal text; Amma's reveal photo (`reveal.photo`); welcome photos; video paths; final greeting; music |
 | `timeline.json` | Life-journey milestones: year, title, caption, photo ids and alt text |
-| `reasons.json` | The 50 reasons, exactly as written, plus the 5 chapter groupings and the closing line |
-| `gifts.json` | 50 gift slots. Fill in `name` / `from` / `note`, and set `given: true` only once a gift has been given |
-| `wishes.json` | Family wishes videos (empty for now) |
+| `reasons.json` | The 50 reasons, exactly as written, the 5 categories and the closing line |
+| `gifts.json` | 50 gift slots: fill in `name` / `from` / `note` if you want names on the gifts |
+| `wishes.json` | Family wishes videos and the placeholder line |
 | `photo_inventory.json` | **Generated** media manifest. Don't edit by hand |
 
-### Adding photos
-1. Drop photos into the source folder:
-   - **Age 1 to 50**: name files by age: `34.jpg`, `34 (2).jpg`, `34.1.jpg` …
-   - **Memory gallery**: any name. Dates come from the camera data or the filename.
-   - **Final Life Journey**: numbered in story order. Then add the new id (for example `lj-30`) to a milestone in `timeline.json`.
-2. Run `npm run build:media` (Python with `pip install pillow pillow-heif opencv-python`).
-   This writes web-sized WebP copies to `assets/media/` and refreshes the manifest. Originals are never changed.
-   HEIC photos are converted automatically.
-
-### Adding family wishes videos
-Put MP4 files (H.264 / AAC) in `assets/videos/wishes/` and add entries to `data/wishes.json`:
-
-```json
-{ "id": "wish-1", "title": "From Vikky", "from": "Vikky",
-  "src": "assets/videos/wishes/vikky.mp4", "poster": "assets/videos/wishes/vikky.jpg", "captions": "" }
-```
-
-`poster` (an image) and `captions` (a `.vtt` file) are optional. With two or more videos, a playlist appears.
-
 ### Music
-The site plays a soft music box generated in the browser: Happy Birthday, then a gentle loop.
-It starts only after someone presses *Begin*, and the ♫ button toggles it.
-To use a real track, put an MP3 in `assets/audio/` and set `music.src` in `site.json`.
+`assets/audio/canon-in-d-major.mp3`: *Canon in D Major* by Kevin MacLeod (incompetech.com),
+licensed under Creative Commons: By Attribution 3.0 (via Wikimedia Commons). The credit is shown on the final scene.
+To change the track, put an MP3 in `assets/audio/`, then set `music.src`, `music.title` and `music.credit` in `data/site.json`.
+`music.volume` (0–1) sets the level. The default is 0.4.
+
+### Adding photos
+1. Drop photos into `Final Life Journey/`, `Age 1 to 50/` (named by age: `34.jpg`, `34 (2).jpg` …) or `Memory gallery/`.
+2. Run `npm run build:media` (Python with `pip install pillow pillow-heif opencv-python imageio-ffmpeg`).
+   This writes web-sized WebP copies to `assets/media/` and refreshes the manifest. Originals are never changed.
 
 ---
 
 ## Project structure
 
 ```text
-index.html            all seven chapters
-pages/                standalone chapter pages (generated: npm run build:pages)
-css/                  variables · global · components · chapters · animations
-js/app.js             entry point: loads data, mounts chapters
-js/core/              data, nav, audio, confetti, lightbox, player, utilities
-js/sections/          one module per chapter
-js/three/             stage lifecycle + hero, constellation and gift scenes
-js/vendor/            three.module.min.js (r160, MIT)
-data/                 content (see above)
-assets/media/         generated web images + film posters
-assets/videos/        the family films (life journey.mp4, age.mp4); wishes videos go in wishes/
-assets/illustrations/ illustrations (source files)
-Final Life Journey/ · Age 1 to 50/ · Memory gallery/   original photos (never modified)
+index.html            the presentation: one <section class="scene"> per screen
+pages/                short links (pages/reasons.html → index.html#reasons)
+css/                  fonts · variables (palette, 16:9 sizing) · global · deck · components · scenes
+js/app.js             loads data, mounts the scenes in running order
+js/core/deck.js       the presentation controller: scene registry, Next/Previous, keys, menu, idle controls
+js/core/              data, audio, player, lightbox, confetti, particles, utilities
+js/sections/          one module per scene (welcome, reveal, journey-film, journey, reasons, memories, gallery, wishes, finale)
+js/three/             WebGL stage + the 3D gift scene
+assets/media/         web images + the memories film
+assets/videos/family/ the family's Life Journey and Wishes videos go here
+assets/audio/         background music
+assets/fonts/         Cormorant Garamond + Manrope (SIL Open Font License)
 scripts/              build_media.py · build_pages.py · serve.mjs · verify.mjs · smoke.mjs
-tests/fixtures/       the 50 reasons, word for word, used by the tests
 ```
 
-Performance: Three.js loads only when a 3D chapter approaches the screen. Render loops pause off-screen and in background tabs.
-Pixel ratio is capped and particle counts drop on phones. Images are lazy-loaded WebP at two sizes.
-Full-size photos load only in the viewer. With *reduce motion* turned on, all drifting, parallax and confetti stop.
-Without WebGL, every chapter falls back to a CSS version.
+Layout: the design is a 16:9 frame (1920 × 1080). All sizes use a unit, `--u`, equal to 1% of the largest 16:9 frame that fits the screen,
+so 1920 × 1080, 1600 × 900, 1366 × 768 and 1280 × 720 all show the same composition. Content keeps inside safe margins against projector overscan.
+Phones and portrait screens get a stacked layout that scrolls within each scene.
 
 ---
 
 ## Tests
 
 ```bash
-npm test              # content + assets: 50 reasons word for word, milestones, every file reference
-npm run test:browser  # headless Chrome/Edge: 5 screen sizes, all interactions, reduced motion, no-WebGL
+npm test              # content + assets: the 50 reasons word for word, milestones, files, removed features
+npm run test:browser  # headless Chrome/Edge: 6 screen sizes, navigation, reasons, gallery, videos, gifts, music
 ```
 
-`test:browser` uses the installed Chrome or Edge (set `CHROME_PATH` if needed) and `puppeteer-core`
-(`npm install` once). Set `SMOKE_SHOTS=some/folder` to save screenshots.
+`test:browser` uses the installed Chrome or Edge (set `CHROME_PATH` if needed) and `puppeteer-core` (`npm install` once).
+Set `SMOKE_SHOTS=some/folder` to save screenshots of every scene.
 
 ---
 
 ## Deploying
 
-Upload these to any static host (Netlify, Vercel, GitHub Pages, S3 …), about 205 MB:
-
-```
-index.html  pages/  css/  js/  data/  assets/media/  assets/videos/age.mp4  assets/videos/life journey.mp4
-```
-
-`assets/videos/happy 50th birthday.mp4` (283 MB) is the HEVC original. The site plays the converted copy in `assets/media/films/`.
-
-The original photo folders (~935 MB) and `assets/illustrations/` are **source files only**. The site never loads them.
-All URLs are relative, so the site works from any sub-folder.
-
----
-
-## Still needed from the family
-
-- **Family wishes videos.** See *Adding family wishes videos*.
-- **Gift names** for the 50 gifts (optional), in `data/gifts.json`.
-- **Photos for the missing ages.** 26 of 50 ages have photos: 1, 5, 10, 15, 17, 21, 22, 28–30, 34–49.
-- **Please confirm the wording** of three milestones that came from short family labels:
-  "Dilli 50th Birthday" (2021), "DB 25th wedding anniversary" (2022), "VK seemandham" (2026).
-  The `needsConfirmation` notes in `timeline.json` point to them.
-- Optional: a music track (see *Music*).
+Upload `index.html  pages/  css/  js/  data/  assets/` to any static host. All URLs are relative.
+`assets/videos/happy 50th birthday.mp4` (283 MB, HEVC) is the original of the memories film and is not needed online.
+The original photo folders (~935 MB) are source files only.

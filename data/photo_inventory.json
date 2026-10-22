@@ -5614,28 +5614,12 @@
  },
  "films": [
   {
-   "id": "film-birthday",
-   "src": "assets/media/films/happy-50th-birthday.mp4",
-   "poster": "assets/media/films/birthday-poster.webp",
+   "id": "film-memories",
+   "src": "assets/media/films/family-memories.mp4",
+   "poster": "assets/media/films/memories-poster.webp",
    "duration": 383.3,
    "width": 960,
    "height": 720
-  },
-  {
-   "id": "film-life-journey",
-   "src": "assets/videos/life journey.mp4",
-   "poster": "assets/media/films/life-journey-poster.webp",
-   "duration": 62.1,
-   "width": 848,
-   "height": 478
-  },
-  {
-   "id": "film-age",
-   "src": "assets/videos/age.mp4",
-   "poster": "assets/media/films/age-poster.webp",
-   "duration": 20.9,
-   "width": 496,
-   "height": 368
   }
  ],
  "errors": []

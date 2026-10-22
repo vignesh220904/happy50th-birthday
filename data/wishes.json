@@ -1,6 +1,8 @@
 {
-  "_note": "Family wishes videos. Put video files in assets/videos/wishes/ and add one entry per video, for example: {\"id\":\"wish-1\",\"title\":\"From Vikky\",\"from\":\"Vikky\",\"src\":\"assets/videos/wishes/vikky.mp4\",\"poster\":\"assets/videos/wishes/vikky.jpg\",\"captions\":\"\"}. 'poster' and 'captions' (.vtt) are optional. With an empty list, the section shows a graceful 'on their way' message.",
+  "_note": "Family wishes videos. The first entry is the family's wishes video: save it as assets/videos/family/family-wishes.mp4 (MP4, H.264 + AAC) and it replaces the placeholder automatically. More videos can be added as extra entries: {\"id\":\"wish-2\",\"title\":\"From Vikky\",\"from\":\"Vikky\",\"src\":\"assets/videos/family/vikky.mp4\",\"poster\":\"\",\"captions\":\"\"}. 'poster' and 'captions' (.vtt) are optional; entries whose file is missing are skipped.",
   "intro": "The people who love you most have something to say.",
-  "emptyMessage": "Beautiful words from the people who love you are on their way.",
-  "videos": []
+  "emptyMessage": "Messages filled with love, from the people who make her world special.",
+  "videos": [
+    { "id": "family-wishes", "title": "Family Wishes", "from": "", "src": "assets/videos/family/family-wishes.mp4", "poster": "", "captions": "" }
+  ]
 }

@@ -1,45 +1,49 @@
 """
-Generate the standalone chapter pages in pages/ from index.html.
+Generate the short links in pages/.
 
-Each page is a thin shell: the same <head>, navigation and footer as index.html,
-with a single chapter <section>. All content is rendered by the shared modules in
-js/, so there is nothing to keep in sync by hand — re-run this after editing the
-<head> or footer of index.html:
+The site is now one presentation (index.html). Each page here is a tiny
+redirect that opens the presentation at the matching scene, so older links
+such as pages/reasons.html keep working:
 
     python scripts/build_pages.py
 """
 import os
-import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = {
-    "welcome": ("welcome.html", "Welcome"),
-    "journey": ("journey.html", "Her Life Journey"),
-    "reasons": ("reasons.html", "50 Reasons We Love You"),
-    "memories": ("memories.html", "Key Memories"),
-    "wishes": ("wishes.html", "Family Wishes"),
-    "age": ("age-transition.html", "Age 1 to 50"),
-    "finale": ("finale.html", "The Celebration"),
+    "welcome.html": ("welcome", "Welcome"),
+    "journey.html": ("journey", "Her Life Journey"),
+    "reasons.html": ("reasons", "50 Reasons We Love You"),
+    "memories.html": ("memories", "Family Memories"),
+    "wishes.html": ("wishes", "Family Wishes"),
+    "finale.html": ("finale", "50 Gifts Celebration"),
+    # The "Age 1 to 50" film was removed from the presentation at the family's request.
+    "age-transition.html": ("welcome", "Welcome"),
 }
+
+TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title} — Happy 50th Birthday, Amma</title>
+  <meta http-equiv="refresh" content="0; url=../index.html#{scene}">
+  <link rel="canonical" href="../index.html#{scene}">
+  <script>location.replace('../index.html#{scene}');</script>
+</head>
+<body>
+  <p><a href="../index.html#{scene}">Open the celebration: {title}</a></p>
+</body>
+</html>
+"""
 
 
 def main():
-    with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as fh:
-        index = fh.read()
-    sections = {sid: block for block, sid in re.findall(r'(\s*<section id="([a-z]+)"[^>]*></section>)', index)}
-    main_block = re.search(r"(<main id=\"main\">)(.*?)(\s*</main>)", index, re.S)
-    for sid, (filename, title) in PAGES.items():
-        page = index.replace(main_block.group(0), main_block.group(1) + sections[sid] + main_block.group(3))
-        if sid != "welcome":  # the opening title card belongs to the welcome only
-            page = re.sub(r"\s*<!-- intro -->.*?<!-- /intro -->", "", page, flags=re.S)
-        page = page.replace('data-base=""', 'data-base="../"')
-        page = page.replace('data-page="home"', f'data-page="{sid}"')
-        page = re.sub(r"<title>.*?</title>", f"<title>{title} — 50 Years of Love · M. Buvaneswari</title>", page)
-        # project-relative asset links → one level up
-        page = re.sub(r'(href|src|content)="(css/|js/|assets/)', r'\1="../\2', page)
+    os.makedirs(os.path.join(ROOT, "pages"), exist_ok=True)
+    for filename, (scene, title) in PAGES.items():
         out = os.path.join(ROOT, "pages", filename)
         with open(out, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(page)
+            fh.write(TEMPLATE.format(scene=scene, title=title))
         print("wrote", os.path.relpath(out, ROOT))
 
 
