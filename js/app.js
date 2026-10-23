@@ -27,13 +27,16 @@ import * as wishes from './sections/wishes.js';
 import * as cake from './sections/cake.js';
 import * as finale from './sections/finale.js';
 
-// The running order of the celebration: the story film follows the birthday
-// greeting; after the family's video wishes come the Age 1 to 50 and Life
-// Journey films, then the cake ("Happy Birthday, Amma") and the final gift.
+// The running order of the celebration: the story film (Age 1 to 50 — Her
+// Story) follows the birthday greeting; after the family's video wishes come the
+// cake ("Happy Birthday, Amma") and the final gift. The Age 1 to 50 real video
+// and the Life Journey video are left out at the family's request
+// (data/site.json → videos.*.inPresentation); their scenes stay here so either
+// can be switched back on without touching the code.
 const SCENES = [
   { id: 'welcome', title: 'A Golden Beginning', mod: welcome },
   { id: 'reveal', title: 'Happy 50th Birthday', mod: reveal },
-  { id: 'story-film', title: 'Age 1 to 5: Her Story', mod: storyFilm },
+  { id: 'story-film', title: 'Age 1 to 50 — Her Story', mod: storyFilm },
   { id: 'journey', title: 'A Journey Through Time', mod: journey },
   { id: 'proud', title: 'Proud Moments', mod: proud },
   { id: 'reasons', title: '50 Reasons We Love You', mod: reasons },
@@ -96,6 +99,7 @@ async function main() {
   refit();
   document.documentElement.classList.add('is-loaded');
   window.__deck = deck; // handy from the browser console during rehearsal: __deck.goTo('finale')
+  window.__music = music; // …and __music.audible: is the background music heard right now?
 }
 
 main().catch((err) => {

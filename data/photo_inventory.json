@@ -1,7 +1,7 @@
 {
  "version": 2,
  "generatedBy": "scripts/build_media.py",
- "generatedAt": "2026-10-21T23:49:48",
+ "generatedAt": "2026-10-23T15:18:14",
  "collections": {
   "journey": [
    {
@@ -5585,6 +5585,18 @@
     "smW": 640,
     "lg": "assets/media/illustrations/ill-birth-vikky-1998-lg.webp",
     "lgW": 1200
+   },
+   {
+    "id": "ill-college-1996",
+    "file": "assets/illustrations/college_1996.jpg",
+    "kind": "illustration",
+    "width": 1800,
+    "height": 1344,
+    "color": "#a3a38c",
+    "sm": "assets/media/illustrations/ill-college-1996-sm.webp",
+    "smW": 640,
+    "lg": "assets/media/illustrations/ill-college-1996-lg.webp",
+    "lgW": 1800
    },
    {
     "id": "ill-mba-achievement-2012",

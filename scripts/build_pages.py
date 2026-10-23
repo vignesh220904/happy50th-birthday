@@ -12,9 +12,10 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = {
     "welcome.html": ("welcome", "A Golden Beginning"),
-    "story.html": ("story-film", "Age 1 to 5: Her Story"),
-    "age-transition.html": ("age-film", "Age 1 to 50: The Real Journey"),
-    "life-journey.html": ("journey-film", "Her Life Journey"),
+    "story.html": ("story-film", "Age 1 to 50 — Her Story"),
+    # the Real Journey and Life Journey videos left the presentation: their old links open Her Story
+    "age-transition.html": ("story-film", "Age 1 to 50 — Her Story"),
+    "life-journey.html": ("story-film", "Age 1 to 50 — Her Story"),
     "journey.html": ("journey", "A Journey Through Time"),
     "proud.html": ("proud", "Proud Moments"),
     "reasons.html": ("reasons", "50 Reasons We Love You"),

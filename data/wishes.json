@@ -329,8 +329,7 @@
       "width": 1180,
       "height": 720,
       "mb": 96.1,
-      "confirmed": false,
-      "_note": "One of the final two videos: waiting for the family's confirmation. Set confirmed to true to include it."
+      "confirmed": true
     },
     {
       "n": 26,
@@ -343,8 +342,7 @@
       "width": 1280,
       "height": 720,
       "mb": 34.7,
-      "confirmed": false,
-      "_note": "One of the final two videos: waiting for the family's confirmation. Set confirmed to true to include it."
+      "confirmed": true
     }
   ],
   "_expectedNote": "24 numbered wishes (1-24) plus the two additional videos at the end (27, 28), which wait for confirmation."

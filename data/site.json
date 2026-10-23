@@ -35,19 +35,20 @@
     "photoAlt": "Amma, M. Buvaneswari, smiling in a pink and orange silk saree, holding a bouquet of roses"
   },
   "videos": {
-    "_note": "The family's own films. Their originals are in VIDEOS/ (never changed); 'npm run build:films' prepares the browser-ready copies in assets/videos/family/ that 'src' points to. storyFilm plays after Happy 50th Birthday; ageFilm and lifeJourney after the family's video wishes, before the cake. 'title' + 'titleAccent' (shown in gold) and 'lede' are the words beside each film. A film whose file is missing is left out. 'memories' is an id in data/photo_inventory.json → films.",
+    "_note": "The family's own films. Their originals are in VIDEOS/ (never changed); 'npm run build:films' prepares the browser-ready copies in assets/videos/family/ that 'src' points to. storyFilm ('Age 1 to 50 — Her Story', her story from birth to fifty; the original file is named 'age 1 to 5 story video.mp4') plays after Happy 50th Birthday. ageFilm (the 'Real Journey' road montage) and lifeJourney (the photo montage) are not part of the presentation at the family's request: 'inPresentation': false keeps them out (their files stay); set it to true to bring one back, after the video wishes. 'title' + 'titleAccent' (shown in gold) and 'lede' are the words beside each film. A film whose file is missing is left out. 'memories' is an id in data/photo_inventory.json → films.",
     "storyFilm": {
       "source": "VIDEOS/age 1 to 5 story video.mp4",
       "src": "assets/videos/family/age-1-to-5-story.mp4",
       "poster": "assets/videos/family/age-1-to-5-story.jpg",
       "duration": 414,
       "eyebrow": "A Film from the Family",
-      "title": "Age 1 to 5",
-      "titleAccent": "Her Story",
+      "title": "Age 1 to 50",
+      "titleAccent": "— Her Story",
       "lede": "The story film the family made for her.",
-      "playerTitle": "Age 1 to 5: Her Story"
+      "playerTitle": "Age 1 to 50 — Her Story"
     },
     "ageFilm": {
+      "inPresentation": false,
       "source": "VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4",
       "src": "assets/videos/family/age-1-to-50.mp4",
       "poster": "assets/videos/family/age-1-to-50.jpg",
@@ -59,6 +60,7 @@
       "playerTitle": "Age 1 to 50: The Real Journey"
     },
     "lifeJourney": {
+      "inPresentation": false,
       "source": "VIDEOS/updated/LIFE JOURNEY-update.mp4",
       "src": "assets/videos/family/life-journey.mp4",
       "poster": "assets/videos/family/life-journey.jpg",
@@ -92,11 +94,10 @@
     "sign": "With all our love, always"
   },
   "music": {
-    "_note": "Background music, all the way through. It starts with Begin the Celebration (or M) and loops. 'volume' (0-1) is its level on ordinary pages; 'softVolume' is the gentle level it keeps under the films and the family's video wishes. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
+    "_note": "Background music. It starts with Begin the Celebration (or M) and loops. 'volume' (0-1) is its level on ordinary pages. It is never heard under a video: it fades out and pauses before every film and family wish, and returns on the next page without a video. M switches it off and on. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
     "src": "assets/audio/music.mp3",
     "title": "Happy Birthday Songs",
     "volume": 0.4,
-    "softVolume": 0.1,
     "credit": "Music: “Happy Birthday Songs – 1 Hour Non-Stop Celebration”, supplied by the family"
   }
 }

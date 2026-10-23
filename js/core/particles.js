@@ -7,7 +7,7 @@
 
 import { prefersReducedMotion, seeded } from './util.js';
 
-const BOKEH = ['217,182,111', '217,182,111', '236,220,178', '198,219,245', '127,166,227', '47,98,192', '255,255,255'];
+const BOKEH = ['217,182,111', '217,182,111', '236,220,178', '198,219,245', '111,208,238', '143,182,238', '255,255,255'];
 const PETALS = ['#ecdcb2', '#f6ebcf', '#e4effd', '#fff4ea'];
 
 function sprite(size, draw) {
@@ -41,7 +41,7 @@ const petalSprite = (color) => sprite(48, (g, s) => {
   g.bezierCurveTo(s * 0.34, -s * 0.3, s * 0.3, s * 0.3, 0, s * 0.44);
   g.bezierCurveTo(-s * 0.3, s * 0.3, -s * 0.34, -s * 0.3, 0, -s * 0.42);
   g.fill();
-  g.strokeStyle = 'rgba(201,102,138,0.18)';
+  g.strokeStyle = 'rgba(185,142,62,0.25)';
   g.lineWidth = 1;
   g.beginPath();
   g.moveTo(0, -s * 0.3);
@@ -55,7 +55,7 @@ export function startParticles(canvas) {
   const rand = seeded(2026);
   const reduced = prefersReducedMotion();
   const bokeh = BOKEH.map(bokehSprite);
-  const sparks = ['217,182,111', '255,255,255', '201,102,138'].map(sparkSprite);
+  const sparks = ['217,182,111', '255,255,255', '111,208,238'].map(sparkSprite);
   const petals = PETALS.map(petalSprite);
   let w = 0, hgt = 0, dpr = 1, raf = 0;
   const parts = [];

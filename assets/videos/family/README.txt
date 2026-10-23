@@ -9,8 +9,10 @@ in the VIDEOS folder (which are never changed):
   life-journey.mp4       <- VIDEOS/updated/LIFE JOURNEY-update.mp4             (web copy, under 100 MB)
 
 Each has a poster frame (.jpg). data/site.json -> videos lists them, with the
-words shown beside each film. The story film plays after "Happy 50th
-Birthday"; Age 1 to 50 and Her Life Journey play after the video wishes.
+words shown beside each film. The story film is shown as "Age 1 to 50 - Her
+Story" and plays after "Happy 50th Birthday". The Age 1 to 50 real video and
+the Life Journey video are kept here but left out of the presentation at the
+family's request ("inPresentation": false in data/site.json).
 
 To replace a film: put the new original in VIDEOS/ under the same name and run
 npm run build:films again. A film whose file is missing is left out of the

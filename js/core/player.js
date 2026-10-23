@@ -3,8 +3,10 @@
 // a loading spinner, keyboard shortcuts and a graceful error state.
 //
 // Presentation behaviour: only one video plays at a time; the background music
-// fades out while a video plays and returns afterwards; and <body> gets
-// `.video-playing` so the presentation controls can step aside.
+// is silent while any video plays (core/audio.js fades it out and pauses it, from
+// the video's own play / playing / pause / ended / error events) and may return
+// afterwards; and <body> gets `.video-playing` so the presentation controls can
+// step aside.
 
 import { h, icons, pad } from './util.js';
 import { url } from './data.js';
@@ -16,7 +18,7 @@ const players = new Set();
 function syncBodyState() {
   const playing = [...players].some((p) => !p.video.paused && !p.video.ended);
   document.body.classList.toggle('video-playing', playing);
-  if (playing) music.duck(); else music.unduck();
+  if (playing) music.hold('video'); else music.release('video');
 }
 
 // `fullscreen` (optional) replaces the full-screen button's behaviour, so a
@@ -93,6 +95,7 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
     players.forEach((p) => p !== api && p.pause()); // one video at a time
     sync();
   });
+  video.addEventListener('playing', sync);
   video.addEventListener('pause', sync);
   video.addEventListener('ended', () => { sync(); onEnded?.(); });
   video.addEventListener('loadedmetadata', () => { loaded(); syncTime(); });
@@ -101,7 +104,7 @@ export function createPlayer({ src, poster, title = 'Video', captions = '', onEn
   video.addEventListener('playing', loaded);
   video.addEventListener('timeupdate', syncTime);
   video.addEventListener('volumechange', syncVolume);
-  video.addEventListener('error', onError);
+  video.addEventListener('error', () => { onError(); sync(); });
   seek.addEventListener('input', () => {
     if (video.duration) video.currentTime = (seek.value / 1000) * video.duration;
   });

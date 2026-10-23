@@ -1,5 +1,5 @@
 {
-  "_note": "Life Journey milestones, in story order. 'media' lists ids from data/photo_inventory.json (lj-* = Final Life Journey, age-* = Age 1 to 50, ill-* = illustrations). Entries with an empty media list are shown as typographic scenes; 'pendingPhoto' marks one still waiting for a family photograph (shown as a small note on the slide). 'chapters' split the milestones by sortYear into the two slideshows: A Journey Through Time and Proud Moments. 'needsConfirmation' marks wording the family should double-check; it is not shown on the site.",
+  "_note": "Life Journey milestones, in story order. 'media' lists ids from data/photo_inventory.json (lj-* = Final Life Journey, age-* = Age 1 to 50, ill-* = illustrations). Entries with an empty media list are shown as typographic scenes; 'pendingPhoto' marks one still waiting for a family photograph (shown as a small note on the slide); 'illustration' notes (not shown) where an illustration stands in for a photograph. 'chapters' split the milestones by sortYear into the two slideshows: A Journey Through Time and Proud Moments. 'needsConfirmation' marks wording the family should double-check; it is not shown on the site.",
   "chapters": [
     { "id": "journey", "title": "A Journey Through Time", "eyebrow": "Her Life Journey", "from": 1976, "to": 2005 },
     { "id": "proud", "title": "Proud Moments", "eyebrow": "Her Life Journey", "from": 2006, "to": 2026 }
@@ -66,8 +66,10 @@
       "sortYear": 1996,
       "title": "M.Com — First Year",
       "caption": "She went on to complete the first year of her Master of Commerce.",
-      "pendingPhoto": "Photograph awaited from the family",
-      "media": []
+      "illustration": "No photograph of this year yet: an illustration of a 1990s college stands in (labelled Illustration on screen). When the family sends a photograph, add it with npm run build:media and put its id first in 'media'.",
+      "media": [
+        { "id": "ill-college-1996", "alt": "Illustration of a 1990s Indian college: a red-brick building with ivory arches and a clock tower, a gulmohar tree and bicycles in the morning light" }
+      ]
     },
     {
       "id": "marriage",
@@ -321,7 +323,10 @@
       "sortYear": 2026,
       "title": "Fifty",
       "caption": "Fifty years of love, strength, sacrifice and beautiful memories. Celebrated together at Palmshore Restaurant, Ekkatuthangal, Chennai.",
-      "media": []
+      "media": [
+        { "id": "age-46-1", "alt": "Amma, M. Buvaneswari, smiling in a pink and orange silk saree, holding a bouquet of roses" },
+        { "id": "age-49", "alt": "Amma, M. Buvaneswari, in a lavender embroidered saree at a family celebration" }
+      ]
     }
   ]
 }

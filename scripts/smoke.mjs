@@ -47,15 +47,37 @@ const exists = (p) => existsSync(new URL(`../${p}`, import.meta.url));
 const site = json('data/site.json');
 const timeline = json('data/timeline.json');
 const wishesData = json('data/wishes.json');
-// The family's three films (each joins the presentation once its web copy exists, npm run build:films)
+// The family's films (each joins the presentation once its web copy exists, npm run build:films,
+// unless the family left it out: inPresentation false)
 const FILM_SCENES = [['story-film', 'storyFilm'], ['age-film', 'ageFilm'], ['journey-film', 'lifeJourney']]
-  .filter(([, key]) => site.videos[key]?.src && exists(site.videos[key].src)).map(([id]) => id);
+  .filter(([, key]) => site.videos[key]?.src && exists(site.videos[key].src) && site.videos[key].inPresentation !== false).map(([id]) => id);
+const FILM_INTRO_MS = 10000;  // a film's introduction (js/sections/cinema.js → INTRO_MS)
+const WISHES_INTRO_MS = 7000; // the messages' introduction (js/sections/wishes.js → INTRO_MS)
 const has = (id) => FILM_SCENES.includes(id);
 const SCENE_ORDER = ['welcome', 'reveal', ...(has('story-film') ? ['story-film'] : []), 'journey', 'proud', 'reasons', 'memories', 'wishes',
   ...(has('age-film') ? ['age-film'] : []), ...(has('journey-film') ? ['journey-film'] : []), 'cake', 'finale'];
 const THEATRE_BUTTONS = /^Back,(Full screen|Normal screen),Next$/;
-/** <body data-music>: off, normal (ordinary pages) or soft (under a film or wish) */
+/** <body data-music>: off, normal (ordinary pages) or silent (held for a film or wish) */
 const musicIs = (page, state) => page.evaluate((st) => document.body.dataset.music === st, state);
+/** Can the background music actually be heard (playing, volume above zero)? */
+const musicAudible = (page) => page.evaluate(() => window.__music.audible);
+/** Silent for a video: held, and really faded out and paused */
+const musicSilent = (page) => page.evaluate(() => document.body.dataset.music === 'silent' && !window.__music.audible);
+/** Watch the whole session: is the music ever heard once a video has been playing for a second?
+ *  (an automatic start is already silent; a Play pressed by hand fades the music out over 0.4 s) */
+const watchSilence = (page) => page.evaluate(() => {
+  window.__overlaps = [];
+  window.__plays = [];
+  // measured from each (re)start: a pause and a later Play start the clock again
+  document.addEventListener('play', (e) => { e.target.__since = performance.now(); }, true);
+  document.addEventListener('pause', (e) => { e.target.__since = undefined; }, true);
+  const real = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function play() { if (this instanceof HTMLVideoElement) window.__plays.push(decodeURI(this.currentSrc || this.src).split('/').pop()); return real.call(this); };
+  setInterval(() => {
+    const v = [...document.querySelectorAll('video')].find((x) => !x.paused && !x.ended && performance.now() - (x.__since ?? Infinity) > 1000);
+    if (v && window.__music.audible) window.__overlaps.push(`${v.closest('.scene').dataset.scene} @ ${v.currentTime.toFixed(1)} s`);
+  }, 100);
+});
 /** Esc closes the video (the first Esc leaves full screen, if the browser is in it) */
 const escapeVideo = async (page) => { for (let k = 0; k < 2 && await page.evaluate(() => document.body.classList.contains('is-theatre')); k++) { await page.keyboard.press('Escape'); await new Promise((r) => setTimeout(r, 450)); } };
 const slidesIn = (chapterId) => {
@@ -183,9 +205,10 @@ try {
     }));
     check('welcome: the golden "50" emblem, not a collage of photographs', await page.evaluate(() => !!document.querySelector('.emblem__wreath ellipse') && !document.querySelector('.scene[data-scene="welcome"] img')));
     check('no gallery, loading screen, title card or birthday-film button', await page.evaluate(() => !document.querySelector('[data-scene="gallery"], .loader, #intro, .film-btn') && !/birthday film|photo gallery/i.test(document.body.textContent)));
-    check('palette is light (warm ivory background, dark-blue text)', await page.evaluate(() => {
+    check('palette is blue (royal-blue background, ivory text), the welcome too', await page.evaluate(() => {
       const c = getComputedStyle(document.body);
-      return c.backgroundColor === 'rgb(255, 250, 242)' && c.color === 'rgb(23, 54, 93)';
+      const sky = getComputedStyle(document.querySelector('.backdrop__sky')).backgroundImage;
+      return c.backgroundColor === 'rgb(19, 58, 133)' && c.color === 'rgb(255, 250, 240)' && /rgb\(44, 102, 196\)/.test(sky) && /rgb\(12, 37, 96\)/.test(sky);
     }));
     await sleep(3800);
     check('a resting mouse hides only the pointer: the controls stay on screen', await page.evaluate(() => document.body.classList.contains('pointer-idle') && !document.body.classList.contains('controls-hidden') && getComputedStyle(document.querySelector('.deck-bar--tools')).opacity === '1'));
@@ -311,7 +334,18 @@ try {
       const s = document.querySelector('.scene[data-scene="memories"]');
       return s.querySelectorAll('.player__big-play').length === 1 && !s.querySelector('.cinema__play, .cinema__replay, .cinema__continue');
     }));
-    check('a video page plays by itself on arrival, even with the automatic presentation paused', !(await autoOn(page)) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video('memories'), 6000));
+    await watchSilence(page);
+    const arrived = Date.now();
+    await sleep(1500);
+    check('Our Memories opens on its introduction: the title, the poster and a golden countdown line', await page.evaluate(() => {
+      const s = document.querySelector('.scene[data-scene="memories"]');
+      return s.classList.contains('is-counting') && !!s.querySelector('.cinema__countdown.is-running') && /Our Memories/.test(s.querySelector('.cinema__title').textContent) && !document.body.classList.contains('is-theatre');
+    }) && await page.$eval(video('memories'), (v) => v.paused));
+    await sleep(FILM_INTRO_MS - 800 - (Date.now() - arrived));
+    check('…and keeps it on screen for 10 seconds (the film has not started at 9 s)', await page.$eval(video('memories'), (v) => v.paused) && !(await theatreOpen(page)));
+    check('a video page plays by itself after its introduction, even with the automatic presentation paused', !(await autoOn(page)) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video('memories'), 4000));
+    const startedAfter = (Date.now() - arrived) / 1000;
+    check(`…10 seconds after arriving (${startedAfter.toFixed(1)} s)`, startedAfter >= 9.8 && startedAfter <= 12.5);
     check('the film loads (6 min 23 s)', await page.$eval(video('memories'), (v) => Math.round(v.duration) === 383));
     await sleep(600);
     check('it opens in full screen (theatre)', await page.evaluate(() => {
@@ -321,17 +355,18 @@ try {
     check('…the film plays and the presentation controls step aside', await page.$eval(video('memories'), (v) => !v.paused) && await page.evaluate(() => getComputedStyle(document.querySelector('.deck-bar--nav')).display === 'none'));
     const barTexts = await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.map((x) => x.textContent.trim()).join());
     check('…with just Back, Full screen / Normal screen and Next at the bottom', THEATRE_BUTTONS.test(barTexts), barTexts);
-    check('…and the music carries on softly underneath', await waitFor(page, () => document.body.dataset.music === 'soft', null, 2000));
+    check('…and the background music is silent: faded out and paused', await waitFor(page, () => document.body.dataset.music === 'silent' && !window.__music.audible, null, 2000));
     await page.keyboard.press('ArrowRight');
     await sleep(400);
     check('arrow keys inside the film do not change scene', (await active(page)) === 'memories');
     await press(page, 'Escape');
     if (await theatreOpen(page)) await press(page, 'Escape'); // the first Esc leaves full screen
     check('Escape leaves full screen, then closes the theatre and pauses the film, without resetting the presentation', !(await theatreOpen(page)) && await page.$eval(video('memories'), (v) => v.paused) && (await active(page)) === 'memories');
-    check('the music returns to its normal level when the film is closed', await waitFor(page, () => document.body.dataset.music === 'normal', null, 3000));
+    check('the music returns when the film is closed', await waitFor(page, () => document.body.dataset.music === 'normal' && window.__music.audible, null, 3000));
     await page.click('.scene[data-scene="memories"] .player__big-play');
     await sleep(900);
     check('Play carries on with the film in the theatre', await page.$eval(video('memories'), (v) => !v.paused) && await theatreOpen(page));
+    check('…and the music fades out again at once', await waitFor(page, () => !window.__music.audible, null, 1500));
     await page.evaluate((sel) => { const v = document.querySelector(sel); v.currentTime = v.duration - 0.3; }, video('memories'));
     await page.waitForFunction((sel) => document.querySelector(sel).ended, { timeout: 15000 }, video('memories')).catch(() => {});
     await sleep(500);
@@ -342,11 +377,13 @@ try {
     check('…Continue goes on to the family’s messages', (await active(page)) === 'wishes' && !(await page.evaluate(() => document.body.classList.contains('is-theatre'))));
     check('leaving a scene pauses its video', await page.$eval(video('memories'), (v) => v.paused));
     // the player bar's own Back and Next move between pages
-    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, 6000); // the messages start by themselves
+    check('Messages Filled With Love opens on its introduction (no message playing yet)', await page.evaluate(() => document.querySelector('.scene[data-scene="wishes"]').classList.contains('is-counting') && /Messages Filled/.test(document.querySelector('#wishes-title').textContent)) && !(await playing(page)).length);
+    check('…and the music stays silent from one video page to the next', await musicSilent(page));
+    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, WISHES_INTRO_MS + 3000); // the messages start by themselves
     await page.$$eval('.scene[data-scene="wishes"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Back').click());
     await sleep(700);
     check('the player’s Back button goes to the previous page (and stops the video)', (await active(page)) === 'memories' && !(await playing(page)).includes('wishes'));
-    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, 6000);
+    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, FILM_INTRO_MS + 3000);
     await page.$$eval('.scene[data-scene="memories"] .theatre-bar .btn', (b) => b.find((x) => x.textContent.trim() === 'Next').click());
     await sleep(700);
     check('…and its Next button to the next page', (await active(page)) === 'wishes');
@@ -358,7 +395,14 @@ try {
       check(`Messages: ${playableWishes.length} confirmed wishes are ready, first one first`, await page.$eval(video('wishes'), (v, src) => decodeURI(v.currentSrc || v.src).endsWith(src), playableWishes[0].src));
     }
     check('videos play the prepared web copies (never the VIDEOS/ originals or the removed Childhood film)', await page.evaluate(() => ![...document.querySelectorAll('video')].some((v) => /\/VIDEOS\//.test(v.src) || /childhood/i.test(v.src))));
-    check(`the family’s three films are in the presentation (${FILM_SCENES.length} of 3 prepared)`, FILM_SCENES.length === 3, 'run npm run build:films');
+    check('of the family\'s films, "Age 1 to 50 — Her Story" is in the presentation; the Real Journey and Life Journey videos are not', FILM_SCENES.join() === 'story-film' && await page.evaluate(() => { const ids = window.__deck.scenes.map((x) => x.id); return ids.includes('story-film') && !ids.includes('age-film') && !ids.includes('journey-film') && !document.querySelector('[data-scene="age-film"], [data-scene="journey-film"]'); }));
+    check('page 3 reads "Age 1 to 50 — Her Story" (heading, page name and player)', await page.evaluate(() => {
+      const s = document.querySelector('.scene[data-scene="story-film"]');
+      const title = s.querySelector('.cinema__title').textContent.replace(/\s+/g, ' ').trim();
+      return title === 'Age 1 to 50 — Her Story' && window.__deck.scenes[2].title === 'Age 1 to 50 — Her Story' && s.querySelector('video').getAttribute('aria-label') === 'Age 1 to 50 — Her Story' && !/Age 1 to 5\b(?! ?0)/.test(document.body.textContent) && !/Real Journey|Life Journey film/i.test(document.body.textContent);
+    }));
+    check('…playing the family\'s story film (from "age 1 to 5 story video.mp4")', await page.$eval(video('story-film'), (v) => /age-1-to-5-story\.mp4$/.test(v.currentSrc || v.src)));
+    check('the music was never heard while a video played', await page.evaluate(() => !window.__overlaps.length), await page.evaluate(() => window.__overlaps.slice(0, 4).join(', ')));
 
     // Music controls (on a page without a video, where the presentation bar is in view)
     await page.evaluate(() => window.__deck.goTo('reasons'));
@@ -373,12 +417,25 @@ try {
 
     // A Final Gift of Love
     await page.evaluate(() => window.__deck.goTo('finale'));
-    await sleep(3400);
+    await sleep(1100);
+    check('the final page opens on a closed gift, alone in the middle of the screen, floating', await page.evaluate(() => {
+      const s = document.querySelector('.scene[data-scene="finale"]');
+      const r = s.querySelector('.fgift').getBoundingClientRect();
+      return s.classList.contains('is-playing') && !s.classList.contains('is-open') && Math.abs(r.left + r.width / 2 - innerWidth / 2) < innerWidth * 0.04
+        && getComputedStyle(s.querySelector('.finale__title')).opacity === '0' && !s.querySelector('.fgift img');
+    }));
+    await sleep(2300);
     check('the final page shows the family’s closing words, her name, the date and venue', await page.$eval('.scene[data-scene="finale"]', (s) => ['A Final Gift of Love', 'Happy 50th Birthday, Amma!', '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.', 'We may never be able to give back everything you have given us', 'M. Buvaneswari', '27 October 2026', 'Palmshore Restaurant, Ekkatuthangal, Chennai'].every((t) => s.textContent.includes(t))));
     check('no numbered gift tiles', !(await page.$('.gtile, .gtracker')));
-    check('the gift opens by itself', await page.$eval('.scene[data-scene="finale"]', (s) => s.classList.contains('is-open')));
+    check('the gift opens by itself: the lid lifts off and a golden light pours out', await page.$eval('.scene[data-scene="finale"]', (s) => s.classList.contains('is-open') && getComputedStyle(s.querySelector('.fgift__lid')).transform !== 'none' && Number(getComputedStyle(s.querySelector('.fgift__beam')).opacity) > 0.5));
+    check('…and a golden 50 rises out of the box, with sparkles', await page.$eval('.scene[data-scene="finale"]', (s) => s.classList.contains('is-rising') && s.querySelector('.fgift__fifty text').textContent === '50' && getComputedStyle(s.querySelector('.fgift__sparks i')).animationName === 'gift-spark'));
+    await sleep(3600);
+    check('then the gift moves aside and the family\'s closing words appear', await page.$eval('.scene[data-scene="finale"]', (s) => s.classList.contains('is-revealed') && getComputedStyle(s.querySelector('.finale__message')).opacity === '1' && getComputedStyle(s.querySelector('.fgift__fifty')).opacity === '1'));
     await shot(page, 'finale-open');
-    check('the final page offers Start Again', await page.$$eval('.finale__actions .btn', (b) => b[1].textContent.trim() === 'Start Again'));
+    check('the final page offers Replay and Start Again', await page.$$eval('.finale__actions .btn', (b) => b[0].textContent.trim() === 'Replay' && b[1].textContent.trim() === 'Start Again'));
+    await page.$$eval('.finale__actions .btn', (b) => b[0].click());
+    await sleep(400);
+    check('Replay closes the gift and opens it again', await page.$eval('.scene[data-scene="finale"]', (s) => !s.classList.contains('is-open') && !s.classList.contains('is-revealed')) && await waitFor(page, () => document.querySelector('.scene[data-scene="finale"]').classList.contains('is-revealed'), null, 7000));
     await page.$$eval('.finale__actions .btn', (b) => b[1].click());
     await sleep(900);
     check('"Start Again" returns to the welcome', (await active(page)) === 'welcome');
@@ -407,13 +464,18 @@ try {
     const firstFilm = FILM_SCENES[0];
     const nextAfter = (id) => SCENE_ORDER[SCENE_ORDER.indexOf(id) + 1];
 
+    await watchSilence(page);
     await page.click('[data-welcome="begin"]');
     await sleep(700);
     check('Begin asks for full screen (allowed: it follows a click)', await page.evaluate(() => !document.fullscreenEnabled || !!document.fullscreenElement));
+    check('…and starts the background music', await waitFor(page, () => window.__music.audible, null, 3000));
     check(`after Happy 50th Birthday (about 5.5 s) the first film follows by itself: ${firstFilm}`, await waitFor(page, (id) => window.__deck.current === id, firstFilm, 9000));
-    check('…and starts playing by itself in the full-screen theatre', await waitFor(page, (sel) => !document.querySelector(sel).paused, video(firstFilm), 8000) && await theatreOpen(page));
-    await sleep(1200); // the music fades out over about a second
-    check('…the presentation controls step aside and the music plays softly underneath', await page.evaluate(() => getComputedStyle(document.querySelector('.deck-bar--nav')).display === 'none') && await musicIs(page, 'soft'));
+    const filmArrived = Date.now();
+    await sleep(5000);
+    check('…its introduction stays on screen, with the music still playing', await page.$eval(video(firstFilm), (v) => v.paused) && !(await theatreOpen(page)) && await musicAudible(page));
+    check('…the film starts by itself after 10 seconds, in the full-screen theatre', await waitFor(page, (sel) => !document.querySelector(sel).paused, video(firstFilm), FILM_INTRO_MS - 5000 + 3000) && (Date.now() - filmArrived) >= FILM_INTRO_MS - 300 && await theatreOpen(page));
+    await sleep(400);
+    check('…the presentation controls step aside and the background music is silent (faded out and paused)', await page.evaluate(() => getComputedStyle(document.querySelector('.deck-bar--nav')).display === 'none') && await musicSilent(page));
     check('…the player bar stays on screen (Back, Full screen, Next)', THEATRE_BUTTONS.test(await page.$$eval(`.scene[data-scene="${firstFilm}"] .theatre-bar .btn`, (b) => b.map((x) => x.textContent.trim()).join())) && await page.$eval(`.scene[data-scene="${firstFilm}"] .theatre-bar`, (b) => getComputedStyle(b).opacity === '1'));
     check('…the film keeps its own shape (nothing stretched or cropped)', await page.$eval(`.scene[data-scene="${firstFilm}"]`, (s) => {
       const v = s.querySelector('video'), r = s.querySelector('.cinema__screen').getBoundingClientRect();
@@ -424,6 +486,7 @@ try {
     const after = nextAfter(firstFilm);
     check(`when it ends, the theatre closes and the presentation moves on to ${after}`, await waitFor(page, (id) => window.__deck.current === id, after, 8000) && !(await theatreOpen(page)));
     check('…the finished film is not left playing', !(await playing(page)).length);
+    check('…and the music returns on the slideshow (a page without a video)', await waitFor(page, () => document.body.dataset.music === 'normal' && window.__music.audible, null, 3000));
 
     // the photo slideshows move faster
     if (after === 'journey') {
@@ -435,30 +498,49 @@ try {
       check('…and it appears already loaded (never a blank frame)', await page.$eval('.scene[data-scene="journey"] .tslide:last-child', (s) => { const i = s.querySelector('img'); return !i || (i.complete && i.naturalWidth > 0); }));
     }
 
-    // leaving a film: it stops; leaving during its short title countdown: it never starts later
-    if (has('age-film')) {
-      await page.evaluate(() => window.__deck.goTo('age-film'));
-      await waitFor(page, (sel) => !document.querySelector(sel).paused, video('age-film'), 8000);
-      await page.evaluate(() => window.__deck.goTo('reveal'));
-      check('leaving a film pauses it (nothing plays out of sight)', await waitFor(page, () => ![...document.querySelectorAll('video')].some((v) => !v.paused), null, 2000) && !(await theatreOpen(page)));
-      await page.evaluate(() => window.__deck.goTo('age-film'));
-      await sleep(500);
-      await page.evaluate(() => window.__deck.goTo('reveal'));
-      await sleep(2200);
-      check('a film left during its countdown never starts in the background', !(await playing(page)).length);
-    }
+    // leaving a film: it stops; leaving during its introduction: it never starts later; coming back: one start only
+    await page.evaluate(() => window.__deck.goTo('memories'));
+    await waitFor(page, (sel) => !document.querySelector(sel).paused, video('memories'), FILM_INTRO_MS + 3000);
+    await page.evaluate(() => window.__deck.goTo('reveal'));
+    check('leaving a film pauses it (nothing plays out of sight)', await waitFor(page, () => ![...document.querySelectorAll('video')].some((v) => !v.paused), null, 2000) && !(await theatreOpen(page)));
+    await page.evaluate(() => { window.__plays.length = 0; window.__deck.goTo('memories'); });
+    await sleep(3000);
+    await page.evaluate(() => window.__deck.goTo('reveal'));
+    await sleep(800);
+    await page.evaluate(() => window.__deck.goTo('memories'));
+    await sleep(2000);
+    await page.evaluate(() => window.__deck.setAuto(false));
+    await page.evaluate(() => window.__deck.setAuto(true));
+    await waitFor(page, (sel) => !document.querySelector(sel).paused, video('memories'), FILM_INTRO_MS + 3000);
+    await sleep(2500);
+    check('arriving, leaving and returning during the introduction, and pausing / resuming: the film starts once, never twice', await page.evaluate(() => window.__plays.join() === 'family-memories.mp4') && (await playing(page)).join() === 'memories', await page.evaluate(() => window.__plays.join()));
+    await page.evaluate(() => window.__deck.goTo('reveal'));
+    await sleep(2200);
+    check('a film left during its introduction never starts in the background', !(await playing(page)).length);
 
     // the family's messages: one by one, then the cake and the final gift
     if (playableWishes.length) {
       await page.evaluate(() => window.__deck.goTo('wishes'));
       const wishSrc = (k) => playableWishes[k].src;
       const nowSrc = () => page.$eval(video('wishes'), (v) => decodeURI(v.currentSrc || v.src));
-      check('the family’s messages start by themselves, the first one first', await waitFor(page, (sel) => !document.querySelector(sel).paused, video('wishes'), 8000) && (await nowSrc()).endsWith(wishSrc(0)));
+      const wishesArrived = Date.now();
+      await sleep(5000);
+      check('Messages Filled With Love: the introduction stays about 7 seconds (no message yet at 5 s)', await page.$eval(video('wishes'), (v) => v.paused) && /Messages Filled/.test(await page.$eval('#wishes-title', (t) => t.textContent)));
+      check('the family’s messages start by themselves, the first one first', await waitFor(page, (sel) => !document.querySelector(sel).paused, video('wishes'), WISHES_INTRO_MS) && (await nowSrc()).endsWith(wishSrc(0)));
+      const wishesAfter = (Date.now() - wishesArrived) / 1000;
+      check(`…after about 7 seconds (${wishesAfter.toFixed(1)} s)`, wishesAfter >= 6.8 && wishesAfter <= 9.5);
       if (playableWishes.length > 1) {
         await seekToEnd(page, 'wishes');
         check('…then, after a short "up next" card, the next message plays by itself', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused; }, wishSrc(1), 9000));
-        check('…one video at a time, and the music stays soft between them', (await playing(page)).join() === 'wishes' && await musicIs(page, 'soft'));
-        for (let k = 2; k < playableWishes.length; k++) await press(page, 'PageDown'); // a clicker moves between the messages
+        check('…one video at a time, and the music stays silent between them', (await playing(page)).join() === 'wishes' && await musicSilent(page));
+        for (let k = 2; k < playableWishes.length - 1; k++) await press(page, 'PageDown'); // a clicker moves between the messages
+        if (playableWishes.length > 2) {
+          // the last two messages: the second-to-last plays to its end, then the last one follows by itself
+          const [penult, last] = playableWishes.slice(-2).map((v) => v.file.split('/').pop());
+          check(`the second-to-last message is the family's ${penult}, playing, with the music off`, (await nowSrc()).endsWith(wishSrc(playableWishes.length - 2)) && (await playing(page)).join() === 'wishes' && await musicSilent(page));
+          await seekToEnd(page, 'wishes');
+          check(`…when it ends, the last message (${last}) follows by itself, one at a time, the music still off`, await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused && v.currentTime > 0.5; }, wishSrc(playableWishes.length - 1), 9000) && (await playing(page)).join() === 'wishes' && await musicSilent(page));
+        }
         check(`a clicker moves through every message in the family’s order, to the last (${playableWishes.length})`, (await nowSrc()).endsWith(wishSrc(playableWishes.length - 1)) && new RegExp(`Message ${playableWishes.length} of ${playableWishes.length}`).test(await sub(page)));
         await press(page, 'PageDown');
         check('…and never past a message that is still playing', (await active(page)) === 'wishes' && (await playing(page)).join() === 'wishes');
@@ -470,7 +552,7 @@ try {
         await seekToEnd(page, film);
       }
       check('then the presentation goes on to the cake, "Happy Birthday, Amma"', await waitFor(page, () => window.__deck.current === 'cake', null, 8000));
-      check('…no video is left playing, and the music is back to its normal level', await waitFor(page, () => document.body.dataset.music === 'normal', null, 4000) && !(await playing(page)).length);
+      check('…no video is left playing, and the music is back', await waitFor(page, () => document.body.dataset.music === 'normal' && window.__music.audible, null, 4000) && !(await playing(page)).length);
       await sleep(2200);
       check('the cake: its message, five lit candles, no gift tracker', await page.$eval('.scene[data-scene="cake"]', (s, h) => s.classList.contains('is-lit') && s.textContent.includes(h) && s.querySelectorAll('.cake__flame').length === 5 && !s.querySelector('.gtile, .gtracker'), site.cake.headline));
       await shot(page, 'cake');
@@ -479,6 +561,8 @@ try {
       await sleep(3000);
       check('…and stays on the final page', (await active(page)) === 'finale');
     }
+    check('the music was never heard while a film or a message played', await page.evaluate(() => !window.__overlaps.length), await page.evaluate(() => window.__overlaps.slice(0, 4).join(', ')));
+    check('only one music track ever (no second <audio>)', await page.evaluate(() => document.querySelectorAll('audio').length === 0 && performance.getEntriesByType('resource').filter((r) => /music\.mp3/.test(r.name)).length <= 2));
     check('no console errors or broken files', !problems.length, problems.slice(0, 6).join('\n      '));
     await page.close();
   }
@@ -502,7 +586,7 @@ try {
     const film = FILM_SCENES[0];
     await page.click('[data-welcome="begin"]');
     await waitFor(page, (id) => window.__deck.current === id, film, 9000);
-    await sleep(3200);
+    await sleep(FILM_INTRO_MS + 2200);
     check('the film does not pretend to play: a clear "Press Play" note, no theatre', await page.$eval(`.scene[data-scene="${film}"] .cinema__prompt`, (p) => !p.hidden && getComputedStyle(p).display !== 'none') && !(await theatreOpen(page)) && !(await playing(page)).length);
     check('…the presentation waits on the film (it is not skipped)', (await active(page)) === film && await autoOn(page));
     check('…and the music carries on meanwhile', await musicIs(page, 'normal'));
@@ -525,7 +609,7 @@ try {
   // ---------------------------------------------------------------- short links
   if (run('pages')) {
     console.log('\nshort links (pages/)');
-    for (const [file, scene] of [['reasons.html', 'reasons'], ['memories.html', 'memories'], ['cake.html', 'cake'], ['finale.html', 'finale'], ['story.html', 'story-film'], ['age-transition.html', 'age-film']]) {
+    for (const [file, scene] of [['reasons.html', 'reasons'], ['memories.html', 'memories'], ['cake.html', 'cake'], ['finale.html', 'finale'], ['story.html', 'story-film'], ['age-transition.html', 'story-film'], ['life-journey.html', 'story-film']]) {
       const { page } = await open(browser, `pages/${file}`, VIEWPORTS[3]);
       check(`pages/${file} opens the presentation at "${scene}"`, (await active(page)) === scene);
       await page.close();
@@ -536,7 +620,7 @@ try {
   server.close();
 }
 
-if (FILM_SCENES.length < 3) console.log('\nNote: not all three family films are prepared yet (npm run build:films).');
+if (!FILM_SCENES.includes('story-film')) console.log('\nNote: the Her Story film is not prepared yet (npm run build:films).');
 if (!(wishesData.videos || []).length) console.log('Note: still waiting for the "Family video wishes" folder (the Messages page shows the family\'s line until then).');
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

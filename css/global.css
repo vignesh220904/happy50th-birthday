@@ -17,7 +17,7 @@ html {
   font-variant-numeric: lining-nums; /* Cormorant defaults to old-style figures */
 }
 body {
-  background: var(--warm-white);
+  background: var(--royal-deep);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--fs-body);
@@ -31,7 +31,7 @@ img, video, canvas, svg { display: block; max-width: 100%; }
 img { height: auto; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
-a { color: var(--ramar-deep); text-underline-offset: 3px; }
+a { color: var(--gold-text); text-underline-offset: 3px; }
 p { margin: 0 0 1em; }
 h1, h2, h3, h4 {
   margin: 0;
@@ -41,7 +41,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.005em;
   text-wrap: balance;
 }
-::selection { background: rgba(127, 166, 227, 0.35); color: var(--ink); }
+::selection { background: rgba(242, 212, 143, 0.4); color: #fff; }
 
 :focus-visible {
   outline: 3px solid var(--focus);
@@ -85,7 +85,7 @@ h1, h2, h3, h4 {
 .scene-title em {
   font-style: italic;
   font-weight: 600;
-  color: var(--ramar);
+  color: var(--gold-text);
 }
 .scene-lede {
   max-width: 46ch;
@@ -126,11 +126,11 @@ h1, h2, h3, h4 {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-decoration: none;
-  box-shadow: 0 2px 4px rgba(23, 54, 93, 0.06), 0 8px 20px -10px rgba(23, 54, 93, 0.3);
+  box-shadow: 0 2px 4px rgba(4, 16, 48, 0.12), 0 8px 20px -10px rgba(4, 16, 48, 0.5);
   transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur);
   -webkit-tap-highlight-color: transparent;
 }
-.btn:hover { border-color: var(--sapphire-light); background: #fff; }
+.btn:hover { border-color: var(--champagne-soft); background: rgba(255, 255, 255, 0.2); }
 .btn:active { transform: scale(0.97); }
 .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 .btn svg { width: 1.25em; height: 1.25em; flex: none; }
@@ -179,7 +179,7 @@ h1, h2, h3, h4 {
   animation: sheen 5s var(--ease-in-out) infinite;
 }
 .btn--celebrate:hover { border-color: #fff; background: linear-gradient(135deg, #f8e9c2 0%, #e2c27e 45%, #cfa553 100%); }
-.btn--light {           /* on the blue screening rooms */
+.btn--light {           /* glass on the blue */
   border-color: rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
@@ -201,15 +201,15 @@ h1, h2, h3, h4 {
   color: var(--ink);
   transition: background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast), opacity var(--dur-fast);
 }
-.icon-btn:hover { border-color: var(--sapphire-light); background: #fff; }
+.icon-btn:hover { border-color: var(--champagne-soft); background: rgba(255, 255, 255, 0.2); }
 .icon-btn:active { transform: scale(0.94); }
 .icon-btn svg { width: 44%; height: 44%; }
-.icon-btn[aria-pressed="true"] { background: var(--ramar); border-color: var(--ramar); color: #fff; }
+.icon-btn[aria-pressed="true"] { background: var(--champagne); border-color: var(--champagne); color: var(--ink-dark); }
 .icon-btn--light { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.12); color: #fff; }
 .icon-btn--light:hover { border-color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.22); }
 .icon-btn[disabled] { opacity: 0.35; cursor: default; }
 
-/* ---------- Shared backdrop: layered light, soft orbs, drifting particles ---------- */
+/* ---------- Shared backdrop: layered royal blues, soft light, drifting particles ---------- */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -221,11 +221,12 @@ h1, h2, h3, h4 {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(70% 60% at 78% 16%, rgba(255, 255, 255, 0.95), transparent 70%),
-    radial-gradient(55% 50% at 6% 94%, rgba(198, 219, 245, 0.7), transparent 72%),
-    radial-gradient(45% 45% at 96% 90%, rgba(236, 220, 178, 0.55), transparent 72%),
-    radial-gradient(50% 45% at 18% 6%, rgba(228, 239, 253, 0.95), transparent 70%),
-    linear-gradient(165deg, #eef5ff 0%, var(--warm-white) 34%, var(--ivory) 64%, var(--cream) 100%);
+    radial-gradient(60% 55% at 74% 18%, rgba(111, 208, 238, 0.28), transparent 70%),
+    radial-gradient(70% 65% at 60% 38%, rgba(79, 134, 216, 0.55), transparent 72%),
+    radial-gradient(45% 45% at 96% 92%, rgba(217, 182, 111, 0.22), transparent 72%),
+    radial-gradient(55% 50% at 4% 96%, rgba(12, 37, 96, 0.75), transparent 72%),
+    radial-gradient(50% 45% at 14% 4%, rgba(143, 182, 238, 0.32), transparent 70%),
+    linear-gradient(160deg, var(--royal-medium) 0%, var(--royal) 38%, var(--royal-deep) 72%, var(--royal-night) 100%);
 }
 .backdrop__orb {
   position: absolute;
@@ -234,9 +235,9 @@ h1, h2, h3, h4 {
   will-change: transform;
   animation: orb-drift 26s var(--ease-in-out) infinite alternate;
 }
-.backdrop__orb--1 { width: 46vw; height: 46vw; left: -12vw; top: -18vw; background: radial-gradient(circle, rgba(187, 221, 248, 0.6), transparent 68%); }
-.backdrop__orb--2 { width: 38vw; height: 38vw; right: -8vw; bottom: -16vw; background: radial-gradient(circle, rgba(217, 182, 111, 0.4), transparent 68%); animation-duration: 32s; }
-.backdrop__orb--3 { width: 30vw; height: 30vw; left: 40vw; top: 30vh; background: radial-gradient(circle, rgba(246, 235, 207, 0.55), transparent 68%); animation-duration: 38s; }
+.backdrop__orb--1 { width: 46vw; height: 46vw; left: -12vw; top: -18vw; background: radial-gradient(circle, rgba(111, 208, 238, 0.22), transparent 68%); }
+.backdrop__orb--2 { width: 38vw; height: 38vw; right: -8vw; bottom: -16vw; background: radial-gradient(circle, rgba(217, 182, 111, 0.26), transparent 68%); animation-duration: 32s; }
+.backdrop__orb--3 { width: 30vw; height: 30vw; left: 40vw; top: 30vh; background: radial-gradient(circle, rgba(143, 182, 238, 0.24), transparent 68%); animation-duration: 38s; }
 .backdrop__particles { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .confetti-canvas {
@@ -277,11 +278,11 @@ h1, h2, h3, h4 {
   place-content: center;
   gap: 0.6rem;
   padding: 32px;
-  background: var(--ivory);
+  background: linear-gradient(160deg, var(--royal-medium), var(--royal-deep) 70%, var(--royal-night));
   text-align: center;
   color: var(--ink-soft);
 }
 .noscript h1,
 .file-warning h1 { margin-bottom: 1rem; font-size: 3rem; color: var(--ink); }
 .file-warning p { max-width: 560px; margin: 0 auto; }
-.file-warning code { padding: 0.1em 0.4em; border-radius: 6px; background: var(--sky); color: var(--ink); }
+.file-warning code { padding: 0.1em 0.4em; border-radius: 6px; background: rgba(255, 255, 255, 0.14); color: var(--ink); }

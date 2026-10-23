@@ -1,6 +1,7 @@
 // Our Memory Film — the family's own film, the video they supplied in the
 // "Memory gallery" Google Drive folder (data/site.json → videos.memories).
-// One central Play button; it opens in full screen with Back and Replay.
+// The page opens on its introduction for 10 seconds, then the film starts by
+// itself and fills the screen; one central Play button if the browser waits for a click.
 
 import { mountCinema } from './cinema.js';
 

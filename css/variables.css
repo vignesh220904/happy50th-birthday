@@ -1,9 +1,10 @@
 /* ==========================================================================
-   Design tokens — a light, warm palette for the projector
-   Ivory, warm cream and champagne gold as the base; soft royal blue and a
-   refined medium blue for her name, highlights and the screening rooms.
-   The blues are deliberately softer than navy, yet rich enough to hold
-   their contrast in a dim hall.
+   Design tokens — one royal-blue world for the projector
+   Every page sits on the same layered blue: deep royal blue, medium royal
+   blue and softer blue light, with a little cyan in the highlights. Ivory
+   carries the words, champagne gold the decorations. The blues stay brighter
+   than navy, so the hall never feels dark, and rich enough for ivory text to
+   hold its contrast from the back of the room.
 
    Sizing: the presentation is designed on a 16:9 frame (1920 × 1080).
    --u is 1% of the largest 16:9 frame that fits the screen, so every scene
@@ -11,16 +12,22 @@
    Phones and portrait screens get their own sizes at the end of this file.
    ========================================================================== */
 :root {
-  /* Palette */
-  --sky: #e4effd;              /* palest blue wash */
+  /* Palette: the blues */
+  --royal-night: #0c2560;      /* deepest royal blue: the corners of the backdrop */
+  --royal-deep: #133a85;       /* deep royal blue: the body of the backdrop */
+  --royal: #1d4fa8;            /* royal blue */
+  --royal-medium: #2c66c4;     /* medium royal blue */
+  --royal-soft: #4f86d8;       /* soft blue light */
+  --cyan: #6fd0ee;             /* the subtle cyan-blue highlight */
+  --sky: #e4effd;              /* palest blue: small chips and dots */
   --powder: #c6dbf5;
-  --sapphire-light: #7fa6e3;   /* refined medium blue, light */
-  --ramar: #2f62c0;            /* soft royal blue: the accent (her favourite Ramar blue) */
+  --sapphire-light: #8fb6ee;   /* light medium blue, for lines and dots on the blue */
+  --ramar: #2f62c0;            /* soft royal blue (her favourite Ramar blue) */
   --ramar-deep: #234e9c;
-  --royal-room: #2a5aa8;       /* the screening rooms: soft royal blue, not navy */
-  --royal-room-deep: #1d437f;
+  --royal-room: #2a5aa8;       /* the screening rooms */
+  --royal-room-deep: #163d7d;
   --pearl: #ffffff;
-  --ivory: #fffdf8;
+  --ivory: #fffaf0;
   --cream: #fbf3e3;
   --warm-white: #fffaf2;
   --silver: #dce5f0;
@@ -28,18 +35,20 @@
   --champagne-soft: #ecdcb2;
   --champagne-light: #f6ebcf;
   --champagne-deep: #b98e3e;
-  --gold-text: #87672a;        /* champagne darkened for text: 5.2:1 on ivory */
-  --ink: #17365d;              /* main text: 11.6:1 on ivory */
-  --ink-soft: #3a5579;         /* secondary text: 7.4:1 on ivory */
-  --ink-muted: #5b7194;        /* small print: 4.9:1 on ivory */
+  --gold-text: #f2d48f;        /* champagne lifted for text on the blue: 6.9:1 on --royal */
+  --gold-ink: #87672a;         /* gold for text on ivory surfaces (the cake's plate, chips) */
+  --ink: #fffaf0;              /* main text: ivory, 8.1:1 on --royal */
+  --ink-soft: #dce8fa;         /* secondary text: 6.7:1 on --royal */
+  --ink-muted: #b4c9ea;        /* small print: 4.8:1 on --royal */
+  --ink-dark: #17365d;         /* dark-blue text, on the few ivory and gold surfaces */
 
-  /* Surfaces */
-  --card: rgba(255, 255, 255, 0.78);
-  --card-strong: rgba(255, 255, 255, 0.92);
-  --line: rgba(23, 54, 93, 0.12);
-  --line-strong: rgba(23, 54, 93, 0.22);
+  /* Surfaces: glass on the blue */
+  --card: rgba(255, 255, 255, 0.1);
+  --card-strong: rgba(16, 44, 104, 0.82);
+  --line: rgba(255, 255, 255, 0.16);
+  --line-strong: rgba(255, 255, 255, 0.32);
   --line-gold: rgba(217, 182, 111, 0.65);
-  --focus: #1f55b0;
+  --focus: #f2d48f;
 
   /* Typography */
   --font-display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
@@ -68,9 +77,9 @@
   --radius-sm: max(8px, calc(var(--u) * 0.55));
   --radius: max(12px, calc(var(--u) * 0.95));
   --radius-lg: max(16px, calc(var(--u) * 1.5));
-  --shadow-soft: 0 calc(var(--u) * 1) calc(var(--u) * 2.6) calc(var(--u) * -1) rgba(23, 54, 93, 0.28);
-  --shadow-card: 0 2px 6px rgba(23, 54, 93, 0.06), 0 calc(var(--u) * 0.9) calc(var(--u) * 2.4) calc(var(--u) * -0.8) rgba(23, 54, 93, 0.22);
-  --shadow-deep: 0 calc(var(--u) * 2) calc(var(--u) * 4.5) calc(var(--u) * -1.4) rgba(15, 39, 71, 0.45), 0 calc(var(--u) * 0.6) calc(var(--u) * 1.4) calc(var(--u) * -0.5) rgba(15, 39, 71, 0.25);
+  --shadow-soft: 0 calc(var(--u) * 1) calc(var(--u) * 2.6) calc(var(--u) * -1) rgba(4, 16, 48, 0.4);
+  --shadow-card: 0 2px 6px rgba(4, 16, 48, 0.12), 0 calc(var(--u) * 0.9) calc(var(--u) * 2.4) calc(var(--u) * -0.8) rgba(4, 16, 48, 0.4);
+  --shadow-deep: 0 calc(var(--u) * 2) calc(var(--u) * 4.5) calc(var(--u) * -1.4) rgba(4, 14, 44, 0.6), 0 calc(var(--u) * 0.6) calc(var(--u) * 1.4) calc(var(--u) * -0.5) rgba(4, 14, 44, 0.35);
   --glass-blur: blur(14px) saturate(140%);
 
   /* Motion */
@@ -80,7 +89,7 @@
   --dur: 420ms;
   --dur-scene: 600ms;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* Phones (portrait or landscape) and portrait screens: the secondary layout.
@@ -104,8 +113,8 @@
     --radius-sm: 8px;
     --radius: 14px;
     --radius-lg: 20px;
-    --shadow-soft: 0 10px 26px -10px rgba(23, 54, 93, 0.3);
-    --shadow-card: 0 2px 6px rgba(23, 54, 93, 0.06), 0 10px 24px -10px rgba(23, 54, 93, 0.24);
-    --shadow-deep: 0 20px 44px -14px rgba(15, 39, 71, 0.45);
+    --shadow-soft: 0 10px 26px -10px rgba(4, 16, 48, 0.45);
+    --shadow-card: 0 2px 6px rgba(4, 16, 48, 0.12), 0 10px 24px -10px rgba(4, 16, 48, 0.4);
+    --shadow-deep: 0 20px 44px -14px rgba(4, 14, 44, 0.6);
   }
 }
