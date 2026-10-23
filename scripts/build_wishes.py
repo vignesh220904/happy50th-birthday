@@ -1,11 +1,11 @@
 """
-Build the family video wishes playlist (data/wishes.json) from the folder the
-family shared on Google Drive, "Family video wishes".
+Build the family video wishes playlist (data/wishes.json) from the family's
+folder of wishes. The folder is named in data/wishes.json → "source" (now
+"family wishes updated video"; earlier "Family video wishes"). Put it in the
+project root, so the videos are in
 
-Download that Drive folder and put it in the project root, so the videos are in
-
-    Family video wishes/01 - Vikky.mp4
-    Family video wishes/02 - Varshu.mov
+    family wishes updated video/1.mp4
+    family wishes updated video/02 - Varshu.mov
     ...
 
 then run from the project root:
@@ -24,18 +24,25 @@ Validation: a file that is empty, cannot be decoded or fails to convert is
 reported and left out of the playlist. It is never replaced by anything else.
 
 Order: the family numbered the files to set the playback order, so videos are
-sorted by the number at the start of the filename (2 before 10). Files without
-a number are listed after the numbered ones and reported, so nothing is
-silently reordered.
+sorted by the number at the start of the filename (2 before 10). Two files
+with the same number play the plain one first, then its variants in order:
+"13.mp4", "13(1).mp4"; "17 - a.mp4", "17 - b.mp4". Files without a number are
+listed after the numbered ones and reported, so nothing is silently reordered.
 
 Names: the text after the number becomes the caption ("01 - Vikky.mp4" ->
-"Vikky"). Camera-style names (VID_2026..., IMG_1234, WhatsApp Video ...) give
-no caption, because nothing on screen should be a guess.
+"Vikky"). Camera-style names (VID_2026..., IMG_1234, WhatsApp Video ...) and
+variant marks ("(1)", "a", "002") give no caption, because nothing on screen
+should be a guess.
 
-Confirmation: the family asked to confirm the final two videos before they are
-shown. They are listed with "confirmed": false and are skipped by the
-presentation until that is changed to true in data/wishes.json. Re-running this
-script keeps every "confirmed" value already set.
+Confirmation: every wish is listed with "confirmed": true (the family has seen
+them all; PENDING_LAST can hold the final ones back again). A wish set to false
+in data/wishes.json is skipped by the presentation; re-running this script keeps
+every "confirmed" value already set.
+
+Films among the wishes: data/wishes.json → "films" places one of the family's
+films inside the playlist, e.g. the Life Journey video just before wish 9:
+    {"before": 9, "title": "Her Life Journey", "src": "assets/videos/family/life-journey.mp4", ...}
+It uses the web copy made by npm run build:films and plays once, in turn.
 
 Requires: imageio-ffmpeg (pip install imageio-ffmpeg).
 """
@@ -46,11 +53,11 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE_DIR = "Family video wishes"
+DEFAULT_SOURCE = "Family video wishes"
 OUT_DIR = os.path.join("assets", "videos", "wishes")
 PLAYLIST = os.path.join("data", "wishes.json")
 VIDEO_EXT = {".mp4", ".mov", ".m4v", ".webm", ".3gp", ".mkv", ".avi"}
-PENDING_LAST = 2  # the final two videos wait for the family's confirmation
+PENDING_LAST = 0  # the family confirmed every wish (set to 2 to hold the final two back again)
 MAX_MB = 95       # GitHub refuses files over 100 MB
 AUDIO_KBPS = 160
 HDR = re.compile(r"arib-std-b67|smpte2084|bt2020", re.I)
@@ -58,6 +65,7 @@ TONEMAP = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,"
            "tonemap=tonemap=mobius:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
 SCALE = "scale='if(gte(iw,ih),min(1920,iw),-2)':'if(gte(iw,ih),-2,min(1920,ih))'"
 
+VARIANT = re.compile(r"^\(?\d{1,3}\)?$|^[a-z]$", re.I)  # "(1)", "002", "a": a second file for the same number, not a name
 CAMERA_NAME = re.compile(r"^(vid|img|mov|pxl|dsc|whatsapp|video|wa\d|signal|screen|rec)[\s_-]*[\w\s-]*$|^[\d\s_.-]+$", re.I)
 
 
@@ -70,15 +78,17 @@ def ffmpeg():
 
 
 def order_key(name):
-    m = re.match(r"\s*(\d+)", name)
-    return (0, int(m.group(1)), name.lower()) if m else (1, 0, name.lower())
+    """By the family's number; the same number: the plain file first, then "(1)", "a", "b" …"""
+    stem = os.path.splitext(name)[0]
+    m = re.match(r"\s*(\d+)(.*)$", stem)
+    return (0, int(m.group(1)), m.group(2).strip(" -_.").lower()) if m else (1, 0, stem.lower())
 
 
 def caption_for(name):
     stem = os.path.splitext(name)[0]
     rest = re.sub(r"^\s*\d+\s*[-_.)\]]*\s*", "", stem).strip(" -_.")
     rest = re.sub(r"[_]+", " ", rest).strip()
-    if not rest or CAMERA_NAME.match(rest):
+    if not rest or CAMERA_NAME.match(rest) or VARIANT.match(rest):
         return ""
     return rest
 
@@ -143,6 +153,7 @@ def main():
     force = "--force" in sys.argv
     with open(PLAYLIST, encoding="utf-8") as fh:
         playlist = json.load(fh)
+    SOURCE_DIR = playlist.get("source") or DEFAULT_SOURCE
     if not os.path.isdir(SOURCE_DIR):
         sys.exit(f'Folder "{SOURCE_DIR}" not found. Download the family\'s Drive folder into the project root first.')
 
@@ -200,6 +211,24 @@ def main():
         if pending and not entry["confirmed"]:
             entry["_note"] = "One of the final two videos: waiting for the family's confirmation. Set confirmed to true to include it."
 
+    # the family's films placed among the wishes ("films": [{"before": 9, ...}]), each once, in turn
+    for film in playlist.get("films", []):
+        at = next((i for i, v in enumerate(videos) if v["number"] == film.get("before")), None)
+        info = probe(exe, film["src"]) if os.path.exists(film.get("src", "")) else {"duration": None}
+        if at is None or not info["duration"]:
+            invalid.append(f"film {film.get('title')}: {'no wish ' + str(film.get('before')) + ' to place it before' if at is None else film.get('src') + ' is missing or unreadable (run npm run build:films)'}")
+            continue
+        w, h = info["size"]
+        videos.insert(at, {
+            "kind": "film", "title": film.get("title", ""), "file": film.get("source", ""), "src": film["src"],
+            "poster": film.get("poster", ""), "from": "", "duration": info["duration"], "width": w, "height": h,
+            "mb": round(os.path.getsize(film["src"]) / 1e6, 1), "confirmed": True,
+        })
+    for i, entry in enumerate(videos):
+        entry["n"] = i + 1
+        if entry.get("kind") == "film":
+            entry["number"] = None
+
     playlist["videos"] = videos
     with open(PLAYLIST, "w", encoding="utf-8") as fh:
         json.dump(playlist, fh, indent=2, ensure_ascii=False)
@@ -208,14 +237,15 @@ def main():
     shown = [v for v in videos if v["confirmed"]]
     print(f"\n{len(videos)} videos listed in {PLAYLIST}; {len(shown)} will play, in this order:")
     for v in videos:
-        print(f"  {v['n']:>2}. {v['file']} ({v['mb']} MB){'  (' + v['from'] + ')' if v['from'] else ''}{'' if v['confirmed'] else '  [waiting for confirmation]'}")
+        print(f"  {v['n']:>2}. {'[film] ' + v['title'] + ' · ' if v.get('kind') == 'film' else ''}{v['file']} ({v['mb']} MB){'  (' + v['from'] + ')' if v['from'] else ''}{'' if v['confirmed'] else '  [waiting for confirmation]'}")
     expected = playlist.get("expected")
-    if expected and len(videos) != expected:
-        print(f"\n! The family mentioned about {expected} videos; {len(videos)} were found. Please check the folder is complete.")
+    wishes = [v for v in videos if v.get("kind") != "film"]  # the family's films placed among them are not wishes
+    if expected and len(wishes) != expected:
+        print(f"\n! The family mentioned about {expected} videos; {len(wishes)} were found. Please check the folder is complete.")
     if gaps:
         print(f"! Numbers missing from the sequence: {', '.join(map(str, gaps))}")
     if duplicates:
-        print(f"! The same number is used twice: {', '.join(map(str, duplicates))}. Check the intended order with the family.")
+        print(f"! The same number is used twice: {', '.join(map(str, duplicates))}. Played plain file first, then its variants; check with the family.")
     if unnumbered:
         print(f"! Not numbered (placed at the end): {', '.join(unnumbered)}")
     if invalid:

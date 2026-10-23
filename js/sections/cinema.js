@@ -26,10 +26,15 @@
 // If the browser still holds the film back until someone clicks, the screen
 // says "Press Play" and the presentation waits; it never claims to be playing.
 //
-// Music: the background music is never heard under a video. The page holds it
-// silent (core/audio.js) from just before its video starts until the page is
-// left, and keeps it silent through its introduction when it follows straight
-// on from another video. Closing the theatre by hand lets the music return.
+// Music: while a video plays, the background music goes soft (about 12 % of its
+// normal volume, core/audio.js) and it stays soft while the theatre is open, so
+// it does not come back up between two family wishes. It returns to normal when
+// the theatre closes, when the page waits for a click, or when a video cannot be
+// played. The videos' own sound is never changed.
+//
+// A playlist may hold one of the family's films among the wishes ("kind": "film",
+// e.g. the Life Journey video before wish 9): it plays once, in turn, under its
+// own title, and is not counted as a message.
 
 import { h, icons, announce } from '../core/util.js';
 import { music } from '../core/audio.js';
@@ -38,7 +43,6 @@ import { url } from '../core/data.js';
 import { videoStage, fileExists } from './shared.js';
 
 const INTRO_MS = 10000;         // the introduction shows this long before the film starts by itself
-const PREFADE_MS = 1500;        // the music starts to fade this long before the film starts
 const UP_NEXT_MS = 2200;        // between two wishes: who is next
 const END_HOLD_MS = 1200;       // after the film or the last wish: a breath, then on
 const SKIP_MS = 2500;           // a video that cannot be played is skipped after this …
@@ -62,8 +66,8 @@ export async function mountCinema(el, deck, {
   const multi = items.length > 1;
 
   let current = 0, player = null, theatre = false, started = false, hasPlayed = false, ownsFullscreen = false;
-  let upNextTimer = 0, errorTimer = 0, introTimer = 0, fadeTimer = 0, watchdog = 0, prepared = false;
-  const clearTimers = () => { [upNextTimer, errorTimer, introTimer, fadeTimer, watchdog].forEach(clearTimeout); counting(false); };
+  let upNextTimer = 0, errorTimer = 0, introTimer = 0, watchdog = 0, prepared = false;
+  const clearTimers = () => { [upNextTimer, errorTimer, introTimer, watchdog].forEach(clearTimeout); counting(false); };
 
   // ---- The screen ------------------------------------------------------------------------
   const screen = h('div', { class: `cinema__screen cinema__screen--${theme}` });
@@ -81,7 +85,11 @@ export async function mountCinema(el, deck, {
     if (on) { void countdown.offsetWidth; countdown.classList.add('is-running'); } // restart the line
   }
 
-  const label = (v) => [multi ? `${itemLabel} ${current + 1} of ${items.length}` : '', v?.from ? `From ${v.from}` : ''].filter(Boolean).join(' · ');
+  // the messages are counted without the films placed among them
+  const messages = items.filter((v) => v.kind !== 'film');
+  const messageNo = (v) => messages.indexOf(v) + 1;
+  const name = (v) => (v.kind === 'film' ? v.title : `${itemLabel} ${messageNo(v)} of ${messages.length}`);
+  const label = (v) => [multi && v ? name(v) : '', v?.from ? `From ${v.from}` : ''].filter(Boolean).join(' · ');
 
   function load(i, { autoplay = false } = {}) {
     clearTimers();
@@ -105,12 +113,11 @@ export async function mountCinema(el, deck, {
     vid.addEventListener('play', () => {
       started = true;
       clearTimeout(introTimer);
-      clearTimeout(fadeTimer);
       counting(false);
-      if (here()) music.hold(quiet); // and it stays silent on this page until the page is left
       endCard.hidden = true;
       prompt.hidden = true;
       if (!theatre) openTheatre();
+      else music.hold(quiet); // (again, after a video that could not be played let it go)
     });
     vid.addEventListener('playing', () => { hasPlayed = true; clearTimeout(watchdog); });
     player.el.classList.add('is-entering');
@@ -139,7 +146,7 @@ export async function mountCinema(el, deck, {
   function blocked() {
     clearTimeout(watchdog);
     console.info('[video] the browser is waiting for a click before it plays the video with sound');
-    if (!theatre) music.release(quiet); // the music carries on while the page waits for a click
+    if (!theatre) music.release(quiet); // the music is back to normal while the page waits for a click
     prompt.hidden = false;
     player.el.querySelector('.player__big-play')?.focus({ preventScroll: true });
     announce('Press Play to start the video.');
@@ -152,6 +159,7 @@ export async function mountCinema(el, deck, {
     clearTimeout(watchdog);
     clearTimeout(errorTimer);
     console.warn(`[video] skipped, could not be played: ${items[current].src}`);
+    music.release(quiet); // nothing is playing: the music comes back to normal (a next video softens it again)
     if (multi && current < items.length - 1 && (theatre || deck.autoplaying)) {
       errorTimer = setTimeout(() => load(current + 1, { autoplay: true }), SKIP_MS);
     } else if (deck.autoplaying) {
@@ -160,10 +168,9 @@ export async function mountCinema(el, deck, {
   }
 
   /** Automatic presentation: back to the presentation view, then on to the next scene.
-   *  The music stays silent until the page is left; the next page decides whether it returns. */
+   *  The music comes back up to normal as the theatre closes. */
   function finish() {
     closeTheatre();
-    music.hold(quiet);
     deck.autoAdvance(END_HOLD_MS);
   }
 
@@ -174,13 +181,14 @@ export async function mountCinema(el, deck, {
       const nextItem = items[current + 1];
       upNext.replaceChildren(
         h('p', { class: 'cinema__upnext-kicker' }, 'Up next'),
-        h('p', { class: 'cinema__upnext-name' }, nextItem.from || `${itemLabel} ${current + 2} of ${items.length}`),
+        h('p', { class: 'cinema__upnext-name' }, nextItem.from || name(nextItem)),
         h('span', { class: 'cinema__upnext-bar', 'aria-hidden': 'true' }),
       );
       upNext.hidden = false;
       upNextTimer = setTimeout(() => load(current + 1, { autoplay: true }), UP_NEXT_MS);
       return;
     }
+    music.release(quiet); // the last video has ended: the music comes back up (Watch again softens it again)
     if (deck.autoplaying) { finish(); return; }
     endCard.replaceChildren(
       h('p', { class: 'cinema__end-title' }, multi ? 'With all our love' : 'Thank you for watching'),
@@ -204,10 +212,7 @@ export async function mountCinema(el, deck, {
   /** Show the introduction for `introMs`, then play by itself (one timer, never two). */
   function queueAutoStart() {
     clearTimeout(introTimer);
-    clearTimeout(fadeTimer);
     counting(true);
-    // the music bows out just before the film, so the film starts in quiet
-    fadeTimer = setTimeout(() => { if (here()) music.hold(quiet); }, Math.max(0, introMs - PREFADE_MS));
     introTimer = setTimeout(() => {
       counting(false);
       if (mayAutoplay() && here() && !started) start();
@@ -249,7 +254,7 @@ export async function mountCinema(el, deck, {
     theatre = true;
     el.classList.add('is-theatre');
     document.body.classList.add('is-theatre');
-    music.hold(quiet); // silent between two wishes, too
+    music.hold(quiet); // soft between two wishes, too
     player.el.focus({ preventScroll: true });
     document.addEventListener('keydown', onTheatreKey, true);
     enterFullscreen();
@@ -264,7 +269,7 @@ export async function mountCinema(el, deck, {
     el.classList.remove('is-theatre');
     document.body.classList.remove('is-theatre');
     document.removeEventListener('keydown', onTheatreKey, true);
-    music.release(quiet); // closed by hand: the music may return
+    music.release(quiet); // back to normal
     // full screen opened just for this video goes too, unless the presentation runs on by itself
     if (ownsFullscreen && document.fullscreenElement && !deck.autoplaying) document.exitFullscreen().catch(() => {});
     deck.refresh();
@@ -308,7 +313,7 @@ export async function mountCinema(el, deck, {
   }
 
   const total = items.reduce((s, v) => s + (v.duration || 0), 0);
-  const metaText = meta ?? (multi ? `${items.length} messages${total >= 90 ? ` · about ${Math.round(total / 60)} minutes` : ''}` : fmtLength(items[0]?.duration));
+  const metaText = meta ?? (multi ? `${messages.length} messages${total >= 90 ? ` · about ${Math.round(total / 60)} minutes` : ''}` : fmtLength(items[0]?.duration));
 
   el.append(h('div', { class: `scene__frame cinema cinema--${theme}` },
     h('div', { class: 'cinema__text' },
@@ -328,10 +333,7 @@ export async function mountCinema(el, deck, {
     enter() {
       started = false;
       if (items.length && current !== 0 && multi) load(0);
-      const autoStart = items.length && mayAutoplay();
-      // straight on from another video: the music stays silent through this introduction
-      if (autoStart && music.silenced) music.hold(quiet);
-      if (autoStart) queueAutoStart();
+      if (items.length && mayAutoplay()) queueAutoStart();
     },
     /** The page before this one is showing: decode the poster now, so this page appears without a stall. */
     prepare() {
@@ -354,7 +356,6 @@ export async function mountCinema(el, deck, {
       if (on && items.length && !started && !theatre) queueAutoStart();
       if (!on) {
         clearTimeout(introTimer);
-        clearTimeout(fadeTimer);
         counting(false);
         if (!theatre) music.release(quiet);
       }

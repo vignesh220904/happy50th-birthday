@@ -94,10 +94,11 @@
     "sign": "With all our love, always"
   },
   "music": {
-    "_note": "Background music. It starts with Begin the Celebration (or M) and loops. 'volume' (0-1) is its level on ordinary pages. It is never heard under a video: it fades out and pauses before every film and family wish, and returns on the next page without a video. M switches it off and on. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
+    "_note": "Background music. It starts with Begin the Celebration (or M) and loops. 'volume' (0-1) is its level on ordinary pages. While a film or family wish plays it goes soft, to 'videoLevel' × volume (0.12 = 12 %), keeps playing underneath, stays soft from one wish to the next, and comes back up when the videos end. M switches it off and on. To change the track, put an MP3 in assets/audio/ and set 'src', 'title' and 'credit'.",
     "src": "assets/audio/music.mp3",
     "title": "Happy Birthday Songs",
     "volume": 0.4,
+    "videoLevel": 0.12,
     "credit": "Music: “Happy Birthday Songs – 1 Hour Non-Stop Celebration”, supplied by the family"
   }
 }

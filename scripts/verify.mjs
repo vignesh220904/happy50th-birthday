@@ -119,14 +119,18 @@ check('final greeting and messages', site.finale.headline === 'Happy 50th Birthd
   && site.finale.subline === '50 Years of Beautiful Memories. A Lifetime of Love. Countless Reasons to Celebrate You.'
   && site.finale.message === 'We may never be able to give back everything you have given us, but we will spend our lives making sure you always feel how deeply you are loved.');
 check('music: the family’s track is configured, exists, and is credited', site.music.src === 'assets/audio/music.mp3' && exists(site.music.src) && !!site.music.credit);
-check('music: never heard under a video (no "soft" level: it fades out and pauses)', !('softVolume' in site.music) && /hold\(reason\)/.test(read('js/core/audio.js')) && /audio\.pause\(\)/.test(read('js/core/audio.js')) && !/duck/.test(read('js/core/audio.js') + read('js/core/player.js') + read('js/sections/cinema.js')));
+const audioJs = read('js/core/audio.js');
+check('music: soft under the videos, 10–15 % of its normal volume (videoLevel), never muted', site.music.videoLevel >= 0.1 && site.music.videoLevel <= 0.15 && /config\.volume \* \(holds\.size \? config\.videoLevel : 1\)/.test(audioJs));
+check('music: a video never pauses or restarts it (only the host\'s M switches it off)', (audioJs.match(/audio\.pause\(\)/g) || []).length === 1 && /if \(!state\.on\) audio\.pause\(\)/.test(audioJs) && /if \(audio\.paused\) await audio\.play\(\)/.test(audioJs));
+check('music: the videos\' own sound is never changed by it (the controller touches only its own <audio>)', !/\.muted|querySelector|HTMLVideoElement|video\.volume/.test(audioJs) && !/music[^\n]*\b(video|v)\.(volume|muted)/.test(read('js/core/player.js') + read('js/sections/cinema.js')));
 check('music: one controller, driven by the videos\' own play / playing / pause / ended / error events', ['play', 'playing', 'pause', 'ended', 'error'].every((ev) => new RegExp(`addEventListener\\('${ev}'`).test(read('js/core/player.js'))) && /music\.hold\('video'\)/.test(read('js/core/player.js')) && (read('js/core/audio.js').match(/new Audio\(/g) || []).length === 1);
 check('music: kept low (volume 0.4 or less)', site.music.volume > 0 && site.music.volume <= 0.4);
 // The family's three films, from VIDEOS/ (prepared by npm run build:films)
 const FILMS = [['storyFilm', 'VIDEOS/age 1 to 5 story video.mp4'], ['ageFilm', 'VIDEOS/updated/AGE 1 TO 50 - real video-update.mp4'], ['lifeJourney', 'VIDEOS/updated/LIFE JOURNEY-update.mp4']];
 for (const [key, original] of FILMS) {
   const f = site.videos[key] || {};
-  check(`film ${key}: made from the family's own "${original.split('/').pop()}"`, f.source === original && (!existsSync(join(ROOT, 'VIDEOS')) || exists(original)), f.source);
+  // (an original that is not in the presentation may have been moved away; its web copy is what counts)
+  check(`film ${key}: made from the family's own "${original.split('/').pop()}"`, f.source === original && (!existsSync(join(ROOT, 'VIDEOS')) || exists(original) || f.inPresentation === false), f.source);
   check(`film ${key}: its web copy (MP4) and poster exist`, /^assets\/videos\/family\/[\w-]+\.mp4$/.test(f.src || '') && exists(f.src) && !!f.poster && exists(f.poster), `${f.src} · ${f.poster}`);
   if (f.src && exists(f.src)) check(`film ${key}: under ${GITHUB_MAX_MB} MB (${mb(f.src).toFixed(1)} MB)`, mb(f.src) < GITHUB_MAX_MB);
 }
@@ -144,10 +148,17 @@ check('wishes: the placeholder line is the family’s wording', wishes.emptyMess
 check('wishes: every listed video is an MP4 that exists', wv.every((v) => /\.mp4$/.test(v.src) && exists(v.src)), wv.filter((v) => !exists(v.src)).map((v) => v.src).join(', '));
 check('wishes: numbered 1, 2, 3 … in the family’s order', wv.every((v, i) => v.n === i + 1));
 const leading = (f) => { const m = /^\s*(\d+)/.exec((f || '').split('/').pop()); return m ? Number(m[1]) : Infinity; };
-check('wishes: the order follows the numbers in the family’s filenames', wv.every((v, i) => i === 0 || leading(wv[i - 1].file) <= leading(v.file)));
-check('wishes: captions come only from the filenames', wv.every((v) => !v.from || (v.file || '').includes(v.from)));
-check('wishes: the family’s numbers, in numeric order (2 before 10), none twice', wv.every((v, i) => v.number === leading(v.file) && (i === 0 || wv[i - 1].number < v.number)));
-check('wishes: only the final two can wait for confirmation; every other wish plays', wv.slice(0, -2).every((v) => v.confirmed === true) && wv.slice(-2).every((v) => typeof v.confirmed === 'boolean'));
+const ww = wv.filter((v) => v.kind !== 'film'); // the family's messages (without the film placed among them)
+check('wishes: the order follows the numbers in the family’s filenames', ww.every((v, i) => i === 0 || leading(ww[i - 1].file) <= leading(v.file)));
+check('wishes: captions come only from the filenames (none from marks like "(1)", "a" or "002")', ww.every((v) => !v.from || (v.file || '').includes(v.from)) && ww.every((v) => !/^\(?\d+\)?$|^[a-z]$/i.test(v.from)));
+check('wishes: the family’s numbers, in numeric order (2 before 10); a second file for a number follows the plain one', ww.every((v, i) => v.number === leading(v.file) && (i === 0 || ww[i - 1].number <= v.number))
+  && ['13', '16'].every((n) => ww.findIndex((v) => v.file.endsWith(`/${n}.mp4`)) + 1 === ww.findIndex((v) => v.file.endsWith(`/${n}(1).mp4`)))
+  && ww.findIndex((v) => v.file.endsWith('/17 - a.mp4')) + 1 === ww.findIndex((v) => v.file.endsWith('/17 - b.mp4')));
+check('wishes: from the "family wishes updated video" folder, all 33 videos, every one confirmed', wishes.source === 'family wishes updated video' && ww.length === 33 && ww.every((v) => v.file.startsWith('family wishes updated video/') && v.confirmed === true));
+const lj = wv.map((v, i) => [v, i]).filter(([v]) => v.kind === 'film');
+const [ljEntry, ljAt] = lj[0] || [];
+check('wishes: the Life Journey video plays once, straight after wish 8 and before wish 9', lj.length === 1 && ljEntry.src === site.videos.lifeJourney.src && exists(ljEntry.src)
+  && /\/8\.mp4$/.test(wv[ljAt - 1]?.file) && /\/9\.mp4$/.test(wv[ljAt + 1]?.file) && ljEntry.confirmed === true, lj.map(([v, i]) => `${i}: ${v.src}`).join(', '));
 const bigWishes = wv.filter((v) => exists(v.src) && mb(v.src) >= GITHUB_MAX_MB);
 check(`wishes: every web copy is under ${GITHUB_MAX_MB} MB`, !bigWishes.length, bigWishes.map((v) => v.src).join(', '));
 if (existsSync(join(ROOT, wishes.source || 'Family video wishes'))) {
@@ -209,7 +220,7 @@ check('final page: an animated gift (no still image): it floats, the lid opens, 
 check('final page: Replay and Start Again; reduced motion shows the finished scene at once', /'Replay'/.test(finaleJs) && /'Start Again'/.test(finaleJs) && /prefersReducedMotion\(\)\) \{ el\.classList\.add\(\.\.\.STATES\)/.test(finaleJs));
 check('videos: the films wait 10 s on their introduction before playing', num('js/sections/cinema.js', 'INTRO_MS') === 10000);
 check('videos: Messages Filled With Love waits about 7 s (5–10 s) before the first message', num('js/sections/wishes.js', 'INTRO_MS') >= 5000 && num('js/sections/wishes.js', 'INTRO_MS') <= 10000 && /introMs: INTRO_MS/.test(read('js/sections/wishes.js')));
-check('videos: one intro timer per page, cleared before it is set again', /clearTimeout\(introTimer\);\s+clearTimeout\(fadeTimer\);\s+counting\(true\)/.test(read('js/sections/cinema.js')));
+check('videos: one intro timer per page, cleared before it is set again', /clearTimeout\(introTimer\);\s+counting\(true\);\s+introTimer = setTimeout/.test(read('js/sections/cinema.js')));
 const cssAll = ['css/variables.css', 'css/global.css', 'css/deck.css', 'css/components.css', 'css/scenes.css'].map(read).join('\n');
 check('blue theme: a royal-blue page background with ivory text on every page', /body \{\s+background: var\(--royal-deep\);/.test(read('css/global.css')) && /--ink: #fffaf0;/.test(read('css/variables.css')) && /--royal-deep: #133a85;/.test(read('css/variables.css')));
 check('blue theme: no plain white page, slide, bubble or control backgrounds left', !/background: (#fff|#ffffff|var\(--warm-white\)|var\(--ivory\)|var\(--sky\)|rgba\(255, 255, 255, 0\.(7|8|9)\d*\));/.test(cssAll), (cssAll.match(/background: (#fff|#ffffff|var\(--warm-white\)|var\(--ivory\)|var\(--sky\)|rgba\(255, 255, 255, 0\.(7|8|9)\d*\));/g) || []).join(' '));

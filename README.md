@@ -39,9 +39,9 @@ Double-clicking `index.html` does **not** work (browsers block the site's data f
    from there to the final gift: the films and the family's video wishes start on their own, one at a time,
    and when a film ends the presentation moves on. Photo slideshows move briskly (about 4½ s for a new milestone,
    3½ s for its other photos).
-   **The music is never heard under a video:** it fades out and pauses just before every film and family wish,
-   stays off between two wishes (and from one video page to the next), and returns on the next page without a video.
-   If you switch it off with **M**, it stays off.
+   **Under every video the music goes soft:** while a film or family wish plays it fades down to about 12 % of its
+   normal volume and keeps playing underneath (the videos' own sound is untouched). It stays soft from one wish to the
+   next and comes back up when the videos end. If you switch it off with **M**, it stays off.
 4. Every video page first shows its **introduction** — the title and the film's first picture, with a golden line
    filling along the top of the screen — for **10 seconds** (Age 1 to 50 — Her Story, Our Memory Film) or about
    **7 seconds** (Messages Filled With Love). Then the video plays by itself (also when the automatic presentation is paused).
@@ -87,15 +87,15 @@ between the family's video wishes while they play (but not past the last one whi
 | 5 | **Proud Moments** · 2006 – 2026 | The same slideshow for the later milestones |
 | 6 | **50 Reasons We Love You** | The family's five groups of ten, each as a floating cloud of bubbles that appear one by one. All 50 reasons, word for word, each once |
 | 7 | **Our Memory Film** | The family's memories film (6 min 23 s). 10 s introduction, then the film |
-| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's video wishes, one at a time, each to its end, in their numbered order (see below) |
+| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's 33 video wishes, one at a time, each to its end, in their numbered order, with the family's **Life Journey** video (`VIDEOS/updated/LIFE JOURNEY-update.mp4`, 1 min 31 s) between wish 8 and wish 9 (see below) |
 | 9 | **Happy Birthday, Amma** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
 | 10 | **A Final Gift of Love** | An ivory-and-gold gift in the middle of the screen floats and glows, wiggles, and its lid swings off; a golden light pours out and a golden **50** rises from the box with gold sparkles and confetti. Then the gift moves aside and the family's closing words, her name, date and venue appear. The scene stays (nothing starts over by itself). **Replay** opens the gift again; **Start Again** returns to the welcome |
 
 Every film opens in the full-screen theatre (Back, Replay, full screen). A film whose prepared copy is missing is left out, never replaced.
 
-**Removed at the family's request:** the separate **Age 1 to 50 – Real Journey** video and the **Life Journey** video
-(their files stay in `VIDEOS/updated/` and `assets/videos/family/`; to bring one back, set `"inPresentation": true` on
-`ageFilm` or `lifeJourney` in `data/site.json`, and it plays after the video wishes), the separate Family Photo Gallery
+**Removed at the family's request:** the separate **Age 1 to 50 – Real Journey** video (its web copy stays in
+`assets/videos/family/`; to bring it back, set `"inPresentation": true` on `ageFilm` in `data/site.json`, and it plays
+after the video wishes), the Life Journey video as a page of its own (it now plays among the wishes, before wish 9), the separate Family Photo Gallery
 (its photographs stay in `Memory gallery/` and in the manifest), the "All 50 Reasons" tab, the numbered 50-gift tracker on the
 last page, the photo collage and "Explore Memories" button on the welcome, the loading screen, the Childhood film and the
 synthesised "Happy Birthday" tune.
@@ -111,10 +111,8 @@ no people, no names, no text), with the site's *Illustration* label, so it is ne
 
 | What | Where it goes | Then |
 |------|---------------|------|
-| Confirmation of the **final two** wishes (files `27.mp4` and `28.mp4`) | – | In `data/wishes.json`, set `"confirmed": true` on them (until then they are not shown) |
-| Wishes **25** and **26**, if they exist (the folder jumps from 24 to 27) | `Family video wishes/` | `npm run build:wishes` |
 | Names for the wishes, if the family wants captions | Rename the files, e.g. `03 - Vikky.mp4` | `npm run build:wishes` |
-| The **family video wishes from Google Drive** (not supplied yet) | `Family video wishes/`, named by number (`1.mp4`, `2.mp4` … or `03 - Vikky.mp4`) | `npm run build:wishes`, then check the final two's `confirmed` in `data/wishes.json`. Nothing else changes: the page plays every confirmed wish in order after its introduction |
+| Any **further family wishes** | `family wishes updated video/`, named by number (`31.mp4` … or `03 - Vikky.mp4`) | `npm run build:wishes`. The page plays every confirmed wish in order after its introduction |
 | A photograph for **1996 – 1997 (M.Com, first year)**, if the family has one (optional: an illustration stands in) | `Final Life Journey/` | `npm run build:media`, then put its id first in the `mcom` milestone's `media` in `data/timeline.json` (or replace the illustration) |
 
 ### The family's videos
@@ -122,16 +120,20 @@ no people, no names, no text), with the site's *Illustration* label, so it is ne
 | Folder | | Command |
 |------|---|---|
 | `VIDEOS/` | the films: `age 1 to 5 story video.mp4` (shown as *Age 1 to 50 — Her Story*), and the updated `updated/AGE 1 TO 50 - real video-update.mp4` and `updated/LIFE JOURNEY-update.mp4` (both left out of the presentation) | `npm run build:films` → `assets/videos/family/` |
-| `Family video wishes/` | the numbered wishes `1.mp4` … `24.mp4`, `27.mp4`, `28.mp4` | `npm run build:wishes` → `assets/videos/wishes/` + `data/wishes.json` |
+| `family wishes updated video/` | the family's 33 wishes, numbered 1 – 30: `1.mp4` … `30.mp4`, with two files for 13 (`13`, `13(1)`), 16 (`16`, `16(1)`) and 17 (`17 - a`, `17 - b`), and `27-002.mp4` for 27 | `npm run build:wishes` → `assets/videos/wishes/` + `data/wishes.json` |
+| `Family video wishes/` | the earlier set of wishes (no longer used; kept as the family sent it) | – |
 
 Both scripts check that every original can be decoded and report any that can't (they are left out, never replaced).
 Films that are already browser-ready are copied as they are; everything else becomes MP4 (H.264 + AAC), at most 1920 px,
 each under 95 MB so it can go to GitHub. HDR phone videos are tone-mapped so they don't look washed out.
 The originals are never changed.
 
-`build:wishes` sorts by the number in the filename (2 before 10) and names a wish after the text following the number
-("03 - Vikky.mp4" → *From Vikky*); files without a name (e.g. "03.mp4") get no caption, so nothing on screen is a guess.
-It reports missing numbers, duplicates, files it cannot decode and a count that differs from the family's.
+`build:wishes` reads the folder named in `data/wishes.json` → `source`, sorts by the number in the filename (2 before 10;
+for a number with two files, the plain one first: `13`, `13(1)`; `17 - a`, `17 - b`) and names a wish after the text
+following the number ("03 - Vikky.mp4" → *From Vikky*); files without a name (e.g. "03.mp4", "13(1).mp4", "27-002.mp4")
+get no caption, so nothing on screen is a guess. It reports missing numbers, duplicates, files it cannot decode and a
+count that differs from the family's. `data/wishes.json` → `films` places the Life Journey video (its web copy from
+`npm run build:films`) before wish 9; it plays once, in turn, as *Her Life Journey*, and is not counted as a message.
 
 The *Memory gallery* Drive folder's video (`101901_1792393489053.mp4`, 282,682,775 bytes) is byte-for-byte the film in this project
 (`assets/videos/happy 50th birthday.mp4`). Its browser-ready copy, `assets/media/films/family-memories.mp4`, is **Our Memory Film**.
@@ -152,10 +154,12 @@ All family-specific content lives in `data/`:
 
 ### Music
 `assets/audio/music.mp3`: *Happy Birthday Songs – 1 Hour Non-Stop Celebration*, supplied by the family. It starts with
-**Begin the Celebration** (or M) and loops, at `music.volume` (0.4) on ordinary pages. It is **silent under every video**:
-one controller (`js/core/audio.js`) fades it out and pauses it before a film or wish starts, keeps it off while any video plays
-(it listens to the videos' own play / playing / pause / ended / error events) and between two videos, and brings it back on the
-next page without a video. M switches it off and on, and nothing else turns it back on. The credit is shown on the final page.
+**Begin the Celebration** (or M) and loops, at `music.volume` (0.4) on ordinary pages. **Under every video it goes soft**:
+one controller (`js/core/audio.js`) fades it down to `music.videoLevel` (0.12, i.e. 12 % of normal) while any video plays (it
+listens to the videos' own play / playing / pause / ended / error events), keeps it soft from one wish to the next, and brings
+it back up when the video ends or pauses, or if a video cannot be played. It keeps playing underneath (never muted or
+restarted), and the videos' own sound is left as it is. M switches it off and on, and nothing else turns it back on.
+The credit is shown on the final page.
 To change the track, put an MP3 you have permission to use in `assets/audio/`, then set `music.src`, `music.title` and `music.credit`
 in `data/site.json`. (`canon-in-d-major.mp3`, the earlier instrumental, is still in the folder but no longer used.)
 
@@ -212,11 +216,11 @@ Set `SMOKE_SHOTS=some/folder` to save screenshots of every scene.
 
 Upload `index.html  pages/  css/  js/  data/  assets/` to any static host. All URLs are relative, and there is no build step.
 `assets/videos/happy 50th birthday.mp4` (283 MB, HEVC) is the original of the memories film and is not needed online.
-The original photo folders (~935 MB), `VIDEOS/` and `Family video wishes/` are source files only.
+The original photo folders (~935 MB), `VIDEOS/`, `family wishes updated video/` and `Family video wishes/` are source files only.
 
 **Vercel:** framework preset "Other", no build command, output directory = the project root. `vercel.json` lets browsers keep
 photos, films and music for a week (so nothing downloads twice); after replacing a file under the same name, visitors may see
 the old one until their copy expires (a hard refresh, Ctrl + F5, fetches the new one). `.vercelignore` keeps the
 source folders out of a `vercel deploy` upload. Every file the site serves is under 100 MB, so it can also deploy from GitHub
-(`VIDEOS/` and `Family video wishes/` are git-ignored). Online, the films stream from the start (their index is at the front),
+(`VIDEOS/`, `family wishes updated video/` and `Family video wishes/` are git-ignored). Online, the films stream from the start (their index is at the front),
 but the venue's internet decides how smoothly they play; the local copy (`Open Birthday Site.bat`) is the safest at the venue.

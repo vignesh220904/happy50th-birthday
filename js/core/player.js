@@ -3,10 +3,10 @@
 // a loading spinner, keyboard shortcuts and a graceful error state.
 //
 // Presentation behaviour: only one video plays at a time; the background music
-// is silent while any video plays (core/audio.js fades it out and pauses it, from
-// the video's own play / playing / pause / ended / error events) and may return
-// afterwards; and <body> gets `.video-playing` so the presentation controls can
-// step aside.
+// goes soft while any video plays (core/audio.js, from the video's own play /
+// playing / pause / ended / error events; the video's own sound is untouched)
+// and comes back up afterwards; and <body> gets `.video-playing` so the
+// presentation controls can step aside.
 
 import { h, icons, pad } from './util.js';
 import { url } from './data.js';

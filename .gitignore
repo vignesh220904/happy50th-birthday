@@ -35,3 +35,6 @@ Family video wishes/
 # The site plays the prepared copies in assets/videos/family/ (npm run build:films).
 # Anchored to the root: git on Windows ignores case, and "VIDEOS/" alone would also hide assets/videos/.
 /VIDEOS/
+
+# The family's updated wishes folder (originals, several GB). The site plays the copies in assets/videos/wishes/.
+family wishes updated video/
