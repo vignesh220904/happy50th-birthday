@@ -2,8 +2,9 @@
 // Checks that the family's words, milestones and media references are intact
 // and that every file the site points to actually exists.
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync, openSync, readSync, closeSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -137,10 +138,16 @@ for (const [key, original] of FILMS) {
 check('the three films are three different files', new Set(FILMS.map(([k]) => site.videos[k]?.src)).size === 3);
 check('page 3 is "Age 1 to 50 — Her Story" (not "Age 1 to 5"), made from the story film', site.videos.storyFilm.title === 'Age 1 to 50' && site.videos.storyFilm.titleAccent === '— Her Story' && site.videos.storyFilm.playerTitle === 'Age 1 to 50 — Her Story' && site.videos.storyFilm.inPresentation !== false);
 check('the separate "Age 1 to 50 – Real Journey" video is left out of the presentation (its file stays)', site.videos.ageFilm.inPresentation === false && exists(site.videos.ageFilm.src));
-check('the "Life Journey" video is left out of the presentation, as the family\'s running order asks (its file stays)', site.videos.lifeJourney.inPresentation === false && exists(site.videos.lifeJourney.src));
+check('"Her Life Journey" (the LIFE JOURNEY-update video) is in the presentation, with its proper title and a short title before it', site.videos.lifeJourney.inPresentation !== false && exists(site.videos.lifeJourney.src) && site.videos.lifeJourney.source === 'VIDEOS/updated/LIFE JOURNEY-update.mp4'
+  && `${site.videos.lifeJourney.title} ${site.videos.lifeJourney.titleAccent}` === 'Her Life Journey' && site.videos.lifeJourney.playerTitle === 'Her Life Journey' && site.videos.lifeJourney.introSeconds > 0 && site.videos.lifeJourney.introSeconds < 10);
+const appJs = read('js/app.js');
+const order = [...appJs.matchAll(/\{ id: '([a-z-]+)'/g)].map((m) => m[1]);
+check('running order after Our Memory Film: 8 the wishes, 9 Her Life Journey, 10 Happy Birthday, Amma, then A Final Gift of Love', order.slice(order.indexOf('memories')).join() === 'memories,wishes,age-film,journey-film,cake,finale' && site.videos.ageFilm.inPresentation === false
+  && /id: 'journey-film', title: 'Her Life Journey'/.test(appJs) && /id: 'cake', title: 'Happy Birthday, Amma'/.test(appJs), order.join());
+check('the closing page is not counted ("Final", never "11 of 10")', /id: 'finale', title: 'A Final Gift of Love', mod: finale, numbered: false/.test(appJs) && /numberOf\(i\) \? `\$\{numberOf\(i\)\} of \$\{counted\(\)\}` : 'Final'/.test(read('js/core/deck.js')));
 const visibleCopy = ['js/app.js', 'js/sections/family-film.js', 'js/sections/story-film.js', 'scripts/build_pages.py', ...readdirSync(join(ROOT, 'pages')).map((f) => `pages/${f}`)];
-const oldTitle = visibleCopy.filter((f) => /Age 1 to 5[:\s]*Her Story|'Age 1 to 5'|Real Journey"\)|Her Life Journey"\)/.test(read(f)));
-check('no visible "Age 1 to 5" or "Real Journey" / "Life Journey" film titles left in the presentation or its links', !oldTitle.length && !/"title": "Age 1 to 5"/.test(read('data/site.json')), oldTitle.join(', '));
+const oldTitle = visibleCopy.filter((f) => /Age 1 to 5[:\s]*Her Story|'Age 1 to 5'|Real Journey"\)/.test(read(f)));
+check('no visible "Age 1 to 5" or "Real Journey" film titles left in the presentation or its links', !oldTitle.length && !/"title": "Age 1 to 5"/.test(read('data/site.json')), oldTitle.join(', '));
 check("the memories film is the family's own film", site.videos.memories.film === 'film-memories');
 const wishes = json('data/wishes.json');
 const wv = wishes.videos || [];
@@ -155,10 +162,35 @@ check('wishes: the family’s numbers, in numeric order (2 before 10); a second 
   && ['13', '16'].every((n) => ww.findIndex((v) => v.file.endsWith(`/${n}.mp4`)) + 1 === ww.findIndex((v) => v.file.endsWith(`/${n}(1).mp4`)))
   && ww.findIndex((v) => v.file.endsWith('/17 - a.mp4')) + 1 === ww.findIndex((v) => v.file.endsWith('/17 - b.mp4')));
 check('wishes: from the "family wishes updated video" folder, all 33 videos, every one confirmed', wishes.source === 'family wishes updated video' && ww.length === 33 && ww.every((v) => v.file.startsWith('family wishes updated video/') && v.confirmed === true));
-const lj = wv.map((v, i) => [v, i]).filter(([v]) => v.kind === 'film');
-const [ljEntry, ljAt] = lj[0] || [];
-check('wishes: the Life Journey video plays once, straight after wish 8 and before wish 9', lj.length === 1 && ljEntry.src === site.videos.lifeJourney.src && exists(ljEntry.src)
-  && /\/8\.mp4$/.test(wv[ljAt - 1]?.file) && /\/9\.mp4$/.test(wv[ljAt + 1]?.file) && ljEntry.confirmed === true, lj.map(([v, i]) => `${i}: ${v.src}`).join(', '));
+check('wishes: only the 33 family messages — Life Journey is not among them (it has its own page, after the wishes)', wv.length === 33 && !wv.some((v) => v.kind === 'film' || /life-journey/i.test(v.src)) && !(wishes.films || []).length && /\/30\.mp4$/.test(wv.at(-1).file));
+const sha1 = (p) => createHash('sha1').update(readFileSync(join(ROOT, p))).digest('hex');
+const staleRev = wv.filter((v) => !v.rev || !exists(v.src) || sha1(v.src).slice(0, 10) !== v.rev);
+check('wishes: every video has a fingerprint ("rev") that matches its file, so a replaced file gets a new URL', !staleRev.length, staleRev.map((v) => v.src).join(', '));
+/** The MP4's top-level boxes and its codecs, read from the file itself (no renamed extension can pass). */
+function mp4Info(p) {
+  const fd = openSync(join(ROOT, p), 'r');
+  const size = statSync(join(ROOT, p)).size;
+  const boxes = [];
+  let moov = null;
+  try {
+    for (let pos = 0; pos + 8 <= size;) {
+      const head = Buffer.alloc(16);
+      readSync(fd, head, 0, 16, pos);
+      let len = head.readUInt32BE(0);
+      const type = head.toString('latin1', 4, 8);
+      if (len === 1) len = Number(head.readBigUInt64BE(8));
+      if (len === 0) len = size - pos;
+      if (len < 8) break;
+      boxes.push(type);
+      if (type === 'moov') { moov = Buffer.alloc(len); readSync(fd, moov, 0, len, pos); }
+      pos += len;
+    }
+  } finally { closeSync(fd); }
+  const m = moov ? moov.toString('latin1') : '';
+  return { faststart: boxes.indexOf('moov') > -1 && boxes.indexOf('moov') < boxes.indexOf('mdat'), avc: m.includes('avc1'), hevc: /hvc1|hev1/.test(m), aac: m.includes('mp4a') };
+}
+const badCodec = wv.map((v) => [v.src, exists(v.src) ? mp4Info(v.src) : null]).filter(([, i]) => !i || !i.avc || i.hevc || !i.aac || !i.faststart);
+check(`wishes: every playlist video is a browser-ready MP4: H.264 (avc1) + AAC, no HEVC, index at the front (${wv.length})`, !badCodec.length, badCodec.map(([s, i]) => `${s} ${JSON.stringify(i)}`).join('\n      '));
 const bigWishes = wv.filter((v) => exists(v.src) && mb(v.src) >= GITHUB_MAX_MB);
 check(`wishes: every web copy is under ${GITHUB_MAX_MB} MB`, !bigWishes.length, bigWishes.map((v) => v.src).join(', '));
 if (existsSync(join(ROOT, wishes.source || 'Family video wishes'))) {
@@ -177,7 +209,7 @@ const index = read('index.html');
 const indexRefs = [...index.matchAll(/(?:href|src)="([^"#:]+\.(?:css|js|woff2))"/g)].map((m) => m[1]);
 check('index.html: stylesheets, scripts and fonts resolve', indexRefs.every((r) => exists(r)), indexRefs.filter((r) => !exists(r)).join(', '));
 const sceneIds = [...index.matchAll(/data-scene="([a-z-]+)"/g)].map((m) => m[1]);
-check('index.html: the scenes, in order (age-film and journey-film stay as switched-off slots)', sceneIds.join() === 'welcome,reveal,story-film,journey,proud,reasons,memories,wishes,age-film,journey-film,cake,finale', sceneIds.join());
+check('index.html: the scenes, in order (age-film stays as a switched-off slot)', sceneIds.join() === 'welcome,reveal,story-film,journey,proud,reasons,memories,wishes,age-film,journey-film,cake,finale', sceneIds.join());
 check('the presentation skips a film the family left out (inPresentation: false)', /inPresentation === false\) return \{ absent: true \}/.test(read('js/sections/family-film.js')));
 check('the separate Family Photo Gallery is removed (its photographs stay in "Memory gallery/")', !sceneIds.includes('gallery') && !exists('js/sections/gallery.js') && manifest.collections.gallery.length > 0);
 check('no loading screen before the welcome', !/class="loader"/.test(index));
@@ -220,6 +252,11 @@ check('final page: an animated gift (no still image): it floats, the lid opens, 
 check('final page: Replay and Start Again; reduced motion shows the finished scene at once', /'Replay'/.test(finaleJs) && /'Start Again'/.test(finaleJs) && /prefersReducedMotion\(\)\) \{ el\.classList\.add\(\.\.\.STATES\)/.test(finaleJs));
 check('videos: the films wait 10 s on their introduction before playing', num('js/sections/cinema.js', 'INTRO_MS') === 10000);
 check('videos: Messages Filled With Love waits about 7 s (5–10 s) before the first message', num('js/sections/wishes.js', 'INTRO_MS') >= 5000 && num('js/sections/wishes.js', 'INTRO_MS') <= 10000 && /introMs: INTRO_MS/.test(read('js/sections/wishes.js')));
+check('videos: each video and poster is asked for with its fingerprint ("?v=rev"), and url() keeps that query', /src: versioned\(v\.src, v\.rev\)/.test(read('js/sections/cinema.js')) && /poster: versioned\(v\.poster, v\.rev\)/.test(read('js/sections/cinema.js')) && /const \[file, query\] = path\.split\('\?'\)/.test(read('js/core/data.js')));
+const vercel = json('vercel.json');
+const cacheFor = (src) => vercel.headers.find((x) => x.source === src)?.headers.find((x) => x.key === 'Cache-Control')?.value || '';
+check('deploy: code and styles are checked for updates on every visit (never run stale)', /max-age=0, must-revalidate/.test(cacheFor('/(css|js)/(.*)')));
+check('videos: a failed video is tried once more from a fresh URL, then shows Retry and Skip (never skipped silently)', /retryNow\(\);\s+return;/.test(read('js/sections/cinema.js')) && /'Retry'/.test(read('js/core/player.js')) && /'Skip'/.test(read('js/core/player.js')) && !/SKIP_MS/.test(read('js/sections/cinema.js')) && /STALL_MS = \d+/.test(read('js/core/player.js')));
 check('videos: one intro timer per page, cleared before it is set again', /clearTimeout\(introTimer\);\s+counting\(true\);\s+introTimer = setTimeout/.test(read('js/sections/cinema.js')));
 const cssAll = ['css/variables.css', 'css/global.css', 'css/deck.css', 'css/components.css', 'css/scenes.css'].map(read).join('\n');
 check('blue theme: a royal-blue page background with ivory text on every page', /body \{\s+background: var\(--royal-deep\);/.test(read('css/global.css')) && /--ink: #fffaf0;/.test(read('css/variables.css')) && /--royal-deep: #133a85;/.test(read('css/variables.css')));

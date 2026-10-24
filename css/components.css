@@ -191,7 +191,9 @@ body.pointer-idle .player.is-playing .player__controls { opacity: 0; } /* the fi
   text-align: center;
 }
 .player__error p { margin: 0.2em 0; font-size: var(--fs-lg); }
-.player__error-hint { font-size: var(--fs-sm) !important; color: #c9d6ea; }
+.player__error-title { font-family: var(--font-display); font-size: var(--fs-2xl) !important; font-weight: 600; }
+.player__error-hint { max-width: 40ch; margin-inline: auto !important; font-size: var(--fs-body) !important; color: #c9d6ea; }
+.player__error-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--u) * 1); margin-top: calc(var(--u) * 1.4); }
 .player.has-error .player__big-play,
 .player.has-error .player__spinner,
 .player.has-error .player__controls { display: none; }

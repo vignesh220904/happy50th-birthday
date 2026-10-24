@@ -20,6 +20,10 @@
 // stay on screen on every page (Back, Next, full screen); only the mouse
 // pointer hides when it rests. H hides or shows the controls by hand.
 //
+// Numbering: the scenes are counted "1 of 10", "2 of 10" …; a scene added with
+// { numbered: false } (the closing page, A Final Gift of Love) is not counted
+// and shows "Final" instead of a number.
+//
 // The welcome is always the first screen. The current scene is deliberately
 // never stored (not in the URL, not in storage), so a refresh or a new session
 // shows the welcome again. A link such as index.html#reasons opens that scene
@@ -61,15 +65,19 @@ export function createDeck(root, uiMount) {
   uiMount.replaceChildren(navBar, toolBar, menu);
 
   // ---- Registry ---------------------------------------------------------------
-  function add(id, title, ctl = {}) {
+  function add(id, title, ctl = {}, { numbered = true } = {}) {
     const el = root.querySelector(`[data-scene="${id}"]`);
     if (!el) return;
     el.setAttribute('tabindex', '-1');
     el.setAttribute('aria-roledescription', 'slide');
-    scenes.push({ id, title, el, ctl });
+    scenes.push({ id, title, el, ctl, numbered });
   }
 
   const current = () => scenes[index];
+  /** "8 of 10" for a counted scene, "Final" for the closing one */
+  const counted = () => scenes.filter((s) => s.numbered).length;
+  const numberOf = (i) => (scenes[i]?.numbered ? scenes.slice(0, i + 1).filter((s) => s.numbered).length : null);
+  const position = (i) => (numberOf(i) ? `${numberOf(i)} of ${counted()}` : 'Final');
   const stepInfo = (s) => s?.ctl.steps?.() || null; // { index, count, label }
 
   // ---- Moving -------------------------------------------------------------------
@@ -104,7 +112,7 @@ export function createDeck(root, uiMount) {
       next.el.focus({ preventScroll: true });
     }
     render();
-    announce(`${next.title}. Section ${index + 1} of ${scenes.length}.`);
+    announce(`${next.title}. ${numberOf(index) ? `Section ${position(index)}` : 'The final page'}.`);
     listeners.forEach((fn) => fn(next.id, index));
     document.dispatchEvent(new CustomEvent('deck:change', { detail: { id: next.id, index } }));
     // let the scene after this one get ready (e.g. load its 3D) while this one plays
@@ -139,9 +147,9 @@ export function createDeck(root, uiMount) {
     nextBtn.disabled = atEnd;
     nextBtn.firstChild.textContent = index === 0 ? 'Begin' : 'Next';
     labelTitle.textContent = s?.title || '';
-    labelSub.textContent = `${index + 1} of ${scenes.length}${info && info.count > 1 ? ` · ${info.label || `${info.index + 1}/${info.count}`}` : ''}`;
-    progressBtn.dataset.short = `${index + 1}/${scenes.length}`;
-    progressBtn.setAttribute('aria-label', `Section ${index + 1} of ${scenes.length}: ${s?.title}. Open the section list.`);
+    labelSub.textContent = `${position(index)}${info && info.count > 1 ? ` · ${info.label || `${info.index + 1}/${info.count}`}` : ''}`;
+    progressBtn.dataset.short = numberOf(index) ? `${numberOf(index)}/${counted()}` : 'Final';
+    progressBtn.setAttribute('aria-label', `${numberOf(index) ? `Section ${position(index)}` : 'The final page'}: ${s?.title}. Open the section list.`);
     document.body.dataset.currentScene = s?.id || '';
     scheduleAuto();
   }
@@ -195,7 +203,7 @@ export function createDeck(root, uiMount) {
       h('p', { class: 'deck-menu__title' }, 'Go to a section'),
       h('ol', {}, scenes.map((s, i) => h('li', {},
         h('button', { type: 'button', 'aria-current': i === index ? 'step' : null, onclick: () => go(i, { focus: true }) },
-          h('span', { class: 'deck-menu__num' }, i + 1),
+          h('span', { class: 'deck-menu__num' }, numberOf(i) ?? '✦'),
           h('span', {}, h('span', { class: 'deck-menu__name' }, s.title), s.ctl.hint ? h('span', { class: 'deck-menu__hint' }, s.ctl.hint) : null),
         ),
       ))),

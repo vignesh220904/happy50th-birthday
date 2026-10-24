@@ -35,7 +35,7 @@
     "photoAlt": "Amma, M. Buvaneswari, smiling in a pink and orange silk saree, holding a bouquet of roses"
   },
   "videos": {
-    "_note": "The family's own films. Their originals are in VIDEOS/ (never changed); 'npm run build:films' prepares the browser-ready copies in assets/videos/family/ that 'src' points to. storyFilm ('Age 1 to 50 — Her Story', her story from birth to fifty; the original file is named 'age 1 to 5 story video.mp4') plays after Happy 50th Birthday. ageFilm (the 'Real Journey' road montage) and lifeJourney (the photo montage) are not part of the presentation at the family's request: 'inPresentation': false keeps them out (their files stay); set it to true to bring one back, after the video wishes. 'title' + 'titleAccent' (shown in gold) and 'lede' are the words beside each film. A film whose file is missing is left out. 'memories' is an id in data/photo_inventory.json → films.",
+    "_note": "The family's own films. Their originals are in VIDEOS/ (never changed); 'npm run build:films' prepares the browser-ready copies in assets/videos/family/ that 'src' points to. storyFilm ('Age 1 to 50 — Her Story', her story from birth to fifty; the original file is named 'age 1 to 5 story video.mp4') plays after Happy 50th Birthday. lifeJourney ('Her Life Journey', 9 of 10) plays after the family's video wishes, before Happy Birthday, Amma; 'introSeconds' is how long its title shows before it starts. ageFilm (the 'Real Journey' road montage) is not part of the presentation at the family's request: 'inPresentation': false keeps it out (its file stays); set it to true to bring it back, after the video wishes. 'title' + 'titleAccent' (shown in gold) and 'lede' are the words beside each film. A film whose file is missing is left out. 'memories' is an id in data/photo_inventory.json → films.",
     "storyFilm": {
       "source": "VIDEOS/age 1 to 5 story video.mp4",
       "src": "assets/videos/family/age-1-to-5-story.mp4",
@@ -60,7 +60,7 @@
       "playerTitle": "Age 1 to 50: The Real Journey"
     },
     "lifeJourney": {
-      "inPresentation": false,
+      "introSeconds": 3,
       "source": "VIDEOS/updated/LIFE JOURNEY-update.mp4",
       "src": "assets/videos/family/life-journey.mp4",
       "poster": "assets/videos/family/life-journey.jpg",

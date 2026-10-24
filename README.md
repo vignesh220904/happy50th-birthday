@@ -51,6 +51,9 @@ Double-clicking `index.html` does **not** work (browsers block the site's data f
 5. If a browser refuses to start a film with sound by itself, the film shows **Press Play to start** and the
    presentation waits; it never skips the film or pretends it is playing. Press the large ▶ once and it continues.
    If full screen was refused, the ⛶ button in the film's bar glows: press it.
+   If a video cannot be played or stays stuck loading, it is first loaded once more by itself from a fresh copy;
+   if that fails too, the screen says **This video could not be played** with **Retry** and **Skip** (nothing is
+   skipped silently). In the automatic presentation it also says when it will move on (after 15 s).
 6. Pause or resume the automatic presentation at any time with the ▶/❚❚ button or **A**.
    Next and Previous always work, by hand, photo by photo. Next never leaves the family's messages
    while one is still playing (Back or Esc first). The presentation stops on the final page; **Start Again**
@@ -87,15 +90,16 @@ between the family's video wishes while they play (but not past the last one whi
 | 5 | **Proud Moments** · 2006 – 2026 | The same slideshow for the later milestones |
 | 6 | **50 Reasons We Love You** | The family's five groups of ten, each as a floating cloud of bubbles that appear one by one. All 50 reasons, word for word, each once |
 | 7 | **Our Memory Film** | The family's memories film (6 min 23 s). 10 s introduction, then the film |
-| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's 33 video wishes, one at a time, each to its end, in their numbered order, with the family's **Life Journey** video (`VIDEOS/updated/LIFE JOURNEY-update.mp4`, 1 min 31 s) between wish 8 and wish 9 (see below) |
-| 9 | **Happy Birthday, Amma** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
-| 10 | **A Final Gift of Love** | An ivory-and-gold gift in the middle of the screen floats and glows, wiggles, and its lid swings off; a golden light pours out and a golden **50** rises from the box with gold sparkles and confetti. Then the gift moves aside and the family's closing words, her name, date and venue appear. The scene stays (nothing starts over by itself). **Replay** opens the gift again; **Start Again** returns to the welcome |
+| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's 33 video wishes, one at a time, each to its end, in their numbered order (see below) |
+| 9 | **Her Life Journey** | The family's Life Journey video (`VIDEOS/updated/LIFE JOURNEY-update.mp4`, 1 min 31 s), after all the wishes; its title shows for 3 s, then it plays |
+| 10 | **Happy Birthday, Amma** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
+| Final | **A Final Gift of Love** | (not counted: the controls say *Final*, not "11 of 10") An ivory-and-gold gift in the middle of the screen floats and glows, wiggles, and its lid swings off; a golden light pours out and a golden **50** rises from the box with gold sparkles and confetti. Then the gift moves aside and the family's closing words, her name, date and venue appear. The scene stays (nothing starts over by itself). **Replay** opens the gift again; **Start Again** returns to the welcome |
 
 Every film opens in the full-screen theatre (Back, Replay, full screen). A film whose prepared copy is missing is left out, never replaced.
 
 **Removed at the family's request:** the separate **Age 1 to 50 – Real Journey** video (its web copy stays in
 `assets/videos/family/`; to bring it back, set `"inPresentation": true` on `ageFilm` in `data/site.json`, and it plays
-after the video wishes), the Life Journey video as a page of its own (it now plays among the wishes, before wish 9), the separate Family Photo Gallery
+after the video wishes), the separate Family Photo Gallery
 (its photographs stay in `Memory gallery/` and in the manifest), the "All 50 Reasons" tab, the numbered 50-gift tracker on the
 last page, the photo collage and "Explore Memories" button on the welcome, the loading screen, the Childhood film and the
 synthesised "Happy Birthday" tune.
@@ -132,8 +136,8 @@ The originals are never changed.
 for a number with two files, the plain one first: `13`, `13(1)`; `17 - a`, `17 - b`) and names a wish after the text
 following the number ("03 - Vikky.mp4" → *From Vikky*); files without a name (e.g. "03.mp4", "13(1).mp4", "27-002.mp4")
 get no caption, so nothing on screen is a guess. It reports missing numbers, duplicates, files it cannot decode and a
-count that differs from the family's. `data/wishes.json` → `films` places the Life Journey video (its web copy from
-`npm run build:films`) before wish 9; it plays once, in turn, as *Her Life Journey*, and is not counted as a message.
+count that differs from the family's. `data/wishes.json` → `films` can place one of the family's films among the wishes
+(empty now: Her Life Journey has its own page, step 9).
 
 The *Memory gallery* Drive folder's video (`101901_1792393489053.mp4`, 282,682,775 bytes) is byte-for-byte the film in this project
 (`assets/videos/happy 50th birthday.mp4`). Its browser-ready copy, `assets/media/films/family-memories.mp4`, is **Our Memory Film**.
@@ -219,8 +223,10 @@ Upload `index.html  pages/  css/  js/  data/  assets/` to any static host. All U
 The original photo folders (~935 MB), `VIDEOS/`, `family wishes updated video/` and `Family video wishes/` are source files only.
 
 **Vercel:** framework preset "Other", no build command, output directory = the project root. `vercel.json` lets browsers keep
-photos, films and music for a week (so nothing downloads twice); after replacing a file under the same name, visitors may see
-the old one until their copy expires (a hard refresh, Ctrl + F5, fetches the new one). `.vercelignore` keeps the
+photos, films and music for a week (so nothing downloads twice), while the code and styles (`js/`, `css/`) are checked
+for updates on every visit. The family's wishes are asked for with their fingerprint (`…mp4?v=<rev>`, from
+`data/wishes.json`), so a wish replaced under the same file name is never played from an old copy in a browser's cache.
+Other files replaced under the same name may show the old version until a visitor's copy expires (Ctrl + F5 fetches the new one). `.vercelignore` keeps the
 source folders out of a `vercel deploy` upload. Every file the site serves is under 100 MB, so it can also deploy from GitHub
 (`VIDEOS/`, `family wishes updated video/` and `Family video wishes/` are git-ignored). Online, the films stream from the start (their index is at the front),
 but the venue's internet decides how smoothly they play; the local copy (`Open Birthday Site.bat`) is the safest at the venue.

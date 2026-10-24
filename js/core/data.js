@@ -6,11 +6,12 @@ import { h } from './util.js';
 /** '' on index.html, '../' on pages/*.html — set via <html data-base>. */
 export const BASE = document.documentElement.dataset.base || '';
 
-/** Turn a project-relative path into a safe URL (handles spaces, brackets, etc.). */
+/** Turn a project-relative path into a safe URL (handles spaces, brackets, etc.; a "?v=…" query is kept). */
 export function url(path) {
   if (!path) return '';
   if (/^(https?:|data:|blob:)/.test(path)) return path;
-  return BASE + path.split('/').map(encodeURIComponent).join('/');
+  const [file, query] = path.split('?');
+  return BASE + file.split('/').map(encodeURIComponent).join('/') + (query ? `?${query}` : '');
 }
 
 const cache = new Map();

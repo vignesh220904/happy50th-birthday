@@ -13,9 +13,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = {
     "welcome.html": ("welcome", "A Golden Beginning"),
     "story.html": ("story-film", "Age 1 to 50 — Her Story"),
-    # the Real Journey and Life Journey videos left the presentation: their old links open Her Story
+    # the Real Journey video left the presentation: its old link opens Her Story
     "age-transition.html": ("story-film", "Age 1 to 50 — Her Story"),
-    "life-journey.html": ("story-film", "Age 1 to 50 — Her Story"),
+    "life-journey.html": ("journey-film", "Her Life Journey"),
     "journey.html": ("journey", "A Journey Through Time"),
     "proud.html": ("proud", "Proud Moments"),
     "reasons.html": ("reasons", "50 Reasons We Love You"),

@@ -11,9 +11,18 @@
 //
 // A playlist (the wishes) plays its videos one at a time, in the given order,
 // with a short "up next" card between them. Next never leaves the scene while
-// a wish is still playing. Videos whose file is missing are left out; a video
-// that cannot be played is skipped after a moment, with a warning in the
-// console, and never replaced by anything else.
+// a wish is still playing. Videos whose file is missing are left out.
+//
+// A video that cannot be played, or stays stuck loading, is first tried once
+// more from a fresh URL (a damaged copy in the browser's cache is the usual
+// cause). If it still fails, the screen says so, with Retry and Skip, and the
+// exact URL and error go to the console: nothing is skipped silently. In the
+// automatic presentation the screen also says when it will move on
+// (MOVE_ON_MS), so the celebration never stops on one broken file.
+//
+// Each video and poster is asked for with its fingerprint (`rev` in the
+// playlist → "?v=…"), so a file replaced under the same name is never played
+// from an old copy in a visitor's browser cache.
 //
 // Every video page plays by itself: once the visitor has clicked or pressed a
 // key anywhere (Begin the Celebration, Next …), arriving on the page shows its
@@ -45,8 +54,10 @@ import { videoStage, fileExists } from './shared.js';
 const INTRO_MS = 10000;         // the introduction shows this long before the film starts by itself
 const UP_NEXT_MS = 2200;        // between two wishes: who is next
 const END_HOLD_MS = 1200;       // after the film or the last wish: a breath, then on
-const SKIP_MS = 2500;           // a video that cannot be played is skipped after this …
-const START_TIMEOUT_MS = 20000; // … and so is one that never starts at all
+const MOVE_ON_MS = 15000;       // automatic presentation: a video that still fails after a retry is passed after this, with a notice on screen
+const START_TIMEOUT_MS = 20000; // a video that never starts at all counts as failed
+/** The file's fingerprint in the URL: a replaced file always has a new address */
+const versioned = (path, rev) => (path && rev ? `${path}?v=${rev}` : path);
 const fmtLength = (s) => (!s ? '' : s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${Math.round(s % 60)} s`);
 
 export async function mountCinema(el, deck, {
@@ -65,7 +76,7 @@ export async function mountCinema(el, deck, {
   playlist.filter((_, i) => !exists[i]).forEach((v) => console.warn(`[video] file not found, left out: ${v.src}`));
   const multi = items.length > 1;
 
-  let current = 0, player = null, theatre = false, started = false, hasPlayed = false, ownsFullscreen = false;
+  let current = 0, player = null, theatre = false, started = false, hasPlayed = false, ownsFullscreen = false, retried = false;
   let upNextTimer = 0, errorTimer = 0, introTimer = 0, watchdog = 0, prepared = false;
   const clearTimers = () => { [upNextTimer, errorTimer, introTimer, watchdog].forEach(clearTimeout); counting(false); };
 
@@ -99,13 +110,16 @@ export async function mountCinema(el, deck, {
     player?.destroy();
     current = i;
     hasPlayed = false;
+    retried = false;
     const v = items[i];
     player = createPlayer({
-      src: v.src,
-      poster: v.poster,
+      src: versioned(v.src, v.rev),
+      poster: versioned(v.poster, v.rev),
       title: v.from ? `${v.title || itemLabel} from ${v.from}` : (v.title || title.replace(/<[^>]+>/g, '')),
       onEnded: ended,
-      onError: () => { if (here()) failed(); },
+      onError: (problem) => { if (here()) failed(problem); },
+      onRetry: () => retryNow(),
+      onSkip: () => skip('the host'),
       fullscreen: () => (theatre ? toggleFullscreen() : openTheatre()),
     });
     const vid = player.video;
@@ -131,16 +145,22 @@ export async function mountCinema(el, deck, {
   /** Play the current video. If the browser holds it back, say so and wait for a click. */
   async function start() {
     const p = player;
+    // the video already failed (e.g. while it was fetched in the background, before this page was open):
+    // a dead <video> refuses play(), so load it again from a fresh URL first
+    if (p.failed) {
+      console.warn(`[video] ${items[current].src} had failed before it was played; loading it again from a fresh copy`);
+      retried = true;
+      p.retry();
+    }
     clearTimeout(watchdog);
     watchdog = setTimeout(() => {
       if (p !== player || hasPlayed || !here()) return;
       console.warn(`[video] ${items[current].src} did not start within ${START_TIMEOUT_MS / 1000} s`);
-      failed();
+      p.fail('stalled'); // → the problem state, and failed() through onError
     }, START_TIMEOUT_MS);
-    const result = await p.play();
+    const result = await p.play(); // ('error' reaches failed() through the player's onError)
     if (p !== player) return; // another video was loaded meanwhile
     if (result === 'blocked') blocked();
-    else if (result === 'error' && here()) failed();
   }
 
   function blocked() {
@@ -152,19 +172,39 @@ export async function mountCinema(el, deck, {
     announce('Press Play to start the video.');
   }
 
-  /** A video that cannot be played: skip it (never stop the presentation on a broken file). */
-  function failed() {
-    if (player.el.dataset.failed) return; // the error event and play() may both report it
-    player.el.dataset.failed = 'true';
+  /** A video that cannot be played or is stuck loading: once more from a fresh URL, then Retry / Skip. */
+  function failed(problem = {}) {
     clearTimeout(watchdog);
     clearTimeout(errorTimer);
-    console.warn(`[video] skipped, could not be played: ${items[current].src}`);
-    music.release(quiet); // nothing is playing: the music comes back to normal (a next video softens it again)
-    if (multi && current < items.length - 1 && (theatre || deck.autoplaying)) {
-      errorTimer = setTimeout(() => load(current + 1, { autoplay: true }), SKIP_MS);
-    } else if (deck.autoplaying) {
-      errorTimer = setTimeout(finish, SKIP_MS);
+    const src = items[current].src;
+    if (!retried) {
+      retried = true;
+      console.warn(`[video] ${src} — ${problem.name || 'error'}; trying once more from a fresh copy`);
+      retryNow();
+      return;
     }
+    console.warn(`[video] ${src} still cannot be played after a retry (${problem.name || 'error'}${problem.message ? `: ${problem.message}` : ''}); showing Retry and Skip`);
+    music.release(quiet); // nothing is playing: the music comes back to normal (a next video softens it again)
+    if (deck.autoplaying) {
+      const next = multi && current < items.length - 1 ? 'The next message follows' : 'The presentation moves on';
+      player.setHint(`Press Retry to load it again. ${next} in ${MOVE_ON_MS / 1000} seconds.`);
+      errorTimer = setTimeout(() => skip('the automatic presentation'), MOVE_ON_MS);
+    }
+    announce('This video could not be played. Press Retry to load it again, or Skip.');
+  }
+  /** Retry: load the current video again from a fresh URL and play it. */
+  function retryNow() {
+    clearTimeout(errorTimer);
+    player.retry();
+    start();
+  }
+  /** Skip a video that cannot be played: on to the next one, or the next page. */
+  function skip(by) {
+    clearTimeout(errorTimer);
+    console.warn(`[video] skipped by ${by}: ${items[current].src}`);
+    if (multi && current < items.length - 1) load(current + 1, { autoplay: true });
+    else if (deck.autoplaying) finish();
+    else { closeTheatre(); deck.next(); }
   }
 
   /** Automatic presentation: back to the presentation view, then on to the next scene.
@@ -259,6 +299,7 @@ export async function mountCinema(el, deck, {
     document.addEventListener('keydown', onTheatreKey, true);
     enterFullscreen();
     announce('Playing in full screen. Press Escape to return to the page.');
+    deck.refresh(); // the page name shows which message is playing straight away
   }
   function closeTheatre() {
     if (!theatre) return;
@@ -333,11 +374,13 @@ export async function mountCinema(el, deck, {
     enter() {
       started = false;
       if (items.length && current !== 0 && multi) load(0);
+      // fetched in the background while another page was showing, and failed: a fresh copy now
+      else if (player?.failed) { console.warn(`[video] ${items[current].src} failed while another page was showing; loading it again`); player.retry(); }
       if (items.length && mayAutoplay()) queueAutoStart();
     },
     /** The page before this one is showing: decode the poster now, so this page appears without a stall. */
     prepare() {
-      const poster = items[0]?.poster;
+      const poster = versioned(items[0]?.poster, items[0]?.rev);
       if (!poster || prepared) return;
       prepared = true;
       const img = new Image();

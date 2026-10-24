@@ -74,7 +74,7 @@ const watchSilence = (page) => page.evaluate(() => {
   document.addEventListener('play', (e) => { e.target.__since = performance.now(); }, true);
   document.addEventListener('pause', (e) => { e.target.__since = undefined; }, true);
   const real = HTMLMediaElement.prototype.play;
-  HTMLMediaElement.prototype.play = function play() { if (this instanceof HTMLVideoElement) window.__plays.push(decodeURI(this.currentSrc || this.src).split('/').pop()); return real.call(this); };
+  HTMLMediaElement.prototype.play = function play() { if (this instanceof HTMLVideoElement) window.__plays.push(decodeURI(this.currentSrc || this.src).split('?')[0].split('/').pop()); return real.call(this); };
   let theatreSince;
   setInterval(() => {
     const now = performance.now();
@@ -404,10 +404,19 @@ try {
     if (!playableWishes.length) {
       check('Messages: the family’s line until their videos are added', await page.$eval('.scene[data-scene="wishes"] .vstage__missing-text', (e) => e.textContent) === wishesData.emptyMessage);
     } else {
-      check(`Messages: ${playableWishes.length} confirmed wishes are ready, first one first`, await page.$eval(video('wishes'), (v, src) => decodeURI(v.currentSrc || v.src).endsWith(src), playableWishes[0].src));
+      check(`Messages: ${playableWishes.length} confirmed wishes are ready, first one first`, await page.$eval(video('wishes'), (v, src) => decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(src), playableWishes[0].src));
     }
     check('videos play the prepared web copies (never the VIDEOS/ originals or the removed Childhood film)', await page.evaluate(() => ![...document.querySelectorAll('video')].some((v) => /\/VIDEOS\//.test(v.src) || /childhood/i.test(v.src))));
-    check('of the family\'s films, "Age 1 to 50 — Her Story" is in the presentation; the Real Journey and Life Journey videos are not', FILM_SCENES.join() === 'story-film' && await page.evaluate(() => { const ids = window.__deck.scenes.map((x) => x.id); return ids.includes('story-film') && !ids.includes('age-film') && !ids.includes('journey-film') && !document.querySelector('[data-scene="age-film"], [data-scene="journey-film"]'); }));
+    check('of the family\'s films, "Age 1 to 50 — Her Story" and "Her Life Journey" are in the presentation; the Real Journey video is not', FILM_SCENES.join() === 'story-film,journey-film' && await page.evaluate(() => { const ids = window.__deck.scenes.map((x) => x.id); return ids.includes('story-film') && ids.includes('journey-film') && !ids.includes('age-film') && !document.querySelector('[data-scene="age-film"]'); }));
+    check('running order after Our Memory Film: 8 Messages Filled With Love, 9 Her Life Journey, 10 Happy Birthday, Amma, then A Final Gift of Love', await page.evaluate(() => window.__deck.scenes.map((x) => x.id).slice(6).join()) === 'memories,wishes,journey-film,cake,finale');
+    const subOn = async (id) => { await page.evaluate((x) => window.__deck.goTo(x), id); await sleep(500); return sub(page); };
+    const counts = [];
+    for (const [id, want] of [['memories', '7 of 10'], ['wishes', '8 of 10'], ['journey-film', '9 of 10'], ['cake', '10 of 10'], ['finale', 'Final']]) counts.push([id, await subOn(id), want]);
+    check('the steps are counted 7 … 10 of 10, and the closing page says "Final" (never "11 of 10")', counts.every(([, got, want]) => got.startsWith(want)) && !counts.some(([, got]) => /11 of/.test(got)), counts.map(([id, got]) => `${id}: ${got}`).join(' | '));
+    check('…the closing page is titled "A Final Gift of Love"', await page.$eval('.deck-label__title', (t) => t.textContent) === 'A Final Gift of Love');
+    check('Her Life Journey: its page title, with the LIFE JOURNEY-update video', await page.evaluate(() => { const s = document.querySelector('.scene[data-scene="journey-film"]'); return s.querySelector('.cinema__title').textContent.replace(/\s+/g, ' ').trim() === 'Her Life Journey' && /life-journey\.mp4/.test(s.querySelector('video').src); }));
+    await page.evaluate(() => window.__deck.goTo('memories'));
+    await sleep(400);
     check('page 3 reads "Age 1 to 50 — Her Story" (heading, page name and player)', await page.evaluate(() => {
       const s = document.querySelector('.scene[data-scene="story-film"]');
       const title = s.querySelector('.cinema__title').textContent.replace(/\s+/g, ' ').trim();
@@ -534,7 +543,7 @@ try {
     if (playableWishes.length) {
       await page.evaluate(() => window.__deck.goTo('wishes'));
       const wishSrc = (k) => playableWishes[k].src;
-      const nowSrc = () => page.$eval(video('wishes'), (v) => decodeURI(v.currentSrc || v.src));
+      const nowSrc = () => page.$eval(video('wishes'), (v) => decodeURI(v.currentSrc || v.src).split('?')[0]); // the path, without its ?v= fingerprint
       const wishesArrived = Date.now();
       await sleep(5000);
       check('Messages Filled With Love: the introduction stays about 7 seconds (no message yet at 5 s)', await page.$eval(video('wishes'), (v) => v.paused) && /Messages Filled/.test(await page.$eval('#wishes-title', (t) => t.textContent)));
@@ -543,49 +552,45 @@ try {
       check(`…after about 7 seconds (${wishesAfter.toFixed(1)} s)`, wishesAfter >= 6.8 && wishesAfter <= 9.5);
       if (playableWishes.length > 1) {
         await seekToEnd(page, 'wishes');
-        check('…then, after a short "up next" card, the next message plays by itself', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused; }, wishSrc(1), 9000));
+        check('…then, after a short "up next" card, the next message plays by itself', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(src) && !v.paused; }, wishSrc(1), 9000));
         check('…one video at a time, and the music stays soft between them', (await playing(page)).join() === 'wishes' && await musicSoft(page));
         const idx = (file) => playableWishes.findIndex((v) => (v.file || '').endsWith(file));
-        const ljAt = playableWishes.findIndex((v) => v.kind === 'film');
-        if (ljAt > 0) {
-          // wish 8 → the Life Journey video → wish 9, each by itself when the one before ends
-          for (let k = 2; k < ljAt; k++) await press(page, 'PageDown'); // from message 2 to wish 8, just before the film
-          check('a clicker moves through the messages to wish 8 (8.mp4)', (await nowSrc()).endsWith(wishSrc(idx('/8.mp4'))) && ljAt - 1 === idx('/8.mp4'));
-          await page.evaluate(() => { window.__plays.length = 0; });
-          await seekToEnd(page, 'wishes');
-          check('when wish 8 ends, the Life Journey video follows by itself', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused && v.currentTime > 0.3; }, wishSrc(ljAt), 9000));
-          check('…titled "Her Life Journey", not counted as a message, the music soft', /Her Life Journey/.test(await sub(page)) && !/Message/.test(await page.$eval('.scene[data-scene="wishes"] .theatre-bar__label', (l) => l.textContent)) && await musicSoft(page));
-          await seekToEnd(page, 'wishes');
-          check('when the Life Journey video ends, wish 9 (9.mp4) follows by itself', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused && v.currentTime > 0.3; }, wishSrc(idx('/9.mp4')), 9000) && idx('/9.mp4') === ljAt + 1);
-          check('…the Life Journey video played exactly once, and nothing else in between', await page.evaluate(() => window.__plays.join()) === ['life-journey.mp4', playableWishes[ljAt + 1].src.split('/').pop()].join(), await page.evaluate(() => window.__plays.join()));
-          check('…one video at a time, the music soft all the way', (await playing(page)).join() === 'wishes' && await musicSoft(page));
-        }
-        for (let k = Math.max(2, ljAt + 2); k < playableWishes.length - 1; k++) await press(page, 'PageDown'); // a clicker moves between the messages
+        // wish 8 → wish 9 straight on (Life Journey is not among the messages any more)
+        for (let k = 2; k <= idx('/8.mp4'); k++) await press(page, 'PageDown'); // from message 2 (index 1) to wish 8
+        check('a clicker moves through the messages to wish 8 (8.mp4)', (await nowSrc()).endsWith(wishSrc(idx('/8.mp4'))));
+        await page.evaluate(() => { window.__plays.length = 0; });
+        await seekToEnd(page, 'wishes');
+        check('when wish 8 ends, wish 9 (9.mp4) follows by itself — no film in between', await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(src) && !v.paused && v.currentTime > 0.3; }, wishSrc(idx('/9.mp4')), 9000) && idx('/9.mp4') === idx('/8.mp4') + 1 && await page.evaluate(() => window.__plays.join()) === '09-wish.mp4' && /Message 9 of 33/.test(await sub(page)));
+        for (let k = idx('/9.mp4') + 1; k < playableWishes.length - 1; k++) await press(page, 'PageDown'); // a clicker moves between the messages
         if (playableWishes.length > 2) {
           // the last two messages: the second-to-last plays to its end, then the last one follows by itself
           const [penult, last] = playableWishes.slice(-2).map((v) => v.file.split('/').pop());
           check(`the second-to-last message is the family's ${penult}, playing, with the music soft`, (await nowSrc()).endsWith(wishSrc(playableWishes.length - 2)) && (await playing(page)).join() === 'wishes' && await musicSoft(page));
           await seekToEnd(page, 'wishes');
-          check(`…when it ends, the last message (${last}) follows by itself, one at a time, the music still soft`, await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).endsWith(src) && !v.paused && v.currentTime > 0.5; }, wishSrc(playableWishes.length - 1), 9000) && (await playing(page)).join() === 'wishes' && await musicSoft(page));
+          check(`…when it ends, the last message (${last}) follows by itself, one at a time, the music still soft`, await waitFor(page, (src) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(src) && !v.paused && v.currentTime > 0.5; }, wishSrc(playableWishes.length - 1), 9000) && (await playing(page)).join() === 'wishes' && await musicSoft(page));
         }
         const messageCount = playableWishes.filter((v) => v.kind !== 'film').length;
-        check(`a clicker moves through every message in the family’s order, to the last (${messageCount} messages and the Life Journey video)`, (await nowSrc()).endsWith(wishSrc(playableWishes.length - 1)) && new RegExp(`Message ${messageCount} of ${messageCount}`).test(await sub(page)));
+        check(`a clicker moves through every message in the family’s order, to the last (${messageCount} messages)`, (await nowSrc()).endsWith(wishSrc(playableWishes.length - 1)) && new RegExp(`Message ${messageCount} of ${messageCount}`).test(await sub(page)));
         await press(page, 'PageDown');
         check('…and never past a message that is still playing', (await active(page)) === 'wishes' && (await playing(page)).join() === 'wishes');
       }
       await seekToEnd(page, 'wishes');
       for (const film of ['age-film', 'journey-film'].filter(has)) {
-        check(`after the ${film === 'age-film' ? 'last message' : 'Age 1 to 50 film'}, ${film} follows and plays by itself`, await waitFor(page, (id) => window.__deck.current === id, film, 8000) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video(film), 8000));
+        check(`after the last message, ${film} follows and plays by itself`, await waitFor(page, (id) => window.__deck.current === id, film, 8000) && await waitFor(page, (sel) => !document.querySelector(sel).paused, video(film), 10000));
         check('…one video at a time', (await playing(page)).join() === film);
+        if (film === 'journey-film') {
+          check('…"Her Life Journey", step 9 of 10 — not "Message 34 of 34" — with the music soft', /^9 of 10/.test(await sub(page)) && !/Message/.test(await sub(page) + await page.$eval('.scene[data-scene="journey-film"] .theatre-bar__label', (l) => l.textContent)) && /Her Life Journey/.test(await page.$eval('.scene[data-scene="journey-film"] .theatre-bar__label', (l) => l.textContent)) && await musicSoft(page));
+          check('…from its LIFE JOURNEY-update copy', await page.$eval(video(film), (v) => /\/life-journey\.mp4/.test(decodeURI(v.currentSrc))));
+        }
         await seekToEnd(page, film);
       }
-      check('then the presentation goes on to the cake, "Happy Birthday, Amma"', await waitFor(page, () => window.__deck.current === 'cake', null, 8000));
+      check('then the presentation goes on to step 10, "Happy Birthday, Amma"', await waitFor(page, () => window.__deck.current === 'cake', null, 8000) && /^10 of 10/.test(await sub(page)));
       check('…no video is left playing, and the music is back to its normal volume', await musicNormal(page, 4000) && !(await playing(page)).length);
       await sleep(2200);
       check('the cake: its message, five lit candles, no gift tracker', await page.$eval('.scene[data-scene="cake"]', (s, h) => s.classList.contains('is-lit') && s.textContent.includes(h) && s.querySelectorAll('.cake__flame').length === 5 && !s.querySelector('.gtile, .gtracker'), site.cake.headline));
       await shot(page, 'cake');
       check('after the cake, the final gift', await waitFor(page, () => window.__deck.current === 'finale', null, site.cake.holdSeconds * 1000 + 3000));
-      check('…where the automatic presentation ends (nothing starts over by itself)', !(await autoOn(page)));
+      check('…where the automatic presentation ends (nothing starts over by itself), and the page says "Final", not "11 of 10"', !(await autoOn(page)) && (await sub(page)) === 'Final');
       await sleep(3000);
       check('…and stays on the final page', (await active(page)) === 'finale');
     }
@@ -624,6 +629,83 @@ try {
     await page.close();
   }
 
+  // ---------------------------------------------------------------- the family's messages really play
+  if (run('playback') && playableWishes.length > 4) {
+    console.log('\nfamily messages: the first, fifth and last really play (1920×1080)');
+    const { page, problems } = await open(browser, 'index.html', VIEWPORTS[0]);
+    await page.mouse.click(30, 30); // a click on the page: browsers then allow sound
+    const messages = playableWishes.filter((v) => v.kind !== 'film');
+    const nowSrc = () => page.$eval(video('wishes'), (v) => decodeURI(v.currentSrc || v.src));
+    const playsNow = (src) => waitFor(page, (s) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).includes(s) && !v.paused && v.currentTime > 0.5 && !v.error; }, src, 15000);
+    await page.evaluate(() => window.__deck.goTo('wishes'));
+    await waitFor(page, () => document.body.classList.contains('is-theatre'), null, WISHES_INTRO_MS + 5000);
+    const indexNow = async () => { const now = await nowSrc(); return playableWishes.findIndex((v) => now.includes(`${v.src}?`)); };
+    for (const [k, label] of [[0, 'first'], [playableWishes.indexOf(messages[4]), 'fifth'], [playableWishes.length - 1, 'last']]) {
+      for (let guard = 0; guard < 60 && (await indexNow()) < k; guard++) await press(page, 'PageDown'); // a clicker, message by message
+      const v = playableWishes[k];
+      check(`the ${label} message (${v.file.split('/').pop()}) plays, from its fingerprinted URL`, await playsNow(v.src) && (await nowSrc()).includes(`?v=${v.rev}`));
+      const n = messages.indexOf(v) + 1;
+      check(`…and the screen says "Message ${n} of ${messages.length}"`, new RegExp(`Message ${n} of ${messages.length}\\b`).test(await sub(page)));
+    }
+    check('no console errors or broken files', !problems.length, problems.slice(0, 6).join('\n      '));
+    await page.close();
+  }
+
+  // ---------------------------------------------------------------- a video that will not play
+  if (run('failures') && playableWishes.length > 6) {
+    console.log('\nwhen a video cannot be played (simulated: a damaged cached copy, a broken file, a download that hangs)');
+    const page = await browser.newPage();
+    await page.setViewport(VIEWPORTS[2]);
+    const logs = [];
+    page.on('console', (m) => logs.push(m.text()));
+    const W = playableWishes.map((v) => v.src.split('/').pop());
+    const [damaged, broken, brokenAuto, hanging] = [W[0], W[1], W[3], W[5]];
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const u = decodeURI(req.url());
+      const file = u.split('?')[0].split('/').pop();
+      if (req.method() !== 'GET' || !u.includes('/assets/videos/')) return req.continue();
+      if (file === damaged && !u.includes('retry=')) return req.respond({ status: 500, body: 'damaged' }); // only the first copy is bad
+      if (file === broken || file === brokenAuto) return req.respond({ status: 404, body: 'missing' });       // bad every time
+      if (file === hanging) return;                                                                          // never answers
+      return req.continue();
+    });
+    await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.waitForFunction(() => document.documentElement.classList.contains('is-loaded'));
+    await page.mouse.click(30, 30);
+    const nowFile = () => page.$eval(video('wishes'), (v) => decodeURI(v.currentSrc || v.src).split('?')[0].split('/').pop());
+    const errorShown = () => page.$eval('.scene[data-scene="wishes"] .player', (p) => p.classList.contains('has-error') && !p.querySelector('.player__error').hidden && (getComputedStyle(p.querySelector('.player__spinner')).display === 'none' || getComputedStyle(p.querySelector('.player__spinner')).opacity === '0'));
+    const errorButtons = () => page.$$eval('.scene[data-scene="wishes"] .player__error .btn', (b) => b.map((x) => x.textContent.trim()).join());
+    const playing1 = (file) => waitFor(page, (f) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(`/${f}`) && !v.paused && v.currentTime > 0.3; }, file, 15000);
+
+    await page.evaluate(() => window.__deck.goTo('wishes'));
+    check(`a damaged cached copy (${damaged}) is fetched again from a fresh URL by itself, and plays`, await waitFor(page, () => document.body.classList.contains('is-theatre'), null, WISHES_INTRO_MS + 5000) && await playing1(damaged) && await page.$eval(video('wishes'), (v) => v.currentSrc.includes('retry=')));
+    check('…and the console names the file and what went wrong', logs.some((l) => l.includes(damaged.replace(/[.]mp4$/, '')) && /trying once more|loading it again/.test(l)));
+
+    await press(page, 'PageDown');
+    await waitFor(page, () => document.querySelector('.scene[data-scene="wishes"] .player.has-error'), null, 10000);
+    check(`a file that cannot be played (${broken}): after one fresh try, "could not be played" with Retry and Skip — no endless spinner`, await errorShown() && (await errorButtons()) === 'Retry,Skip' && /could not be played/.test(await page.$eval('.scene[data-scene="wishes"] .player__error', (e) => e.textContent)));
+    check('…the console shows the exact URL and the media error', logs.some((l) => /\[player\] could not play .*\/assets\/videos\/wishes\//.test(l) && l.includes(broken.replace(/\.mp4$/, '')) && /MEDIA_ERR_\w+|PLAY_FAILED|NotSupportedError/.test(l)), logs.filter((l) => l.includes(broken)).slice(-2).join(' | '));
+    await sleep(6000);
+    check('…and it is not skipped by itself (the presentation is paused: it waits for the host)', (await nowFile()) === broken && await errorShown());
+    await page.click('.scene[data-scene="wishes"] .player__error .btn--celebrate'); // Retry
+    await sleep(2500);
+    check('Retry tries again (and, still broken, says so again)', await errorShown() && logs.filter((l) => l.includes('[player] could not play') && l.includes(broken.replace(/\.mp4$/, ''))).length >= 3);
+    await page.$$eval('.scene[data-scene="wishes"] .player__error .btn', (b) => b.find((x) => x.textContent.trim() === 'Skip').click());
+    check(`Skip moves on to the next message (${W[2]}), which plays`, await playing1(W[2]));
+
+    await page.evaluate(() => window.__deck.setAuto(true));
+    await press(page, 'PageDown');
+    await waitFor(page, () => document.querySelector('.scene[data-scene="wishes"] .player.has-error'), null, 10000);
+    check(`in the automatic presentation, a broken file (${brokenAuto}) says when the presentation moves on`, await errorShown() && /follows in 15 seconds/.test(await page.$eval('.scene[data-scene="wishes"] .player__error-hint', (e) => e.textContent)));
+    check(`…and after that notice, the next message (${W[4]}) plays`, await waitFor(page, (f) => { const v = document.querySelector('.scene[data-scene="wishes"] video'); return decodeURI(v.currentSrc || v.src).split('?')[0].endsWith(`/${f}`) && !v.paused; }, W[4], 22000));
+
+    await press(page, 'PageDown');
+    check(`a download that never arrives (${hanging}): no endless spinner — "taking too long to load", with Retry and Skip`, await waitFor(page, () => { const p = document.querySelector('.scene[data-scene="wishes"] .player'); return p.classList.contains('has-error') && /taking too long/.test(p.textContent); }, null, 50000) && await errorShown() && (await errorButtons()) === 'Retry,Skip');
+    check('…the console says it stalled, with the URL', logs.some((l) => /\[player\] stalled loading .*\/assets\/videos\/wishes\//.test(l)));
+    await page.close();
+  }
+
   // ---------------------------------------------------------------- reduced motion
   if (run('reduced')) {
     console.log('\nreduced motion');
@@ -637,7 +719,7 @@ try {
   // ---------------------------------------------------------------- short links
   if (run('pages')) {
     console.log('\nshort links (pages/)');
-    for (const [file, scene] of [['reasons.html', 'reasons'], ['memories.html', 'memories'], ['cake.html', 'cake'], ['finale.html', 'finale'], ['story.html', 'story-film'], ['age-transition.html', 'story-film'], ['life-journey.html', 'story-film']]) {
+    for (const [file, scene] of [['reasons.html', 'reasons'], ['memories.html', 'memories'], ['cake.html', 'cake'], ['finale.html', 'finale'], ['story.html', 'story-film'], ['age-transition.html', 'story-film'], ['life-journey.html', 'journey-film']]) {
       const { page } = await open(browser, `pages/${file}`, VIEWPORTS[3]);
       check(`pages/${file} opens the presentation at "${scene}"`, (await active(page)) === scene);
       await page.close();

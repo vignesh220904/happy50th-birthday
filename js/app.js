@@ -27,11 +27,12 @@ import * as wishes from './sections/wishes.js';
 import * as cake from './sections/cake.js';
 import * as finale from './sections/finale.js';
 
-// The running order of the celebration: the story film (Age 1 to 50 — Her
-// Story) follows the birthday greeting; after the family's video wishes come the
-// cake ("Happy Birthday, Amma") and the final gift. The Age 1 to 50 real video
-// and the Life Journey video are left out at the family's request
-// (data/site.json → videos.*.inPresentation); their scenes stay here so either
+// The running order of the celebration, counted 1 to 10: the story film (Age 1
+// to 50 — Her Story) follows the birthday greeting; after Our Memory Film come
+// 8 the family's video wishes, 9 Her Life Journey, 10 Happy Birthday, Amma (the
+// cake), and then, not counted, the closing page: A Final Gift of Love.
+// The Age 1 to 50 real video is left out at the family's request
+// (data/site.json → videos.ageFilm.inPresentation); its scene stays here so it
 // can be switched back on without touching the code.
 const SCENES = [
   { id: 'welcome', title: 'A Golden Beginning', mod: welcome },
@@ -45,7 +46,7 @@ const SCENES = [
   { id: 'age-film', title: 'Age 1 to 50: The Real Journey', mod: ageFilm },
   { id: 'journey-film', title: 'Her Life Journey', mod: journeyFilm },
   { id: 'cake', title: 'Happy Birthday, Amma', mod: cake },
-  { id: 'finale', title: 'A Final Gift of Love', mod: finale },
+  { id: 'finale', title: 'A Final Gift of Love', mod: finale, numbered: false }, // shown as "Final", not "11 of 10"
 ];
 
 async function main() {
@@ -74,7 +75,7 @@ async function main() {
     if (ctl.absent) { el.remove(); continue; }
     scene.ctl = ctl;
     shown.push(scene);
-    deck.add(scene.id, scene.title, ctl);
+    deck.add(scene.id, scene.title, ctl, { numbered: scene.numbered !== false });
   }
 
   // Leaving a scene pauses its videos (the music then returns if it was on)

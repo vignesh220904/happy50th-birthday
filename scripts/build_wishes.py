@@ -44,8 +44,14 @@ films inside the playlist, e.g. the Life Journey video just before wish 9:
     {"before": 9, "title": "Her Life Journey", "src": "assets/videos/family/life-journey.mp4", ...}
 It uses the web copy made by npm run build:films and plays once, in turn.
 
+Fingerprints: every entry gets "rev", the start of the web copy's SHA-1. The
+site asks for each video and poster as "…mp4?v=<rev>", so when a wish is
+replaced under the same file name, no visitor's browser can play an old,
+cached copy of it (that mix-up shows as "could not be played" or a spinner).
+
 Requires: imageio-ffmpeg (pip install imageio-ffmpeg).
 """
+import hashlib
 import json
 import os
 import re
@@ -67,6 +73,15 @@ SCALE = "scale='if(gte(iw,ih),min(1920,iw),-2)':'if(gte(iw,ih),-2,min(1920,ih))'
 
 VARIANT = re.compile(r"^\(?\d{1,3}\)?$|^[a-z]$", re.I)  # "(1)", "002", "a": a second file for the same number, not a name
 CAMERA_NAME = re.compile(r"^(vid|img|mov|pxl|dsc|whatsapp|video|wa\d|signal|screen|rec)[\s_-]*[\w\s-]*$|^[\d\s_.-]+$", re.I)
+
+
+def fingerprint(path):
+    """The start of the file's SHA-1: changes whenever the file's content changes."""
+    digest = hashlib.sha1()
+    with open(path, "rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()[:10]
 
 
 def ffmpeg():
@@ -202,6 +217,7 @@ def main():
             "width": w,
             "height": h,
             "mb": round(os.path.getsize(target) / 1e6, 1),
+            "rev": fingerprint(target),
         })
 
     # the final two (in the family's order) wait for confirmation; a value already set is kept
@@ -222,7 +238,7 @@ def main():
         videos.insert(at, {
             "kind": "film", "title": film.get("title", ""), "file": film.get("source", ""), "src": film["src"],
             "poster": film.get("poster", ""), "from": "", "duration": info["duration"], "width": w, "height": h,
-            "mb": round(os.path.getsize(film["src"]) / 1e6, 1), "confirmed": True,
+            "mb": round(os.path.getsize(film["src"]) / 1e6, 1), "rev": fingerprint(film["src"]), "confirmed": True,
         })
     for i, entry in enumerate(videos):
         entry["n"] = i + 1
