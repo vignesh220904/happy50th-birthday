@@ -161,8 +161,10 @@ check('wishes: captions come only from the filenames (none from marks like "(1)"
 check('wishes: the family’s numbers, in numeric order (2 before 10); a second file for a number follows the plain one', ww.every((v, i) => v.number === leading(v.file) && (i === 0 || ww[i - 1].number <= v.number))
   && ['13', '16'].every((n) => ww.findIndex((v) => v.file.endsWith(`/${n}.mp4`)) + 1 === ww.findIndex((v) => v.file.endsWith(`/${n}(1).mp4`)))
   && ww.findIndex((v) => v.file.endsWith('/17 - a.mp4')) + 1 === ww.findIndex((v) => v.file.endsWith('/17 - b.mp4')));
-check('wishes: from the "family wishes updated video" folder, all 33 videos, every one confirmed', wishes.source === 'family wishes updated video' && ww.length === 33 && ww.every((v) => v.file.startsWith('family wishes updated video/') && v.confirmed === true));
-check('wishes: only the 33 family messages — Life Journey is not among them (it has its own page, after the wishes)', wv.length === 33 && !wv.some((v) => v.kind === 'film' || /life-journey/i.test(v.src)) && !(wishes.films || []).length && /\/30\.mp4$/.test(wv.at(-1).file));
+const at = (f) => ww.findIndex((v) => v.file.endsWith(`/${f}`));
+check('wishes: 15 a (the newest) plays right after 15 and right before 16', at('15 a.MOV') > 0 && at('15.mp4') + 1 === at('15 a.MOV') && at('15 a.MOV') + 1 === at('16.mp4') && ww[at('15 a.MOV')].from === '');
+check('wishes: from the "family wishes updated video" folder, all 34 videos, every one confirmed', wishes.source === 'family wishes updated video' && ww.length === 34 && ww.every((v) => v.file.startsWith('family wishes updated video/') && v.confirmed === true));
+check('wishes: only the 34 family messages — Life Journey is not among them (it has its own page, after the wishes)', wv.length === 34 && !wv.some((v) => v.kind === 'film' || /life-journey/i.test(v.src)) && !(wishes.films || []).length && /\/30\.mp4$/.test(wv.at(-1).file));
 const sha1 = (p) => createHash('sha1').update(readFileSync(join(ROOT, p))).digest('hex');
 const staleRev = wv.filter((v) => !v.rev || !exists(v.src) || sha1(v.src).slice(0, 10) !== v.rev);
 check('wishes: every video has a fingerprint ("rev") that matches its file, so a replaced file gets a new URL', !staleRev.length, staleRev.map((v) => v.src).join(', '));

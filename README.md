@@ -90,7 +90,7 @@ between the family's video wishes while they play (but not past the last one whi
 | 5 | **Proud Moments** · 2006 – 2026 | The same slideshow for the later milestones |
 | 6 | **50 Reasons We Love You** | The family's five groups of ten, each as a floating cloud of bubbles that appear one by one. All 50 reasons, word for word, each once |
 | 7 | **Our Memory Film** | The family's memories film (6 min 23 s). 10 s introduction, then the film |
-| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's 33 video wishes, one at a time, each to its end, in their numbered order (see below) |
+| 8 | **Messages Filled With Love** | About 7 s introduction, then the family's 34 video wishes, one at a time, each to its end, in their numbered order (see below) |
 | 9 | **Her Life Journey** | The family's Life Journey video (`VIDEOS/updated/LIFE JOURNEY-update.mp4`, 1 min 31 s), after all the wishes; its title shows for 3 s, then it plays |
 | 10 | **Happy Birthday, Amma** | The birthday cake: ivory tiers, gold bands, royal-blue swags and a golden 50; five candles light one by one. *Make a Wish* blows them out |
 | Final | **A Final Gift of Love** | (not counted: the controls say *Final*, not "11 of 10") An ivory-and-gold gift in the middle of the screen floats and glows, wiggles, and its lid swings off; a golden light pours out and a golden **50** rises from the box with gold sparkles and confetti. Then the gift moves aside and the family's closing words, her name, date and venue appear. The scene stays (nothing starts over by itself). **Replay** opens the gift again; **Start Again** returns to the welcome |
@@ -124,7 +124,7 @@ no people, no names, no text), with the site's *Illustration* label, so it is ne
 | Folder | | Command |
 |------|---|---|
 | `VIDEOS/` | the films: `age 1 to 5 story video.mp4` (shown as *Age 1 to 50 — Her Story*), and the updated `updated/AGE 1 TO 50 - real video-update.mp4` and `updated/LIFE JOURNEY-update.mp4` (both left out of the presentation) | `npm run build:films` → `assets/videos/family/` |
-| `family wishes updated video/` | the family's 33 wishes, numbered 1 – 30: `1.mp4` … `30.mp4`, with two files for 13 (`13`, `13(1)`), 16 (`16`, `16(1)`) and 17 (`17 - a`, `17 - b`), and `27-002.mp4` for 27 | `npm run build:wishes` → `assets/videos/wishes/` + `data/wishes.json` |
+| `family wishes updated video/` | the family's 34 wishes, numbered 1 – 30: `1.mp4` … `30.mp4`, with two files for 13 (`13`, `13(1)`), 15 (`15`, `15 a.MOV`), 16 (`16`, `16(1)`) and 17 (`17 - a`, `17 - b`), and `27-002.mp4` for 27 | `npm run build:wishes` → `assets/videos/wishes/` + `data/wishes.json` |
 | `Family video wishes/` | the earlier set of wishes (no longer used; kept as the family sent it) | – |
 
 Both scripts check that every original can be decoded and report any that can't (they are left out, never replaced).
@@ -133,7 +133,7 @@ each under 95 MB so it can go to GitHub. HDR phone videos are tone-mapped so the
 The originals are never changed.
 
 `build:wishes` reads the folder named in `data/wishes.json` → `source`, sorts by the number in the filename (2 before 10;
-for a number with two files, the plain one first: `13`, `13(1)`; `17 - a`, `17 - b`) and names a wish after the text
+for a number with two files, the plain one first: `13`, `13(1)`; `15`, `15 a`; `17 - a`, `17 - b`) and names a wish after the text
 following the number ("03 - Vikky.mp4" → *From Vikky*); files without a name (e.g. "03.mp4", "13(1).mp4", "27-002.mp4")
 get no caption, so nothing on screen is a guess. It reports missing numbers, duplicates, files it cannot decode and a
 count that differs from the family's. `data/wishes.json` → `films` can place one of the family's films among the wishes
